@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰粉丝答题</title>
+    <style>
+        :root {
+            /* 紫色主题 - 林俊杰应援色 */
+            --primary: #8B5CF6;
+            --primary-light: rgba(139, 92, 246, 0.15);
+            --primary-dark: #6B4C9A;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --accent: #A78BFA;
+            --accent-pink: #F472B6;
+            --error: #EF4444;
+            --success: #10B981;
+            /* 暗色背景 */
+            --bg: #0F0A1A;
+            --bg-secondary: #1A1225;
+            --card: #1A1225;
+            --card-hover: #251A35;
+            --text: #F5F5F5;
+            --text2: #A0A0A0;
+            --border: #2D2340;
+            --border-light: #3D3350;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #150D22 50%, #1A0F2E 100%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            animation: bgShift 20s ease infinite;
+            background-size: 200% 200%;
+        }
+        @keyframes bgShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; min-height: 100vh; }
+        .header { text-align: center; padding: 30px 0 20px; margin-bottom: 20px; }
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .nav { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; }
+        .nav-item {
+            padding: 10px 20px; background: var(--card); border: 1px solid var(--border-light);
+            border-radius: 25px; cursor: pointer; font-size: 14px; transition: all 0.3s ease;
+            position: relative; overflow: hidden;
+            color: #FFFFFF;
+        }
+        .nav-item::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139,92,246,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .nav-item:hover::before { left: 100%; }
+        .nav-item:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
+        .nav-item.active { background: linear-gradient(135deg, var(--primary), #9333ea); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(139,92,246,0.4); }
+        .card {
+            background: var(--card); border-radius: 16px; padding: 24px; margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid var(--border); transition: all 0.3s ease;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(139,92,246,0.15), inset 0 1px 0 rgba(255,255,255,0.05); }
+        .btn {
+            display: block; width: 100%; padding: 14px 24px; background: linear-gradient(135deg, var(--primary), #9333ea); color: #fff;
+            border: none; border-radius: 12px; font-size: 16px; cursor: pointer; text-align: center;
+            transition: all 0.3s ease; margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+            position: relative; overflow: hidden;
+        }
+        .btn::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        .btn:hover::before { left: 100%; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139,92,246,0.4); }
+        .btn:active { transform: translateY(0); }
+        .btn-outline {
+            background: transparent; border: 2px solid var(--accent); color: var(--accent);
+            box-shadow: none;
+        }
+        .btn-outline:hover { background: rgba(167, 139, 250, 0.2); border-color: var(--accent-pink); color: var(--accent-pink); box-shadow: 0 4px 15px rgba(244,114,182,0.3); }
+        .btn-sm { padding: 6px 14px; font-size: 13px; width: auto; display: inline-block; margin: 0; }
+        .btn-error { background: var(--error); }
+        .btn-error.btn-outline { background: transparent; border-color: var(--error); color: var(--error); }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-card {
+            background: linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 100%);
+            border-radius: 12px; padding: 20px 16px; text-align: center;
+            border: 1px solid var(--border); transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+        .stat-value { font-size: 32px; font-weight: 700; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+        .view { display: none; }
+        .view.active { display: block; }
+        .mode-selector { display: flex; gap: 10px; margin-top: 16px; }
+        .mode-btn {
+            flex: 1; padding: 14px 8px; background: var(--bg-secondary); border: 1px solid var(--border-light);
+            border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.3s ease;
+            color: #FFFFFF;
+        }
+        .mode-btn:hover { border-color: var(--primary); background: var(--card-hover); transform: translateY(-2px); }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary), #9333ea); color: #fff; border-color: transparent;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        }
+        .mode-btn .label { font-size: 14px; font-weight: 500; }
+        .mode-btn .desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+        .mode-btn.active .desc { color: rgba(255,255,255,0.8); }
+        .progress-wrap { margin-bottom: 16px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-text { font-size: 13px; color: var(--text2); }
+        .timer-badge {
+            display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--primary);
+            background: var(--primary-light); padding: 6px 12px; border-radius: 20px;
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+        .progress-bar-bg { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-pink)); border-radius: 4px; transition: width 0.3s; }
+        .question-card {
+            background: var(--card); border-radius: 16px; padding: 28px; margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+        }
+        .question-text { font-size: 18px; font-weight: 500; margin-bottom: 24px; line-height: 1.6; color: var(--text); }
+        .option-item {
+            display: flex; align-items: center; padding: 16px 18px; background: var(--bg-secondary);
+            border: 2px solid transparent; border-radius: 12px; cursor: pointer; margin-bottom: 12px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .option-item::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 0; height: 100%;
+            background: linear-gradient(90deg, var(--primary-light), transparent);
+            transition: width 0.3s;
+        }
+        .option-item:hover { border-color: var(--primary); background: var(--card-hover); transform: translateX(4px); }
+        .option-item:hover::before { width: 100%; }
+        .option-item.disabled { cursor: default; }
+        .option-item.disabled:hover { border-color: transparent; background: var(--bg-secondary); }
+        .option-item.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+        .option-item.wrong { border-color: var(--error); background: rgba(239, 68, 68, 0.15); box-shadow: 0 0 20px rgba(239,68,68,0.2); }
+        .option-key {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; background: linear-gradient(135deg, var(--card), var(--card-hover));
+            border-radius: 50%; margin-right: 14px; font-weight: 600; font-size: 14px; flex-shrink: 0;
+            border: 1px solid var(--border); color: var(--primary);
+        }
+        .feedback { margin-top: 16px; padding: 18px; border-radius: 12px; display: none; }
+        .feedback.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feedback.correct { background: rgba(16, 185, 129, 0.12); border: 1px solid var(--success); box-shadow: 0 0 20px rgba(16,185,129,0.1); }
+        .feedback.wrong { background: rgba(239, 68, 68, 0.12); border: 1px solid var(--error); box-shadow: 0 0 20px rgba(239,68,68,0.1); }
+        .feedback-title { font-weight: 600; margin-bottom: 6px; }
+        .feedback.correct .feedback-title { color: var(--success); }
+        .feedback.wrong .feedback-title { color: var(--error); }
+        .feedback-desc { font-size: 14px; color: var(--text2); }
+        .bottom-bar {
+            position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 20px;
+            background: linear-gradient(to top, var(--bg-secondary), rgba(26,18,37,0.95));
+            border-top: 1px solid var(--border);
+            display: flex; gap: 10px; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .bottom-bar .btn { flex: 1; max-width: 200px; }
+        .pb-safe { padding-bottom: 80px; }
+        .category-list { display: flex; flex-direction: column; gap: 10px; }
+        .category-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 18px; background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .category-item:hover {
+            border-color: var(--primary); background: var(--card-hover);
+            transform: translateX(4px); box-shadow: 0 4px 15px rgba(139,92,246,0.2);
+        }
+        .category-name { font-weight: 500; }
+        .category-count { color: var(--text2); font-size: 14px; }
+        .empty { text-align: center; padding: 50px 20px; color: var(--text2); }
+        .error-list { display: flex; flex-direction: column; gap: 12px; }
+        .error-item {
+            padding: 14px 18px; background: rgba(239,68,68,0.08); border-radius: 12px;
+            border-left: 3px solid var(--error); transition: all 0.3s;
+        }
+        .error-item:hover { background: rgba(239,68,68,0.12); }
+        .error-item .q { font-weight: 500; }
+        .error-item .info { font-size: 12px; color: var(--text2); margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .finish-card { text-align: center; padding: 50px 20px; }
+        .finish-icon { font-size: 56px; margin-bottom: 20px; animation: bounce 0.6s ease; }
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .finish-stats { display: flex; justify-content: center; gap: 30px; margin: 24px 0; flex-wrap: wrap; }
+        .finish-stat { text-align: center; }
+        .finish-stat .val { font-size: 28px; font-weight: 700; }
+        .finish-stat .lbl { font-size: 12px; color: var(--text2); }
+        .finish-stat .val.green { color: var(--success); }
+        .finish-stat .val.red { color: var(--error); }
+        .cat-stat-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid var(--border);
+        }
+        .cat-stat-row:last-child { border-bottom: none; }
+        .cat-stat-name { font-weight: 500; min-width: 60px; }
+        .cat-stat-bar-wrap { flex: 1; max-width: 140px; margin: 0 12px; }
+        .cat-stat-bar-bg { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+        .cat-stat-bar { height: 100%; background: var(--primary); border-radius: 4px; transition: width 0.3s; }
+        .cat-stat-pct { font-size: 14px; font-weight: 600; color: var(--primary); min-width: 40px; text-align: right; }
+        /* 管理页面样式 */
+        .q-item { background: var(--bg); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+        .q-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .q-item-cat { font-size: 12px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 4px; }
+        .q-item-text { font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
+        .q-item-answer { font-size: 12px; color: var(--success); }
+        .q-item-actions { display: flex; gap: 6px; }
+        .q-item-actions button { padding: 4px 10px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎵 林俊杰粉丝答题</h1>
+            <p style="color:var(--text2);font-size:14px;">为演唱会答题做准备</p>
+        </header>
+        <nav class="nav">
+            <button type="button" class="nav-item active" onclick="switchView('home')">首页</button>
+            <button type="button" class="nav-item" onclick="switchView('practice')">练习</button>
+            <button type="button" class="nav-item" onclick="switchView('wrongbook')">错题本</button>
+            <button type="button" class="nav-item" onclick="switchView('stats')">统计</button>
+            <button type="button" class="nav-item" onclick="switchView('admin')">管理</button>
+        </nav>
+        <div class="view active" id="view-home">
+            <div class="card">
+                <h3 style="margin-bottom:12px;">开始练习</h3>
+                <div class="mode-selector">
+                    <div class="mode-btn active" data-mode="quick" onclick="selectMode('quick')">
+                        <div class="label">快速</div><div class="desc">10题</div>
+                    </div>
+                    <div class="mode-btn" data-mode="standard" onclick="selectMode('standard')">
+                        <div class="label">标准</div><div class="desc">20题</div>
+                    </div>
+                    <div class="mode-btn" data-mode="intensive" onclick="selectMode('intensive')">
+                        <div class="label">强化</div><div class="desc">30题</div>
+                    </div>
+                </div>
+                <button class="btn" style="margin-top:20px;" onclick="startRandomQuiz()">随机练习</button>
+                <button class="btn btn-outline" onclick="showCategoryView()">分类练习</button>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:12px;">今日数据</h3>
+                <div class="stat-grid">
+                    <div class="stat-card"><div class="stat-value" id="todayCount">0</div><div class="stat-label">今日答题</div></div>
+                    <div class="stat-card"><div class="stat-value" id="todayAcc">0%</div><div class="stat-label">正确率</div></div>
+                </div>
+            </div>
+        </div>
+        <div class="view" id="view-practice">
+            <div id="quizArea" class="pb-safe">
+                <div class="card" style="text-align:center;padding:60px 20px;">
+                    <div style="font-size:48px;margin-bottom:16px;">📝</div>
+                    <h3 style="margin-bottom:12px;">请先开始答题</h3>
+                    <p style="color:var(--text2);margin-bottom:20px;">点击下方按钮开始练习</p>
+                    <button class="btn" style="max-width:200px;margin:0 auto;" onclick="switchView('home')">去首页开始</button>
+                </div>
+            </div>
+        </div>
+        <div class="view" id="view-wrongbook">
+            <div class="card"><h3 style="margin-bottom:12px;">错题本</h3><div id="wrongBookList"><div class="empty"><p>暂无错题记录</p></div></div></div>
+            <button class="btn" id="wrongBookBtn" onclick="startWrongBookQuiz()" style="display:none;">开始复习</button>
+        </div>
+        <div class="view" id="view-stats">
+            <div class="card">
+                <h3 style="margin-bottom:12px;">总体统计</h3>
+                <div class="stat-grid">
+                    <div class="stat-card"><div class="stat-value" id="sTotal">0</div><div class="stat-label">总答题</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sCorrect">0</div><div class="stat-label">正确数</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sAcc">0%</div><div class="stat-label">正确率</div></div>
+                    <div class="stat-card"><div class="stat-value" id="sWrong">0</div><div class="stat-label">错题数</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:12px;">分类正确率</h3>
+                <div id="catStats"><div class="empty"><p>暂无数据</p></div></div>
+            </div>
+        </div>
+        <div class="view" id="view-category">
+            <div class="card"><h3 style="margin-bottom:12px;">选择分类</h3><div class="category-list" id="categoryList"></div></div>
+            <button class="btn btn-outline" style="margin-top:12px;" onclick="switchView('home')">返回首页</button>
+        </div>
+        <!-- 管理视图 -->
+        <div class="view" id="view-admin">
+            <div class="card">
+                <h3 style="margin-bottom:12px;">数据管理</h3>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-outline btn-sm" onclick="exportData()">📤 导出数据</button>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3>题库管理</h3>
+                    <button class="btn btn-sm" onclick="showAddForm()">+ 新增题目</button>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <input type="text" id="searchInput" placeholder="搜索题目..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;" oninput="filterQuestions()">
+                </div>
+                <div id="questionList" style="max-height:400px;overflow-y:auto;"></div>
+            </div>
+        </div>
+        <!-- 编辑/新增题目弹窗 -->
+        <div id="editModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;overflow-y:auto;padding:20px;">
+            <div style="max-width:500px;margin:0 auto;background:var(--card);border-radius:12px;padding:20px;">
+                <h3 id="modalTitle" style="margin-bottom:16px;">新增题目</h3>
+                <input type="hidden" id="editId">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">分类</label>
+                    <select id="editCategory" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;">
+                        <option value="专辑">专辑</option>
+                        <option value="歌曲">歌曲</option>
+                        <option value="基本信息">基本信息</option>
+                        <option value="演唱会">演唱会</option>
+                        <option value="综艺">综艺</option>
+                        <option value="奖项">奖项</option>
+                        <option value="合作">合作</option>
+                        <option value="影视">影视</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">题目</label>
+                    <textarea id="editQuestion" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;resize:vertical;"></textarea>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">选项（每行一个，格式：A.选项内容）</label>
+                    <textarea id="editOptions" rows="4" placeholder="A.选项1&#10;B.选项2&#10;C.选项3&#10;D.选项4" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;resize:vertical;"></textarea>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">正确答案</label>
+                    <select id="editAnswer" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">解析</label>
+                    <textarea id="editExplanation" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;resize:vertical;"></textarea>
+                </div>
+                <div style="display:flex;gap:10px;">
+                    <button class="btn" onclick="saveQuestion()">保存</button>
+                    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+var QUESTION_BANK=[
+{id:"001",category:"专辑",question:"林俊杰发行于2003年的首张专辑是？",options:[{key:"A",text:"乐行者"},{key:"B",text:"第二天堂"},{key:"C",text:"她说"},{key:"D",text:"学不会"}],answer:"A",explanation:"林俊杰2003年发行首张专辑《乐行者》，正式出道。"},
+{id:"002",category:"专辑",question:"林俊杰2008年发行的专辑《JJ陆》的英文名是？",options:[{key:"A",text:"One Shot"},{key:"B",text:"Sixology"},{key:"C",text:"Born to Dream"},{key:"D",text:"The One"}],answer:"B",explanation:"《JJ陆》英文名为《Sixology》，代表第六张专辑。"},
+{id:"003",category:"歌曲",question:"《江南》这首歌所属的专辑是？",options:[{key:"A",text:"乐行者"},{key:"B",text:"第二天堂"},{key:"C",text:"编号89757"},{key:"D",text:"曹操"}],answer:"B",explanation:"《江南》收录于专辑《第二天堂》。"},
+{id:"004",category:"歌曲",question:"《不为谁而作的歌》发行于哪一年？",options:[{key:"A",text:"2013年"},{key:"B",text:"2014年"},{key:"C",text:"2015年"},{key:"D",text:"2016年"}],answer:"C",explanation:"《不为谁而作的歌》于2015年发行。"},
+{id:"005",category:"基本信息",question:"林俊杰的出生地是？",options:[{key:"A",text:"台北"},{key:"B",text:"新加坡"},{key:"C",text:"上海"},{key:"D",text:"香港"}],answer:"B",explanation:"林俊杰出生于新加坡。"},
+{id:"006",category:"基本信息",question:"林俊杰的生日是？",options:[{key:"A",text:"3月27日"},{key:"B",text:"3月28日"},{key:"C",text:"4月1日"},{key:"D",text:"4月10日"}],answer:"B",explanation:"林俊杰出生于1981年3月28日。"},
+{id:"007",category:"演唱会",question:"2009年时线演唱会首唱地点是？",options:[{key:"A",text:"北京"},{key:"B",text:"上海"},{key:"C",text:"台北"},{key:"D",text:"新加坡"}],answer:"C",explanation:"首站在台北小巨蛋。"},
+{id:"008",category:"综艺",question:"林俊杰担任《梦想的声音》导师是第几季？",options:[{key:"A",text:"第一季"},{key:"B",text:"第二季"},{key:"C",text:"第三季"},{key:"D",text:"第四季"}],answer:"B",explanation:"从第二季开始担任导师。"},
+{id:"009",category:"奖项",question:"林俊杰获得金曲奖最佳男歌手是哪一年？",options:[{key:"A",text:"2013年"},{key:"B",text:"2014年"},{key:"C",text:"2015年"},{key:"D",text:"2016年"}],answer:"D",explanation:"2016年凭借《和自己对话》获奖。"},
+{id:"010",category:"专辑",question:"2015年发行的专辑是？",options:[{key:"A",text:"学不会"},{key:"B",text:"新地球"},{key:"C",text:"她说"},{key:"D",text:"因你而在"}],answer:"B",explanation:"2015年发行《新地球》。"},
+{id:"011",category:"歌曲",question:"《她说》的原唱是？",options:[{key:"A",text:"张惠妹"},{key:"B",text:"林俊杰"},{key:"C",text:"蔡依林"},{key:"D",text:"王心凌"}],answer:"B",explanation:"《她说》是林俊杰2010年发行的歌曲。"},
+{id:"012",category:"专辑",question:"林俊杰第一张英文专辑是？",options:[{key:"A",text:"One Shot"},{key:"B",text:"音悦V榜"},{key:"C",text:"和自己对话"},{key:"D",text:"Like You Do"}],answer:"A",explanation:"《One Shot》是首张英文专辑。"},
+{id:"013",category:"基本信息",question:"林俊杰的英文名是？",options:[{key:"A",text:"Jony J"},{key:"B",text:"JJ Lin"},{key:"C",text:"Jason"},{key:"D",text:"Jimmy"}],answer:"B",explanation:"英文名是JJ Lin。"},
+{id:"014",category:"歌曲",question:"与五月天合作演唱的歌曲是？",options:[{key:"A",text:"伤心的人别走"},{key:"B",text:"派对动物"},{key:"C",text:"黑暗骑士"},{key:"D",text:"离开地球表面"}],answer:"C",explanation:"《黑暗骑士》是与阿信合唱的。"},
+{id:"015",category:"综艺",question:"《歌手》参赛是第几季？",options:[{key:"A",text:"第一季"},{key:"B",text:"第二季"},{key:"C",text:"第三季"},{key:"D",text:"第四季"}],answer:"C",explanation:"《歌手》第三季（2015年）。"},
+{id:"016",category:"专辑",question:"《学不会》专辑发行于？",options:[{key:"A",text:"2010年"},{key:"B",text:"2011年"},{key:"C",text:"2012年"},{key:"D",text:"2013年"}],answer:"B",explanation:"《学不会》是2011年发行。"},
+{id:"017",category:"演唱会",question:"伟大的渺小演唱会年份？",options:[{key:"A",text:"2017年"},{key:"B",text:"2018年"},{key:"C",text:"2019年"},{key:"D",text:"2020年"}],answer:"B",explanation:"2018年举行。"},
+{id:"018",category:"奖项",question:"获得过金曲奖最佳专辑制作人吗？",options:[{key:"A",text:"获得过"},{key:"B",text:"没有"},{key:"C",text:"提名而已"},{key:"D",text:"两次"}],answer:"A",explanation:"曾获得该奖项。"},
+{id:"019",category:"歌曲",question:"《起风了》林俊杰版发行时间？",options:[{key:"A",text:"2018年"},{key:"B",text:"2019年"},{key:"C",text:"2020年"},{key:"D",text:"2021年"}],answer:"C",explanation:"2020年发行。"},
+{id:"020",category:"基本信息",question:"林俊杰的星座是？",options:[{key:"A",text:"白羊座"},{key:"B",text:"金牛座"},{key:"C",text:"牡羊座"},{key:"D",text:"双子座"}],answer:"C",explanation:"3月28日是牡羊座。"},
+{id:"021",category:"专辑",question:"《曹操》专辑发行于哪一年？",options:[{key:"A",text:"2005年"},{key:"B",text:"2006年"},{key:"C",text:"2007年"},{key:"D",text:"2008年"}],answer:"B",explanation:"《曹操》是林俊杰2006年发行的第四张专辑。"},
+{id:"022",category:"专辑",question:"《编号89757》专辑名称的灵感来源于？",options:[{key:"A",text:"电话号码"},{key:"B",text:"机器人编号"},{key:"C",text:"房间号"},{key:"D",text:"日期"}],answer:"B",explanation:"《编号89757》概念来自机器人，89757是机器人编号。"},
+{id:"023",category:"专辑",question:"《西界》专辑发行于哪一年？",options:[{key:"A",text:"2006年"},{key:"B",text:"2007年"},{key:"C",text:"2008年"},{key:"D",text:"2009年"}],answer:"B",explanation:"《西界》是林俊杰2007年发行的专辑。"},
+{id:"024",category:"专辑",question:"《100天》专辑发行于哪一年？",options:[{key:"A",text:"2008年"},{key:"B",text:"2009年"},{key:"C",text:"2010年"},{key:"D",text:"2011年"}],answer:"B",explanation:"《100天》是林俊杰2009年发行的专辑。"},
+{id:"025",category:"歌曲",question:"《一千年以后》所属专辑是？",options:[{key:"A",text:"乐行者"},{key:"B",text:"编号89757"},{key:"C",text:"曹操"},{key:"D",text:"第二天堂"}],answer:"B",explanation:"《一千年以后》收录于专辑《编号89757》。"},
+{id:"026",category:"歌曲",question:"《醉赤壁》是哪部电视剧的主题曲？",options:[{key:"A",text:"三国"},{key:"B",text:"赤壁"},{key:"C",text:"赤壁（游戏）"},{key:"D",text:"三国演义"}],answer:"C",explanation:"《醉赤壁》是网络游戏《赤壁》的主题曲。"},
+{id:"027",category:"歌曲",question:"《小酒窝》是与哪位女歌手合唱的？",options:[{key:"A",text:"蔡卓妍"},{key:"B",text:"邓紫棋"},{key:"C",text:"张韶涵"},{key:"D",text:"梁静茹"}],answer:"A",explanation:"《小酒窝》是林俊杰与蔡卓妍（阿Sa）合唱的歌曲。"},
+{id:"028",category:"歌曲",question:"《修炼爱情》发行于哪一年？",options:[{key:"A",text:"2012年"},{key:"B",text:"2013年"},{key:"C",text:"2014年"},{key:"D",text:"2015年"}],answer:"C",explanation:"《修炼爱情》于2014年发行，收录于《新地球》。"},
+{id:"029",category:"歌曲",question:"《可惜没如果》发行于哪一年？",options:[{key:"A",text:"2014年"},{key:"B",text:"2015年"},{key:"C",text:"2016年"},{key:"D",text:"2017年"}],answer:"C",explanation:"《可惜没如果》于2016年发行。"},
+{id:"030",category:"歌曲",question:"《伟大的渺小》专辑的同名主打歌发行年份？",options:[{key:"A",text:"2016年"},{key:"B",text:"2017年"},{key:"C",text:"2018年"},{key:"D",text:"2019年"}],answer:"B",explanation:"《伟大的渺小》专辑同名主打歌于2017年发行。"},
+{id:"031",category:"歌曲",question:"《交换余生》发行于哪一年？",options:[{key:"A",text:"2019年"},{key:"B",text:"2020年"},{key:"C",text:"2021年"},{key:"D",text:"2022年"}],answer:"B",explanation:"《交换余生》于2020年发行。"},
+{id:"032",category:"基本信息",question:"林俊杰的身高是多少？",options:[{key:"A",text:"170cm"},{key:"B",text:"172cm"},{key:"C",text:"175cm"},{key:"D",text:"178cm"}],answer:"B",explanation:"林俊杰身高约172cm。"},
+{id:"033",category:"基本信息",question:"林俊杰的粉丝称呼是什么？",options:[{key:"A",text:"JM"},{key:"B",text:"JJF"},{key:"C",text:"音符"},{key:"D",text:"俊杰粉"}],answer:"A",explanation:"林俊杰的粉丝被称为JM（JJ的粉丝）。"},
+{id:"034",category:"基本信息",question:"林俊杰有一个什么称号？",options:[{key:"A",text:"音乐天才"},{key:"B",text:"行走的CD"},{key:"C",text:"情歌王子"},{key:"D",text:"华语天王"}],answer:"B",explanation:"林俊杰因唱功出色被称为'行走的CD'。"},
+{id:"035",category:"基本信息",question:"林俊杰的经纪公司是？",options:[{key:"A",text:"华纳音乐"},{key:"B",text:"海蝶音乐"},{key:"C",text:"索尼音乐"},{key:"D",text:"滚石唱片"}],answer:"B",explanation:"林俊杰早期签约海蝶音乐。"},
+{id:"036",category:"演唱会",question:"《时线》世界巡回演唱会的开场城市是？",options:[{key:"A",text:"北京"},{key:"B",text:"台北"},{key:"C",text:"新加坡"},{key:"D",text:"上海"}],answer:"B",explanation:"《时线》世界巡回演唱会2013年在台北小巨蛋开场。"},
+{id:"037",category:"演唱会",question:"《圣所》世界巡回演唱会是哪一年开始的？",options:[{key:"A",text:"2017年"},{key:"B",text:"2018年"},{key:"C",text:"2019年"},{key:"D",text:"2020年"}],answer:"B",explanation:"《圣所》世界巡回演唱会于2018年开始。"},
+{id:"038",category:"演唱会",question:"林俊杰首次在台北小巨蛋开演唱会是哪一年？",options:[{key:"A",text:"2006年"},{key:"B",text:"2007年"},{key:"C",text:"2008年"},{key:"D",text:"2009年"}],answer:"A",explanation:"林俊杰2006年首次在台北小巨蛋开演唱会。"},
+{id:"039",category:"综艺节目",question:"林俊杰参加过《奔跑吧》吗？",options:[{key:"A",text:"参加过"},{key:"B",text:"没参加过"},{key:"C",text:"担任过常驻嘉宾"},{key:"D",text:"担任过主持人"}],answer:"A",explanation:"林俊杰参加过《奔跑吧》节目录制。"},
+{id:"040",category:"综艺节目",question:"林俊杰在《我是歌手》中是以什么身份参加的？",options:[{key:"A",text:"补位歌手"},{key:"B",text:"首发歌手"},{key:"C",text:"踢馆歌手"},{key:"D",text:"助阵嘉宾"}],answer:"B",explanation:"林俊杰在《我是歌手》第三季作为首发歌手参加。"},
+{id:"041",category:"综艺节目",question:"林俊杰参加过《向往的生活》吗？",options:[{key:"A",text:"参加过"},{key:"B",text:"没参加过"},{key:"C",text:"担任过主持人"},{key:"D",text:"担任过固定嘉宾"}],answer:"A",explanation:"林俊杰参加过《向往的生活》节目录制。"},
+{id:"042",category:"奖项",question:"林俊杰获得过几次金曲奖最佳国语男歌手奖？",options:[{key:"A",text:"1次"},{key:"B",text:"2次"},{key:"C",text:"3次"},{key:"D",text:"4次"}],answer:"B",explanation:"林俊杰获得过2次金曲奖最佳国语男歌手奖（2014年、2016年）。"},
+{id:"043",category:"奖项",question:"林俊杰2014年获得金曲奖最佳国语男歌手是凭借哪张专辑？",options:[{key:"A",text:"学不会"},{key:"B",text:"因你而在"},{key:"C",text:"她说"},{key:"D",text:"新地球"}],answer:"B",explanation:"林俊杰2014年凭借《因你而在》获得金曲奖最佳国语男歌手。"},
+{id:"044",category:"奖项",question:"林俊杰获得过台湾金曲奖几次最佳作曲人奖？",options:[{key:"A",text:"1次"},{key:"B",text:"2次"},{key:"C",text:"3次"},{key:"D",text:"未获得过"}],answer:"B",explanation:"林俊杰获得过2次金曲奖最佳作曲人奖。"},
+{id:"045",category:"合作",question:"林俊杰与周杰伦有过正式合作吗？",options:[{key:"A",text:"有，合作过单曲"},{key:"B",text:"有，合作过演唱会"},{key:"C",text:"没有正式合作"},{key:"D",text:"只合作过广告"}],answer:"C",explanation:"林俊杰与周杰伦暂无正式音乐作品合作。"},
+{id:"046",category:"合作",question:"《关键词》这首歌曲的作曲是谁？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"方文山"},{key:"C",text:"周杰伦"},{key:"D",text:"林夕"}],answer:"A",explanation:"《关键词》由林俊杰作曲，收录在《新地球》专辑。"},
+{id:"047",category:"合作",question:"林俊杰与韩红合作的歌曲是？",options:[{key:"A",text:"飞云之下"},{key:"B",text:"天亮了"},{key:"C",text:"美丽的神话"},{key:"D",text:"凤凰于飞"}],answer:"A",explanation:"《飞云之下》是林俊杰与韩红合作的歌曲。"},
+{id:"048",category:"影视",question:"林俊杰为哪部电影演唱了主题曲《记得》？",options:[{key:"A",text:"那些年"},{key:"B",text:"我的少女时代"},{key:"C",text:"101次求婚"},{key:"D",text:"小时代"}],answer:"C",explanation:"《记得》是电影《101次求婚》的主题曲。"},
+{id:"049",category:"影视",question:"《醉赤壁》的创作灵感来自？",options:[{key:"A",text:"三国演义小说"},{key:"B",text:"电影赤壁"},{key:"C",text:"游戏赤壁"},{key:"D",text:"历史记载"}],answer:"C",explanation:"《醉赤壁》是为网络游戏《赤壁》创作的主题曲。"},
+{id:"050",category:"基本信息",question:"林俊杰家中排行第几？",options:[{key:"A",text:"老大"},{key:"B",text:"老二"},{key:"C",text:"老三"},{key:"D",text:"独生子"}],answer:"B",explanation:"林俊杰家中排行老二，有一个哥哥。"}
+];
+
+var state={quiz:[],idx:0,answered:false,mode:'quick',correctCount:0,startTime:0,timer:null};
+
+var DB={
+    KEY:'jj_quiz_v2',
+    get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+    defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
+    save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+    addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;var q=DB.findQ(rec.qid);if(q){if(!d.stats.cats[q.category])d.stats.cats[q.category]={t:0,c:0};d.stats.cats[q.category].t++;if(rec.ok)d.stats.cats[q.category].c++;}DB.save(d);},
+    addWrong:function(qid){var d=DB.get();var f=null;for(var i=0;i<d.wrong.length;i++){if(d.wrong[i].qid===qid){f=d.wrong[i];break;}}if(f){f.cnt++;f.time=Date.now();}else{d.wrong.push({qid:qid,cnt:1,time:Date.now()});}DB.save(d);},
+    removeWrong:function(qid){var d=DB.get();d.wrong=d.wrong.filter(function(w){return w.qid!==qid;});DB.save(d);},
+    getWrong:function(){return DB.get().wrong;},
+    findQ:function(qid){for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].id===qid)return QUESTION_BANK[i];}return null;}
+};
+
+var VIEW_NAMES={home:'首页',practice:'练习',wrongbook:'错题本',stats:'统计',admin:'管理'};
+
+function switchView(v){
+    var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+    var el=document.getElementById('view-'+v);if(el)el.classList.add('active');
+    var navs=document.querySelectorAll('.nav-item');for(var j=0;j<navs.length;j++){navs[j].classList.remove('active');if(navs[j].textContent===VIEW_NAMES[v])navs[j].classList.add('active');}
+    if(v==='home')updateHome();
+    if(v==='wrongbook')renderWrongBook();
+    if(v==='stats')renderStats();
+    if(v==='admin')renderAdmin();
+    // 练习视图：没有答题或已完成时显示提示
+    if(v==='practice'){
+        if(state.quiz.length === 0 || state.idx >= state.quiz.length){
+            state.quiz = [];
+            state.idx = 0;
+            stopTimer();
+            document.getElementById('quizArea').innerHTML = '<div class="card" style="text-align:center;padding:60px 20px;"><div style="font-size:48px;margin-bottom:16px;">📝</div><h3 style="margin-bottom:12px;">请先开始答题</h3><p style="color:var(--text2);margin-bottom:20px;">点击下方按钮开始练习</p><button class="btn" style="max-width:200px;margin:0 auto;" onclick="switchView(\'home\')">去首页开始</button></div>';
+        }
+    }
+}
+
+function selectMode(m){state.mode=m;var btns=document.querySelectorAll('.mode-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');var t=document.querySelector('.mode-btn[data-mode="'+m+'"]');if(t)t.classList.add('active');}
+function getCount(){var m={quick:10,standard:20,intensive:30};return m[state.mode]||10;}
+
+function startTimer(){state.startTime=Date.now();if(state.timer)clearInterval(state.timer);state.timer=setInterval(tickTimer,1000);}
+function stopTimer(){if(state.timer){clearInterval(state.timer);state.timer=null;}}
+function tickTimer(){var sec=Math.floor((Date.now()-state.startTime)/1000);var m=Math.floor(sec/60);var s=sec%60;var el=document.getElementById('timerVal');if(el)el.textContent=m+':'+(s<10?'0':'')+s;}
+function fmtTime(ms){var sec=Math.floor(ms/1000);var m=Math.floor(sec/60);var s=sec%60;return m+'分'+s+'秒';}
+
+function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+function showCategoryView(){var cats={};for(var i=0;i<QUESTION_BANK.length;i++){var c=QUESTION_BANK[i].category;cats[c]=(cats[c]||0)+1;}var html='';for(var name in cats){html+='<div class="category-item" onclick="startCatQuiz(\''+name+'\')"><span class="category-name">'+name+'</span><span class="category-count">'+cats[name]+'题</span></div>';}document.getElementById('categoryList').innerHTML=html;switchView('category');}
+function startCatQuiz(cat){var f=[];for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].category===cat)f.push(QUESTION_BANK[i]);}state.quiz=shuffle(f).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+function startWrongBookQuiz(){var wl=DB.getWrong();var qs=[];for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(q)qs.push(q);}if(qs.length===0)return;state.quiz=shuffle(qs);state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+
+function renderQ(){
+    if(state.idx>=state.quiz.length){finishQuiz();return;}
+    var q=state.quiz[state.idx];var pct=Math.round(state.idx/state.quiz.length*100);
+    var sec=Math.floor((Date.now()-state.startTime)/1000);var tm=Math.floor(sec/60);var ts=sec%60;
+    var html='<div class="progress-wrap"><div class="progress-header"><span class="progress-text">'+(state.idx+1)+' / '+state.quiz.length+'</span><span class="timer-badge">⏱ <span id="timerVal">'+tm+':'+(ts<10?'0':'')+ts+'</span></span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:'+pct+'%"></div></div></div>';
+    html+='<div class="question-card"><div class="question-text">'+q.question+'</div>';
+    for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><span>'+o.text+'</span></div>';}
+    html+='<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
+    html+='<div class="bottom-bar"><button class="btn" id="nextBtn" onclick="nextQ()" style="display:none;">下一题</button><button class="btn btn-outline" onclick="quitQuiz()">返回首页</button></div>';
+    document.getElementById('quizArea').innerHTML=html;state.answered=false;
+}
+
+function pickOption(key){
+    if(state.answered)return;state.answered=true;
+    var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+    DB.addRecord({qid:q.id,ans:key,ok:ok,time:Date.now()});if(!ok)DB.addWrong(q.id);
+    for(var i=0;i<q.options.length;i++){var el=document.getElementById('opt-'+q.options[i].key);el.classList.add('disabled');if(q.options[i].key===q.answer)el.classList.add('correct');else if(q.options[i].key===key&&!ok)el.classList.add('wrong');}
+    var fb=document.getElementById('fb');fb.className='feedback show '+(ok?'correct':'wrong');
+    document.getElementById('fbTitle').textContent=ok?'✓ 回答正确！':'✗ 回答错误';
+    document.getElementById('fbDesc').textContent=q.explanation;
+    document.getElementById('nextBtn').style.display='inline-block';
+}
+
+function nextQ(){state.idx++;renderQ();}
+function quitQuiz(){stopTimer();switchView('home');}
+
+function finishQuiz(){
+    stopTimer();var elapsed=Date.now()-state.startTime;var total=state.quiz.length;var correct=state.correctCount;var wrong=total-correct;var pct=total>0?Math.round(correct/total*100):0;
+    var html='<div class="card finish-card"><div class="finish-icon">🎉</div><h2>答题完成！</h2><div class="finish-stats"><div class="finish-stat"><div class="val green">'+correct+'</div><div class="lbl">正确</div></div><div class="finish-stat"><div class="val red">'+wrong+'</div><div class="lbl">错误</div></div><div class="finish-stat"><div class="val">'+pct+'%</div><div class="lbl">正确率</div></div><div class="finish-stat"><div class="val">'+fmtTime(elapsed)+'</div><div class="lbl">用时</div></div></div><button class="btn" onclick="switchView(\'home\')">返回首页</button></div>';
+    document.getElementById('quizArea').innerHTML=html;
+}
+
+function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(function(h){return h.time>=today;});document.getElementById('todayCount').textContent=th.length;var acc=th.length>0?Math.round(th.filter(function(h){return h.ok;}).length/th.length*100):0;document.getElementById('todayAcc').textContent=acc+'%';}
+
+function renderWrongBook(){
+    var wl=DB.getWrong();var el=document.getElementById('wrongBookList');var btn=document.getElementById('wrongBookBtn');
+    if(wl.length===0){el.innerHTML='<div class="empty"><p>暂无错题记录</p><p style="font-size:13px;margin-top:8px;">答错的题目会自动加入这里</p></div>';btn.style.display='none';return;}
+    var html='<div class="error-list">';for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(!q)continue;html+='<div class="error-item"><div class="q">'+q.question+'</div><div class="info"><span>错误'+wl[i].cnt+'次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\''+q.id+'\')">移除</button></div></div>';}html+='</div>';
+    el.innerHTML=html;btn.style.display='block';btn.textContent='开始复习 ('+wl.length+'题)';
+}
+
+function removeWrong(qid){DB.removeWrong(qid);renderWrongBook();}
+
+function renderStats(){
+    var d=DB.get();document.getElementById('sTotal').textContent=d.stats.total;document.getElementById('sCorrect').textContent=d.stats.correct;
+    var acc=d.stats.total>0?Math.round(d.stats.correct/d.stats.total*100):0;document.getElementById('sAcc').textContent=acc+'%';document.getElementById('sWrong').textContent=d.wrong.length;
+    var catEl=document.getElementById('catStats');var cats=d.stats.cats;var keys=Object.keys(cats);
+    if(keys.length===0){catEl.innerHTML='<div class="empty"><p>暂无数据</p></div>';return;}
+    var html='';for(var i=0;i<keys.length;i++){var name=keys[i];var s=cats[name];var pct=s.t>0?Math.round(s.c/s.t*100):0;html+='<div class="cat-stat-row"><span class="cat-stat-name">'+name+'</span><div class="cat-stat-bar-wrap"><div class="cat-stat-bar-bg"><div class="cat-stat-bar" style="width:'+pct+'%"></div></div></div><span class="cat-stat-pct">'+pct+'%</span></div>';}
+    catEl.innerHTML=html;
+}
+
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ===== 管理功能 ===== */
+function renderAdmin() {
+    renderQuestionList();
+}
+
+function renderQuestionList() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var html = '';
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        var q = QUESTION_BANK[i];
+        if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
+        html += '<div class="q-item">';
+        html += '<div class="q-item-header">';
+        html += '<span class="q-item-cat">' + q.category + '</span>';
+        html += '<div class="q-item-actions">';
+        html += '<button class="btn btn-outline btn-sm" onclick="showEditForm(\'' + q.id + '\')">编辑</button>';
+        html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
+        html += '</div></div>';
+        html += '<div class="q-item-text">' + q.question + '</div>';
+        html += '<div class="q-item-answer">答案: ' + q.answer + '</div>';
+        html += '</div>';
+    }
+    document.getElementById('questionList').innerHTML = html || '<div class="empty"><p>暂无题目</p></div>';
+}
+
+function filterQuestions() {
+    renderQuestionList();
+}
+
+function showAddForm() {
+    document.getElementById('modalTitle').textContent = '新增题目';
+    document.getElementById('editId').value = '';
+    document.getElementById('editCategory').value = '专辑';
+    document.getElementById('editQuestion').value = '';
+    document.getElementById('editOptions').value = 'A.\nB.\nC.\nD.';
+    document.getElementById('editAnswer').value = 'A';
+    document.getElementById('editExplanation').value = '';
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function showEditForm(qid) {
+    var q = null;
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        if (QUESTION_BANK[i].id === qid) { q = QUESTION_BANK[i]; break; }
+    }
+    if (!q) return;
+    document.getElementById('modalTitle').textContent = '编辑题目';
+    document.getElementById('editId').value = q.id;
+    document.getElementById('editCategory').value = q.category;
+    document.getElementById('editQuestion').value = q.question;
+    var opts = '';
+    for (var j = 0; j < q.options.length; j++) {
+        opts += q.options[j].key + '.' + q.options[j].text + '\n';
+    }
+    document.getElementById('editOptions').value = opts.trim();
+    document.getElementById('editAnswer').value = q.answer;
+    document.getElementById('editExplanation').value = q.explanation;
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function saveQuestion() {
+    var id = document.getElementById('editId').value;
+    var category = document.getElementById('editCategory').value;
+    var question = document.getElementById('editQuestion').value.trim();
+    var optsText = document.getElementById('editOptions').value.trim();
+    var answer = document.getElementById('editAnswer').value;
+    var explanation = document.getElementById('editExplanation').value.trim();
+
+    if (!question || !optsText) {
+        alert('请填写题目和选项');
+        return;
+    }
+
+    // 解析选项
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+
+    if (options.length < 2) {
+        alert('请至少输入两个选项，格式：A.选项内容');
+        return;
+    }
+
+    if (!id) {
+        // 新增
+        var newId = 'q' + Date.now();
+        QUESTION_BANK.push({
+            id: newId,
+            category: category,
+            question: question,
+            options: options,
+            answer: answer,
+            explanation: explanation
+        });
+    } else {
+        // 编辑
+        for (var j = 0; j < QUESTION_BANK.length; j++) {
+            if (QUESTION_BANK[j].id === id) {
+                QUESTION_BANK[j].category = category;
+                QUESTION_BANK[j].question = question;
+                QUESTION_BANK[j].options = options;
+                QUESTION_BANK[j].answer = answer;
+                QUESTION_BANK[j].explanation = explanation;
+                break;
+            }
+        }
+    }
+
+    saveQuestionBank();
+    closeModal();
+    renderQuestionList();
+}
+
+function deleteQuestion(qid) {
+    if (!confirm('确定删除此题目？')) return;
+    QUESTION_BANK = QUESTION_BANK.filter(function(q) { return q.id !== qid; });
+    saveQuestionBank();
+    renderQuestionList();
+}
+
+function saveQuestionBank() {
+    localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
+}
+
+function loadQuestionBank() {
+    var saved = localStorage.getItem('jj_question_bank');
+    if (saved) {
+        try {
+            QUESTION_BANK = JSON.parse(saved);
+        } catch (e) {}
+    }
+}
+
+/* ===== 数据导出导入 ===== */
+function exportData() {
+    var data = {
+        questionBank: QUESTION_BANK,
+        userData: DB.get(),
+        exportTime: new Date().toISOString()
+    };
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'jj_quiz_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('数据已导出！');
+}
+
+function importData(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var data = JSON.parse(e.target.result);
+            if (data.questionBank) {
+                QUESTION_BANK = data.questionBank;
+                saveQuestionBank();
+            }
+            if (data.userData) {
+                localStorage.setItem(DB.KEY, JSON.stringify(data.userData));
+            }
+            alert('数据导入成功！');
+            updateHome();
+            renderQuestionList();
+        } catch (err) {
+            alert('导入失败：文件格式不正确');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
+</script>
+</body>
+</html>
