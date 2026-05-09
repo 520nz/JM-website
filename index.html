@@ -317,8 +317,11 @@
                     <h3>题库管理</h3>
                     <button class="btn btn-sm" onclick="showAddForm()">+ 新增题目</button>
                 </div>
-                <div style="margin-bottom:12px;">
-                    <input type="text" id="searchInput" placeholder="搜索题目..." style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;" oninput="filterQuestions()">
+                <div style="margin-bottom:12px;display:flex;gap:10px;">
+                    <select id="categoryFilter" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);min-width:100px;" onchange="filterQuestions()">
+                        <option value="">全部类别</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="搜索题目..." style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;" oninput="filterQuestions()">
                 </div>
                 <div id="questionList" style="max-height:400px;overflow-y:auto;"></div>
             </div>
@@ -331,14 +334,6 @@
                 <div style="margin-bottom:12px;">
                     <label style="display:block;font-size:13px;color:var(--text2);margin-bottom:4px;">分类</label>
                     <select id="editCategory" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;">
-                        <option value="专辑">专辑</option>
-                        <option value="歌曲">歌曲</option>
-                        <option value="基本信息">基本信息</option>
-                        <option value="演唱会">演唱会</option>
-                        <option value="综艺">综艺</option>
-                        <option value="奖项">奖项</option>
-                        <option value="合作">合作</option>
-                        <option value="影视">影视</option>
                     </select>
                 </div>
                 <div style="margin-bottom:12px;">
@@ -588,14 +583,47 @@ function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math
 
 /* ===== 管理功能 ===== */
 function renderAdmin() {
+    updateCategoryFilter();
+    updateEditCategoryOptions();
     renderQuestionList();
+}
+
+function updateCategoryFilter() {
+    var cats = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        cats[QUESTION_BANK[i].category] = true;
+    }
+    var sel = document.getElementById('categoryFilter');
+    var cur = sel.value;
+    var opts = '<option value="">全部类别</option>';
+    var keys = Object.keys(cats).sort();
+    for (var j = 0; j < keys.length; j++) {
+        opts += '<option value="' + keys[j] + '"' + (keys[j] === cur ? ' selected' : '') + '>' + keys[j] + '</option>';
+    }
+    sel.innerHTML = opts;
+}
+
+function updateEditCategoryOptions() {
+    var cats = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        cats[QUESTION_BANK[i].category] = true;
+    }
+    var sel = document.getElementById('editCategory');
+    var keys = Object.keys(cats).sort();
+    var opts = '';
+    for (var j = 0; j < keys.length; j++) {
+        opts += '<option value="' + keys[j] + '">' + keys[j] + '</option>';
+    }
+    sel.innerHTML = opts;
 }
 
 function renderQuestionList() {
     var search = document.getElementById('searchInput').value.toLowerCase();
+    var catFilter = document.getElementById('categoryFilter').value;
     var html = '';
     for (var i = 0; i < QUESTION_BANK.length; i++) {
         var q = QUESTION_BANK[i];
+        if (catFilter && q.category !== catFilter) continue;
         if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
         html += '<div class="q-item">';
         html += '<div class="q-item-header">';
