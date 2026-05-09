@@ -1,0 +1,436 @@
+var passCount = 0;
+var failCount = 0;
+var testResults = [];
+
+function test(name, fn) {
+    var result = { name: name, passed: false, error: null };
+    try {
+        fn();
+        result.passed = true;
+        passCount++;
+        console.log('\x1b[32m✓\x1b[0m ' + name);
+    } catch (e) {
+        result.error = e.message;
+        failCount++;
+        console.log('\x1b[31m✗\x1b[0m ' + name);
+        console.log('  \x1b[31m错误: ' + e.message + '\x1b[0m');
+    }
+    testResults.push(result);
+}
+
+function assertEqual(actual, expected, message) {
+    if (actual !== expected) {
+        throw new Error((message || '') + ' 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual));
+    }
+}
+
+function assertDeepEqual(actual, expected, message) {
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error((message || '') + ' 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual));
+    }
+}
+
+function assertTrue(condition, message) {
+    if (!condition) {
+        throw new Error(message || '断言失败: 期望 true');
+    }
+}
+
+function assertFalse(condition, message) {
+    if (condition) {
+        throw new Error(message || '断言失败: 期望 false');
+    }
+}
+
+var QUESTION_BANK = [
+    {id:"001",category:"专辑",question:"测试题目1",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"},{key:"C",text:"选项C"},{key:"D",text:"选项D"}],answer:"B",explanation:"解析1"},
+    {id:"002",category:"歌曲",question:"测试题目2",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"},{key:"C",text:"选项C"},{key:"D",text:"选项D"}],answer:"A",explanation:"解析2"},
+    {id:"003",category:"个人信息",question:"测试题目3",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"}],answer:"A",explanation:"解析3"}
+];
+
+function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    return a;
+}
+
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+    return options;
+}
+
+function calculateAccuracy(correct, total) {
+    if (total === 0) return 0;
+    return Math.round(correct / total * 100);
+}
+
+function validateQuestionData(data) {
+    if (!data || typeof data !== 'object') return false;
+    if (!data.id || typeof data.id !== 'string') return false;
+    if (!data.question || typeof data.question !== 'string') return false;
+    if (!Array.isArray(data.options) || data.options.length < 2) return false;
+    if (!data.answer || typeof data.answer !== 'string') return false;
+    return true;
+}
+
+function mergeStats(existing, newRecord) {
+    existing.total++;
+    if (newRecord.ok) existing.correct++;
+    return existing;
+}
+
+function filterQuestionsByCategory(bank, category) {
+    return bank.filter(function(q) { return q.category === category; });
+}
+
+function filterQuestionsBySearch(bank, searchTerm) {
+    var term = searchTerm.toLowerCase();
+    return bank.filter(function(q) { return q.question.toLowerCase().indexOf(term) !== -1; });
+}
+
+function formatTime(ms) {
+    var sec = Math.floor(ms / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + '分' + s + '秒';
+}
+
+console.log('\n🧪 测试套件 - 林俊杰粉丝答题\n');
+console.log('='.repeat(60));
+
+var startTime = Date.now();
+
+// ===== shuffle 函数测试 =====
+console.log('\n🔀 shuffle 函数测试\n');
+
+test('shuffle 返回数组长度与原数组相同', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    assertEqual(shuffled.length, arr.length);
+});
+
+test('shuffle 不修改原数组', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var original = arr.slice();
+    shuffle(arr);
+    assertDeepEqual(arr, original);
+});
+
+test('shuffle 返回包含所有原元素的新数组', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    var sorted1 = arr.slice().sort();
+    var sorted2 = shuffled.slice().sort();
+    assertDeepEqual(sorted1, sorted2);
+});
+
+test('shuffle 处理空数组', function() {
+    var arr = [];
+    var shuffled = shuffle(arr);
+    assertEqual(shuffled.length, 0);
+});
+
+test('shuffle 处理单元素数组', function() {
+    var arr = [1];
+    var shuffled = shuffle(arr);
+    assertDeepEqual(shuffled, [1]);
+});
+
+test('shuffle 随机性验证（多次洗牌结果不完全相同）', function() {
+    var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    var results = {};
+    var sameCount = 0;
+    for (var i = 0; i < 10; i++) {
+        var shuffled = shuffle(arr);
+        var key = shuffled.join(',');
+        if (results[key]) sameCount++;
+        results[key] = true;
+    }
+    assertTrue(sameCount < 5, '洗牌结果应该具有随机性');
+});
+
+// ===== 选项解析逻辑测试 =====
+console.log('\n📝 选项解析逻辑测试\n');
+
+test('parseOptions 正确解析标准格式选项', function() {
+    var text = 'A.选项一\nB.选项二\nC.选项三\nD.选项四';
+    var options = parseOptions(text);
+    assertEqual(options.length, 4);
+    assertEqual(options[0].key, 'A');
+    assertEqual(options[0].text, '选项一');
+    assertEqual(options[3].key, 'D');
+    assertEqual(options[3].text, '选项四');
+});
+
+test('parseOptions 支持中文顿号分隔符', function() {
+    var text = 'A、选项一\nB、选项二';
+    var options = parseOptions(text);
+    assertEqual(options.length, 2);
+    assertEqual(options[0].text, '选项一');
+});
+
+test('parseOptions 支持全角点号分隔符', function() {
+    var text = 'A．选项一\nB．选项二';
+    var options = parseOptions(text);
+    assertEqual(options.length, 2);
+    assertEqual(options[0].text, '选项一');
+});
+
+test('parseOptions 忽略空行', function() {
+    var text = 'A.选项一\n\n\nB.选项二\n';
+    var options = parseOptions(text);
+    assertEqual(options.length, 2);
+});
+
+test('parseOptions 忽略行首行尾空格', function() {
+    var text = '  A. 选项一  \n  B. 选项二  ';
+    var options = parseOptions(text);
+    assertEqual(options.length, 2);
+    assertEqual(options[0].text, '选项一');
+});
+
+test('parseOptions 忽略无效格式行', function() {
+    var text = 'A.选项一\n无效行\nB.选项二\n123\nC.选项三';
+    var options = parseOptions(text);
+    assertEqual(options.length, 3);
+});
+
+test('parseOptions 处理空字符串', function() {
+    var options = parseOptions('');
+    assertEqual(options.length, 0);
+});
+
+test('parseOptions 处理只有空行的字符串', function() {
+    var options = parseOptions('\n\n\n');
+    assertEqual(options.length, 0);
+});
+
+test('parseOptions 正确处理选项文本中的点号', function() {
+    var text = 'A.这是选项.包含点号\nB.这是选项.也包含.';
+    var options = parseOptions(text);
+    assertEqual(options.length, 2);
+    assertEqual(options[0].text, '这是选项.包含点号');
+});
+
+// ===== 统计计算测试 =====
+console.log('\n📊 统计计算测试\n');
+
+test('calculateAccuracy 正确计算正确率', function() {
+    assertEqual(calculateAccuracy(8, 10), 80);
+    assertEqual(calculateAccuracy(5, 10), 50);
+    assertEqual(calculateAccuracy(0, 10), 0);
+    assertEqual(calculateAccuracy(10, 10), 100);
+});
+
+test('calculateAccuracy 处理总数为零的情况', function() {
+    assertEqual(calculateAccuracy(0, 0), 0);
+});
+
+test('calculateAccuracy 四舍五入到整数', function() {
+    assertEqual(calculateAccuracy(1, 3), 33);
+    assertEqual(calculateAccuracy(2, 3), 67);
+});
+
+test('mergeStats 正确合并统计数据', function() {
+    var existing = { total: 10, correct: 5 };
+    var newRecord = { ok: true };
+    var result = mergeStats(existing, newRecord);
+    assertEqual(result.total, 11);
+    assertEqual(result.correct, 6);
+});
+
+test('mergeStats 正确处理错误答案', function() {
+    var existing = { total: 10, correct: 5 };
+    var newRecord = { ok: false };
+    var result = mergeStats(existing, newRecord);
+    assertEqual(result.total, 11);
+    assertEqual(result.correct, 5);
+});
+
+// ===== 数据验证测试 =====
+console.log('\n✅ 数据验证测试\n');
+
+test('validateQuestionData 验证有效题目数据', function() {
+    var validData = {
+        id: 'test001',
+        question: '测试题目',
+        options: [{ key: 'A', text: '选项A' }, { key: 'B', text: '选项B' }],
+        answer: 'A'
+    };
+    assertTrue(validateQuestionData(validData));
+});
+
+test('validateQuestionData 拒绝空对象', function() {
+    assertFalse(validateQuestionData({}));
+});
+
+test('validateQuestionData 拒绝 null', function() {
+    assertFalse(validateQuestionData(null));
+});
+
+test('validateQuestionData 拒绝 undefined', function() {
+    assertFalse(validateQuestionData(undefined));
+});
+
+test('validateQuestionData 拒绝非对象类型', function() {
+    assertFalse(validateQuestionData('string'));
+    assertFalse(validateQuestionData(123));
+    assertFalse(validateQuestionData([]));
+});
+
+test('validateQuestionData 拒绝缺少 id', function() {
+    var data = {
+        question: '测试题目',
+        options: [{ key: 'A', text: '选项A' }],
+        answer: 'A'
+    };
+    assertFalse(validateQuestionData(data));
+});
+
+test('validateQuestionData 拒绝空问题', function() {
+    var data = {
+        id: 'test001',
+        question: '',
+        options: [{ key: 'A', text: '选项A' }],
+        answer: 'A'
+    };
+    assertFalse(validateQuestionData(data));
+});
+
+test('validateQuestionData 拒绝选项少于2个', function() {
+    var data = {
+        id: 'test001',
+        question: '测试题目',
+        options: [{ key: 'A', text: '选项A' }],
+        answer: 'A'
+    };
+    assertFalse(validateQuestionData(data));
+});
+
+test('validateQuestionData 拒绝空选项数组', function() {
+    var data = {
+        id: 'test001',
+        question: '测试题目',
+        options: [],
+        answer: 'A'
+    };
+    assertFalse(validateQuestionData(data));
+});
+
+test('validateQuestionData 拒绝缺少答案', function() {
+    var data = {
+        id: 'test001',
+        question: '测试题目',
+        options: [{ key: 'A', text: '选项A' }, { key: 'B', text: '选项B' }]
+    };
+    assertFalse(validateQuestionData(data));
+});
+
+// ===== 题目筛选测试 =====
+console.log('\n🔍 题目筛选测试\n');
+
+test('filterQuestionsByCategory 正确筛选分类', function() {
+    var result = filterQuestionsByCategory(QUESTION_BANK, '专辑');
+    assertEqual(result.length, 1);
+    assertEqual(result[0].id, '001');
+});
+
+test('filterQuestionsByCategory 返回空数组当分类不存在', function() {
+    var result = filterQuestionsByCategory(QUESTION_BANK, '不存在的分类');
+    assertEqual(result.length, 0);
+});
+
+test('filterQuestionsBySearch 正确搜索题目', function() {
+    var result = filterQuestionsBySearch(QUESTION_BANK, '测试');
+    assertEqual(result.length, 3);
+});
+
+test('filterQuestionsBySearch 搜索不区分大小写', function() {
+    var result = filterQuestionsBySearch(QUESTION_BANK, '测试');
+    var result2 = filterQuestionsBySearch(QUESTION_BANK, 'TEST');
+    assertEqual(result.length, 3);
+    assertEqual(result2.length, 0);
+});
+
+test('filterQuestionsBySearch 返回空数组当搜索词不存在', function() {
+    var result = filterQuestionsBySearch(QUESTION_BANK, '不存在的关键词xyz');
+    assertEqual(result.length, 0);
+});
+
+test('filterQuestionsBySearch 处理空搜索词', function() {
+    var result = filterQuestionsBySearch(QUESTION_BANK, '');
+    assertEqual(result.length, 3);
+});
+
+// ===== 时间格式化测试 =====
+console.log('\n⏱️ 时间格式化测试\n');
+
+test('formatTime 正确格式化秒数', function() {
+    assertEqual(formatTime(30000), '0分30秒');
+    assertEqual(formatTime(60000), '1分0秒');
+    assertEqual(formatTime(90000), '1分30秒');
+    assertEqual(formatTime(3600000), '60分0秒');
+});
+
+test('formatTime 处理零毫秒', function() {
+    assertEqual(formatTime(0), '0分0秒');
+});
+
+test('formatTime 处理不足一秒的毫秒数', function() {
+    assertEqual(formatTime(500), '0分0秒');
+});
+
+// ===== 边界条件测试 =====
+console.log('\n⚠️ 边界条件测试\n');
+
+test('shuffle 处理大数组', function() {
+    var largeArr = [];
+    for (var i = 0; i < 1000; i++) largeArr.push(i);
+    var shuffled = shuffle(largeArr);
+    assertEqual(shuffled.length, 1000);
+});
+
+test('parseOptions 处理大量选项', function() {
+    var text = '';
+    for (var i = 0; i < 100; i++) {
+        text += 'A.选项' + i + '\n';
+    }
+    var options = parseOptions(text);
+    assertEqual(options.length, 100);
+});
+
+test('calculateAccuracy 处理大数值', function() {
+    var result = calculateAccuracy(999999, 1000000);
+    assertEqual(result, 100);
+});
+
+// 显示测试总结
+var elapsed = Date.now() - startTime;
+console.log('\n' + '='.repeat(60));
+console.log('\n📋 测试总结\n');
+console.log('  \x1b[32m通过: ' + passCount + '\x1b[0m');
+console.log('  \x1b[31m失败: ' + failCount + '\x1b[0m');
+console.log('  耗时: ' + formatTime(elapsed));
+console.log('');
+
+if (failCount === 0) {
+    console.log('\x1b[32m✓ 所有测试通过！\x1b[0m\n');
+    process.exit(0);
+} else {
+    console.log('\x1b[31m✗ 有 ' + failCount + ' 个测试失败\x1b[0m\n');
+    process.exit(1);
+}
