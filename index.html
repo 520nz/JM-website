@@ -745,16 +745,27 @@ function deleteQuestion(qid) {
     renderQuestionList();
 }
 
+var QUESTION_BANK_VERSION = '2025-05-09-v2';
+
 function saveQuestionBank() {
     localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
+    localStorage.setItem('jj_question_bank_version', QUESTION_BANK_VERSION);
 }
 
 function loadQuestionBank() {
+    var savedVersion = localStorage.getItem('jj_question_bank_version');
+    if (savedVersion !== QUESTION_BANK_VERSION) {
+        localStorage.removeItem('jj_question_bank');
+        localStorage.removeItem('jj_question_bank_version');
+        return;
+    }
     var saved = localStorage.getItem('jj_question_bank');
     if (saved) {
         try {
             QUESTION_BANK = JSON.parse(saved);
-        } catch (e) {}
+        } catch (e) {
+            localStorage.removeItem('jj_question_bank');
+        }
     }
 }
 
