@@ -781,21 +781,27 @@ function importData(event) {
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function(e) {
+        var data;
         try {
-            var data = JSON.parse(e.target.result);
-            if (data.questionBank) {
-                QUESTION_BANK = data.questionBank;
-                saveQuestionBank();
-            }
-            if (data.userData) {
-                localStorage.setItem(DB.KEY, JSON.stringify(data.userData));
-            }
-            alert('数据导入成功！');
-            updateHome();
-            renderQuestionList();
+            data = JSON.parse(e.target.result);
         } catch (err) {
-            alert('导入失败：文件格式不正确');
+            alert('导入失败：文件格式不正确，请确保上传有效的JSON文件');
+            return;
         }
+        if (!data.questionBank && !data.userData) {
+            alert('导入失败：文件中未找到有效数据（questionBank 或 userData）');
+            return;
+        }
+        if (data.questionBank) {
+            QUESTION_BANK = data.questionBank;
+            saveQuestionBank();
+        }
+        if (data.userData) {
+            localStorage.setItem(DB.KEY, JSON.stringify(data.userData));
+        }
+        alert('数据导入成功！');
+        try { updateHome(); } catch (e) {}
+        try { renderQuestionList(); } catch (e) {}
     };
     reader.readAsText(file);
     event.target.value = '';

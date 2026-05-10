@@ -3,7 +3,7 @@
     {
       "id": "test001",
       "category": "歌曲",
-      "question": ""无奈，没辙~"是哪首歌的歌词？",
+      "question": "\u201c无奈，没辙~\u201d是哪首歌的歌词？",
       "options": [
         { "key": "A", "text": "可惜没如果" },
         { "key": "B", "text": "修炼爱情" },
