@@ -792,14 +792,70 @@ function importData(event) {
             alert('导入失败：文件中未找到有效数据（questionBank 或 userData）');
             return;
         }
+        var addedCount = 0;
+        var updatedCount = 0;
         if (data.questionBank) {
-            QUESTION_BANK = data.questionBank;
+            var existingIds = {};
+            for (var i = 0; i < QUESTION_BANK.length; i++) {
+                existingIds[QUESTION_BANK[i].id] = true;
+            }
+            for (var j = 0; j < data.questionBank.length; j++) {
+                var q = data.questionBank[j];
+                if (existingIds[q.id]) {
+                    for (var k = 0; k < QUESTION_BANK.length; k++) {
+                        if (QUESTION_BANK[k].id === q.id) {
+                            QUESTION_BANK[k] = q;
+                            updatedCount++;
+                            break;
+                        }
+                    }
+                } else {
+                    QUESTION_BANK.push(q);
+                    addedCount++;
+                }
+            }
             saveQuestionBank();
         }
         if (data.userData) {
-            localStorage.setItem(DB.KEY, JSON.stringify(data.userData));
+            var existingData = DB.get();
+            if (data.userData.history) {
+                existingData.history = existingData.history.concat(data.userData.history);
+            }
+            if (data.userData.wrong) {
+                var wrongMap = {};
+                for (var w = 0; w < existingData.wrong.length; w++) {
+                    wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
+                }
+                for (var x = 0; x < data.userData.wrong.length; x++) {
+                    var wrongItem = data.userData.wrong[x];
+                    if (wrongMap[wrongItem.qid]) {
+                        wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+                    } else {
+                        existingData.wrong.push(wrongItem);
+                    }
+                }
+            }
+            if (data.userData.stats) {
+                if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
+                existingData.stats.total += data.userData.stats.total || 0;
+                existingData.stats.correct += data.userData.stats.correct || 0;
+                if (data.userData.stats.cats) {
+                    for (var catName in data.userData.stats.cats) {
+                        if (!existingData.stats.cats[catName]) {
+                            existingData.stats.cats[catName] = {t: 0, c: 0};
+                        }
+                        existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
+                        existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                    }
+                }
+            }
+            DB.save(existingData);
         }
-        alert('数据导入成功！');
+        var msg = '数据导入成功！';
+        if (addedCount > 0 || updatedCount > 0) {
+            msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+        }
+        alert(msg);
         try { updateHome(); } catch (e) {}
         try { renderQuestionList(); } catch (e) {}
     };
