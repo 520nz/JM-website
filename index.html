@@ -311,6 +311,10 @@
                     <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
                     <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
                 </div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                    <button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="showResetConfirm()">🔄 恢复默认题库</button>
+                    <span style="font-size:12px;color:var(--text2);margin-left:8px;">将题库恢复为初始的78道题目</span>
+                </div>
             </div>
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -360,6 +364,19 @@
                 <div style="display:flex;gap:10px;">
                     <button class="btn" onclick="saveQuestion()">保存</button>
                     <button class="btn btn-outline" onclick="closeModal()">取消</button>
+                </div>
+            </div>
+        </div>
+        <!-- 恢复默认题库确认弹窗 -->
+        <div id="resetModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1001;">
+            <div style="max-width:400px;background:var(--card);border-radius:16px;padding:24px;border:1px solid var(--border);">
+                <h3 style="margin-bottom:16px;color:var(--error);">⚠️ 确认恢复默认题库</h3>
+                <p style="margin-bottom:16px;color:var(--text2);font-size:14px;">此操作将删除所有自定义题目，恢复为初始的78道默认题目。</p>
+                <p style="margin-bottom:16px;color:var(--text);font-size:14px;">请输入 <strong style="color:var(--primary);">恢复默认</strong> 以确认操作：</p>
+                <input type="text" id="resetConfirmInput" placeholder="请输入：恢复默认" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:16px;" oninput="checkResetInput()">
+                <div style="display:flex;gap:10px;">
+                    <button class="btn" id="resetConfirmBtn" style="background:var(--error);opacity:0.5;pointer-events:none;" onclick="resetQuestionBank()">确认恢复</button>
+                    <button class="btn btn-outline" onclick="closeResetModal()">取消</button>
                 </div>
             </div>
         </div>
@@ -478,6 +495,8 @@ var QUESTION_BANK=[
 {id:"077",category:"获奖记录",question:"林俊杰在第21届台湾金曲奖颁奖典礼上的表演被媒体称为什么？",options:[{key:"A",text:"金曲之王"},{key:"B",text:"无冕之王"},{key:"C",text:"最佳表演"},{key:"D",text:"华语之光"}],answer:"B",explanation:"中国内地媒体将林俊杰称为当届金曲奖的无冕之王，台湾媒体则认为他拯救了金曲奖。"},
 {id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"}
 ];
+
+var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
 
 var state={quiz:[],idx:0,answered:false,mode:'quick',correctCount:0,startTime:0,timer:null};
 
@@ -745,27 +764,16 @@ function deleteQuestion(qid) {
     renderQuestionList();
 }
 
-var QUESTION_BANK_VERSION = '2025-05-09-v2';
-
 function saveQuestionBank() {
     localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
-    localStorage.setItem('jj_question_bank_version', QUESTION_BANK_VERSION);
 }
 
 function loadQuestionBank() {
-    var savedVersion = localStorage.getItem('jj_question_bank_version');
-    if (savedVersion !== QUESTION_BANK_VERSION) {
-        localStorage.removeItem('jj_question_bank');
-        localStorage.removeItem('jj_question_bank_version');
-        return;
-    }
     var saved = localStorage.getItem('jj_question_bank');
     if (saved) {
         try {
             QUESTION_BANK = JSON.parse(saved);
-        } catch (e) {
-            localStorage.removeItem('jj_question_bank');
-        }
+        } catch (e) {}
     }
 }
 
@@ -792,24 +800,121 @@ function importData(event) {
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function(e) {
+        var data;
         try {
-            var data = JSON.parse(e.target.result);
-            if (data.questionBank) {
-                QUESTION_BANK = data.questionBank;
-                saveQuestionBank();
-            }
-            if (data.userData) {
-                localStorage.setItem(DB.KEY, JSON.stringify(data.userData));
-            }
-            alert('数据导入成功！');
-            updateHome();
-            renderQuestionList();
+            data = JSON.parse(e.target.result);
         } catch (err) {
-            alert('导入失败：文件格式不正确');
+            alert('导入失败：文件格式不正确，请确保上传有效的JSON文件');
+            return;
         }
+        if (!data.questionBank && !data.userData) {
+            alert('导入失败：文件中未找到有效数据（questionBank 或 userData）');
+            return;
+        }
+        var addedCount = 0;
+        var updatedCount = 0;
+        if (data.questionBank) {
+            var existingIds = {};
+            for (var i = 0; i < QUESTION_BANK.length; i++) {
+                existingIds[QUESTION_BANK[i].id] = true;
+            }
+            for (var j = 0; j < data.questionBank.length; j++) {
+                var q = data.questionBank[j];
+                if (existingIds[q.id]) {
+                    for (var k = 0; k < QUESTION_BANK.length; k++) {
+                        if (QUESTION_BANK[k].id === q.id) {
+                            QUESTION_BANK[k] = q;
+                            updatedCount++;
+                            break;
+                        }
+                    }
+                } else {
+                    QUESTION_BANK.push(q);
+                    addedCount++;
+                }
+            }
+            saveQuestionBank();
+        }
+        if (data.userData) {
+            var existingData = DB.get();
+            if (data.userData.history) {
+                existingData.history = existingData.history.concat(data.userData.history);
+            }
+            if (data.userData.wrong) {
+                var wrongMap = {};
+                for (var w = 0; w < existingData.wrong.length; w++) {
+                    wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
+                }
+                for (var x = 0; x < data.userData.wrong.length; x++) {
+                    var wrongItem = data.userData.wrong[x];
+                    if (wrongMap[wrongItem.qid]) {
+                        wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+                    } else {
+                        existingData.wrong.push(wrongItem);
+                    }
+                }
+            }
+            if (data.userData.stats) {
+                if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
+                existingData.stats.total += data.userData.stats.total || 0;
+                existingData.stats.correct += data.userData.stats.correct || 0;
+                if (data.userData.stats.cats) {
+                    for (var catName in data.userData.stats.cats) {
+                        if (!existingData.stats.cats[catName]) {
+                            existingData.stats.cats[catName] = {t: 0, c: 0};
+                        }
+                        existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
+                        existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                    }
+                }
+            }
+            DB.save(existingData);
+        }
+        var msg = '数据导入成功！';
+        if (addedCount > 0 || updatedCount > 0) {
+            msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+        }
+        alert(msg);
+        try { updateHome(); } catch (e) {}
+        try { renderQuestionList(); } catch (e) {}
     };
     reader.readAsText(file);
     event.target.value = '';
+}
+
+/* ===== 恢复默认题库 ===== */
+function showResetConfirm() {
+    var modal = document.getElementById('resetModal');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    document.getElementById('resetConfirmInput').value = '';
+    checkResetInput();
+}
+
+function closeResetModal() {
+    document.getElementById('resetModal').style.display = 'none';
+}
+
+function checkResetInput() {
+    var input = document.getElementById('resetConfirmInput').value;
+    var btn = document.getElementById('resetConfirmBtn');
+    if (input === '恢复默认') {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+    } else {
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+    }
+}
+
+function resetQuestionBank() {
+    QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+    localStorage.removeItem('jj_question_bank');
+    closeResetModal();
+    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+    try { renderQuestionList(); } catch (e) {}
+    try { updateCategoryFilter(); } catch (e) {}
 }
 
 window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
