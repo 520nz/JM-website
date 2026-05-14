@@ -1072,12 +1072,14 @@ function runTests() {
         localStorage.removeItem(DB.KEY);
 
         var q1 = DB.findQ('001');
-        var q2 = DB.findQ('002');
+        var q5 = DB.findQ('005');
         assert(q1 !== null, '题目001存在于题库');
-        assert(q2 !== null, '题目002存在于题库');
+        assert(q5 !== null, '题目005存在于题库');
+        assertEqual(q1.category, '专辑', '题目001属于专辑分类');
+        assertEqual(q5.category, '专辑', '题目005属于专辑分类');
 
         DB.addRecord({ qid: '001', ans: 'B', ok: true, time: Date.now() });
-        DB.addRecord({ qid: '002', ans: 'A', ok: false, time: Date.now() });
+        DB.addRecord({ qid: '005', ans: 'B', ok: false, time: Date.now() });
 
         var data = DB.get();
 
