@@ -958,7 +958,7 @@ function runTests() {
     function testDBModule() {
         localStorage.removeItem(DB.KEY);
         
-        assertEqual(DB.get(), DB.defaults(), 'DB.get() 返回默认值');
+        assertDeepEqual(DB.get(), DB.defaults(), 'DB.get() 返回默认值');
         
         DB.save({ test: 'data' });
         assertDeepEqual(DB.get(), { test: 'data' }, 'DB.save() 和 DB.get() 正常工作');
@@ -1031,33 +1031,30 @@ function runTests() {
     }
 
     function testQuestionValidation() {
+        var testId = '__tmp_' + Date.now();
+        var q = {
+            id: testId,
+            category: '测试',
+            question: '测试题目',
+            options: [
+                { key: 'A', text: '选项A' },
+                { key: 'B', text: '选项B' },
+                { key: 'C', text: '选项C' },
+                { key: 'D', text: '选项D' }
+            ],
+            answer: 'A',
+            explanation: '测试解析'
+        };
+
         var originalLength = QUESTION_BANK.length;
-        var backupBank = QUESTION_BANK.slice();
-        
-        try {
-            var q = {
-                id: 'test001',
-                category: '测试',
-                question: '测试题目',
-                options: [
-                    { key: 'A', text: '选项A' },
-                    { key: 'B', text: '选项B' },
-                    { key: 'C', text: '选项C' },
-                    { key: 'D', text: '选项D' }
-                ],
-                answer: 'A',
-                explanation: '测试解析'
-            };
-            
-            QUESTION_BANK.push(q);
-            assertEqual(QUESTION_BANK.length, originalLength + 1, '题目添加成功');
-            
-            var found = DB.findQ('test001');
-            assertDeepEqual(found, q, '新增题目可被查询');
-        } finally {
-            QUESTION_BANK.length = 0;
-            QUESTION_BANK.push(...backupBank);
-        }
+        QUESTION_BANK.push(q);
+
+        assertEqual(QUESTION_BANK.length, originalLength + 1, '题目添加成功');
+
+        var found = DB.findQ(testId);
+        assertDeepEqual(found, q, '新增题目可被查询');
+
+        QUESTION_BANK.pop();
     }
 
     function testAnswerValidation() {
@@ -1073,16 +1070,21 @@ function runTests() {
 
     function testCategoryStats() {
         localStorage.removeItem(DB.KEY);
-        
+
+        var q1 = DB.findQ('001');
+        var q2 = DB.findQ('002');
+        assert(q1 !== null, '题目001存在于题库');
+        assert(q2 !== null, '题目002存在于题库');
+
         DB.addRecord({ qid: '001', ans: 'B', ok: true, time: Date.now() });
         DB.addRecord({ qid: '002', ans: 'A', ok: false, time: Date.now() });
-        
+
         var data = DB.get();
-        
+
         assert(data.stats.cats['专辑'] !== undefined, '分类统计存在');
         assertEqual(data.stats.cats['专辑'].t, 2, '分类总答题数正确');
         assertEqual(data.stats.cats['专辑'].c, 1, '分类正确数正确');
-        
+
         localStorage.removeItem(DB.KEY);
     }
 
