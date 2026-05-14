@@ -771,8 +771,13 @@ function loadQuestionBank() {
     var saved = localStorage.getItem('jj_question_bank');
     if (saved) {
         try {
-            QUESTION_BANK = JSON.parse(saved);
-        } catch (e) {}
+            var parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                QUESTION_BANK = parsed;
+            }
+        } catch (e) {
+            localStorage.removeItem('jj_question_bank');
+        }
     }
 }
 
@@ -916,7 +921,13 @@ function resetQuestionBank() {
     try { updateCategoryFilter(); } catch (e) {}
 }
 
-window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
+window.addEventListener('DOMContentLoaded',function(){
+    loadQuestionBank();
+    if (!QUESTION_BANK || !Array.isArray(QUESTION_BANK) || QUESTION_BANK.length === 0) {
+        QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+    }
+    updateHome();
+});
 </script>
 </body>
 </html>
