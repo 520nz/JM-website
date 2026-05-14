@@ -243,7 +243,6 @@
             <button type="button" class="nav-item" onclick="switchView('wrongbook')">错题本</button>
             <button type="button" class="nav-item" onclick="switchView('stats')">统计</button>
             <button type="button" class="nav-item" onclick="switchView('admin')">管理</button>
-            <button type="button" class="nav-item" onclick="runTests()" title="运行测试">🧪 测试</button>
         </nav>
         <div class="view active" id="view-home">
             <div class="card">
@@ -307,13 +306,14 @@
         <div class="view" id="view-admin">
             <div class="card">
                 <h3 style="margin-bottom:12px;">数据管理</h3>
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button class="btn btn-outline btn-sm" onclick="exportData()">📤 导出数据</button>
-                        <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
-                        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
-                    </div>
-                    <button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="showResetConfirm()">🔄 重置</button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn btn-outline btn-sm" onclick="exportData()">📤 导出数据</button>
+                    <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                </div>
+                <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                    <button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="showResetConfirm()">🔄 恢复默认题库</button>
+                    <span style="font-size:12px;color:var(--text2);margin-left:8px;">将题库恢复为初始的78道题目</span>
                 </div>
             </div>
             <div class="card">
@@ -383,7 +383,7 @@
     </div>
 <script>
 var QUESTION_BANK=[
-// ===== 专辑 =====
+// ===== 专辑 - 15题 =====
 {id:"001",category:"专辑",question:"林俊杰首张专辑《乐行者》发行于哪一天？",options:[{key:"A",text:"2003年4月1日"},{key:"B",text:"2003年4月10日"},{key:"C",text:"2003年5月1日"},{key:"D",text:"2003年5月10日"}],answer:"B",explanation:"《乐行者》于2003年4月10日正式发行，这也是林俊杰的出道专辑。"},
 {id:"005",category:"专辑",question:"《第二天堂》（俗称《江南》专辑）发行于哪一年？",options:[{key:"A",text:"2003年"},{key:"B",text:"2004年"},{key:"C",text:"2005年"},{key:"D",text:"2006年"}],answer:"B",explanation:"《第二天堂》于2004年6月4日发行，包含热门歌曲《江南》。"},
 {id:"009",category:"专辑",question:"《编号89757》专辑的灵感来源于？",options:[{key:"A",text:"电话号码"},{key:"B",text:"机器人编号"},{key:"C",text:"房间号"},{key:"D",text:"日期"}],answer:"B",explanation:"89757是机器人编号，专辑以此概念为主题，讲述机器人爱上人类的故事。"},
@@ -399,8 +399,7 @@ var QUESTION_BANK=[
 {id:"049",category:"专辑",question:"《伟大的渺小》专辑发行于哪一年？",options:[{key:"A",text:"2016年"},{key:"B",text:"2017年"},{key:"C",text:"2018年"},{key:"D",text:"2019年"}],answer:"B",explanation:"《伟大的渺小》于2017年12月28日发行。"},
 {id:"053",category:"专辑",question:"《幸存者·如你》专辑发行于？",options:[{key:"A",text:"2017年"},{key:"B",text:"2018年"},{key:"C",text:"2019年"},{key:"D",text:"2020年"}],answer:"B",explanation:"《幸存者·如你》于2018年10月5日发行。"},
 {id:"057",category:"专辑",question:"《重拾_快乐》专辑发行于？",options:[{key:"A",text:"2022年"},{key:"B",text:"2023年"},{key:"C",text:"2024年"},{key:"D",text:"2025年"}],answer:"B",explanation:"《重拾_快乐》于2023年4月21日发行，是林俊杰的最新专辑。"},
-
-// ===== 歌曲 =====
+// ===== 歌曲 - 45题 =====
 {id:"002",category:"歌曲",question:"《乐行者》专辑中由林俊杰本人作词的歌曲是？",options:[{key:"A",text:"就是我"},{key:"B",text:"会读书"},{key:"C",text:"不懂"},{key:"D",text:"翅膀"}],answer:"A",explanation:"《就是我》由林俊杰作词，这是他第一首完全由自己作词的作品。"},
 {id:"003",category:"歌曲",question:"《第二天堂》中《江南》的作词人是谁？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"张思尔"},{key:"C",text:"李瑞洵"},{key:"D",text:"方文山"}],answer:"C",explanation:"《江南》由李瑞洵作词，是林俊杰的代表作之一。"},
 {id:"004",category:"歌曲",question:"《乐行者》专辑中哪首歌的作词人包含林秋离？",options:[{key:"A",text:"星空下的吻"},{key:"B",text:"会有那么一天"},{key:"C",text:"女儿家"},{key:"D",text:"让我心动的人"}],answer:"A",explanation:"《星空下的吻》由张思尔/林秋离作词。"},
@@ -446,8 +445,7 @@ var QUESTION_BANK=[
 {id:"058",category:"歌曲",question:"《愿与愁》作词人是？",options:[{key:"A",text:"方文山"},{key:"B",text:"易家扬"},{key:"C",text:"小寒"},{key:"D",text:"林怡凤"}],answer:"C",explanation:"《愿与愁》由小寒作词，是专辑的主打歌曲。"},
 {id:"059",category:"歌曲",question:"《孤独娱乐》作词人是？",options:[{key:"A",text:"易家扬"},{key:"B",text:"方文山"},{key:"C",text:"小寒"},{key:"D",text:"林雨果"}],answer:"A",explanation:"《孤独娱乐》由易家扬作词。"},
 {id:"060",category:"歌曲",question:"《自画像》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林怡凤"},{key:"C",text:"方文山"},{key:"D",text:"小寒"}],answer:"B",explanation:"《自画像》由林怡凤作词。"},
-
-// ===== 个人信息 =====
+// ===== 个人信息 - 8题 =====
 {id:"061",category:"个人信息",question:"林俊杰的本名（非艺名）是什么？",options:[{key:"A",text:"JJ Lin"},{key:"B",text:"Wayne"},{key:"C",text:"Lim Junjie"},{key:"D",text:"林俊峰"}],answer:"B",explanation:"林俊杰本名Wayne，JJ Lin为艺名，Lim Junjie为外文名拼音。"},
 {id:"062",category:"个人信息",question:"林俊杰的出生日期是？",options:[{key:"A",text:"1981年3月27日"},{key:"B",text:"1982年3月27日"},{key:"C",text:"1981年5月27日"},{key:"D",text:"1980年3月27日"}],answer:"A",explanation:"林俊杰于1981年3月27日出生于新加坡。"},
 {id:"063",category:"个人信息",question:"林俊杰的祖籍是哪里？",options:[{key:"A",text:"中国福建省福州市"},{key:"B",text:"中国福建省泉州市"},{key:"C",text:"中国福建省厦门市"},{key:"D",text:"中国广东省潮州市"}],answer:"C",explanation:"林俊杰祖籍中国福建省厦门市同安区。"},
@@ -456,8 +454,7 @@ var QUESTION_BANK=[
 {id:"066",category:"个人信息",question:"林俊杰于哪一年成立了个人音乐制作公司JFJ Productions？",options:[{key:"A",text:"2005年"},{key:"B",text:"2006年"},{key:"C",text:"2007年"},{key:"D",text:"2008年"}],answer:"C",explanation:"林俊杰于2007年3月27日成立了JFJ Productions，正式自立门户。"},
 {id:"067",category:"个人信息",question:"林俊杰的哥哥林俊峰的职业是？",options:[{key:"A",text:"新加坡电信公司董事"},{key:"B",text:"瑞士银行亚太区副总裁"},{key:"C",text:"佳能公司CEO"},{key:"D",text:"石油公司负责人"}],answer:"B",explanation:"林俊杰的哥哥林俊峰是瑞士银行亚太区副总裁。"},
 {id:"068",category:"个人信息",question:"林俊杰于哪一年考取了国际汽车联盟（FIA）的职业赛车驾照？",options:[{key:"A",text:"2014年"},{key:"B",text:"2015年"},{key:"C",text:"2016年"},{key:"D",text:"2017年"}],answer:"C",explanation:"林俊杰于2016年6月顺利考取FIA职业证照，成为职业赛车手。"},
-
-// ===== 获奖记录 =====
+// ===== 获奖记录 - 10题 =====
 {id:"069",category:"获奖记录",question:"林俊杰凭借首张专辑《乐行者》获得了第几届台湾金曲奖的最佳新人奖？",options:[{key:"A",text:"第13届"},{key:"B",text:"第14届"},{key:"C",text:"第15届"},{key:"D",text:"第16届"}],answer:"C",explanation:"林俊杰凭借《乐行者》获得第15届台湾金曲奖最佳新人奖。"},
 {id:"070",category:"获奖记录",question:"林俊杰首次获得台湾金曲奖最佳国语男歌手奖是凭借哪张专辑？",options:[{key:"A",text:"《她说》"},{key:"B",text:"《学不会》"},{key:"C",text:"《因你而在》"},{key:"D",text:"《新地球》"}],answer:"C",explanation:"林俊杰凭借《因你而在》获得第25届台湾金曲奖最佳国语男歌手奖。"},
 {id:"071",category:"获奖记录",question:"林俊杰第二次获得台湾金曲奖最佳国语男歌手奖是凭借哪张专辑？",options:[{key:"A",text:"《新地球》"},{key:"B",text:"《和自己对话》"},{key:"C",text:"《伟大的渺小》"},{key:"D",text:"《学不会》"}],answer:"B",explanation:"林俊杰凭借《和自己对话》获得第27届台湾金曲奖最佳国语男歌手奖。"},
@@ -467,11 +464,10 @@ var QUESTION_BANK=[
 {id:"075",category:"获奖记录",question:"林俊杰凭借《伟大的渺小》入围了第29届台湾金曲奖多个奖项，以下哪个不是入围奖项？",options:[{key:"A",text:"最佳国语男歌手奖"},{key:"B",text:"最佳国语专辑奖"},{key:"C",text:"最佳年度歌曲奖"},{key:"D",text:"最佳新人奖"}],answer:"D",explanation:"第29届金曲奖林俊杰入围了最佳国语男歌手奖、最佳国语专辑奖、最佳年度专辑奖、最佳专辑制作人奖、最佳年度歌曲奖、最佳作曲人奖，未入围最佳新人奖。"},
 {id:"076",category:"获奖记录",question:"林俊杰凭借专辑《重拾_快乐》和歌曲《愿与愁》入围了第35届台湾金曲奖哪两个奖项？",options:[{key:"A",text:"最佳华语男歌手奖、最佳作曲人奖"},{key:"B",text:"最佳华语专辑奖、最佳作词人奖"},{key:"C",text:"最佳年度歌曲奖、最佳作曲人奖"},{key:"D",text:"最佳华语男歌手奖、最佳专辑制作人奖"}],answer:"A",explanation:"林俊杰凭借《重拾_快乐》入围最佳华语男歌手奖，凭借《愿与愁》入围最佳作曲人奖。"},
 {id:"077",category:"获奖记录",question:"林俊杰在第21届台湾金曲奖颁奖典礼上的表演被媒体称为什么？",options:[{key:"A",text:"金曲之王"},{key:"B",text:"无冕之王"},{key:"C",text:"最佳表演"},{key:"D",text:"华语之光"}],answer:"B",explanation:"中国内地媒体将林俊杰称为当届金曲奖的无冕之王，台湾媒体则认为他拯救了金曲奖。"},
-{id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"},
-
+{id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"}
 ];
 
-var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+var DEFAULT_QUESTION_BANKvar DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
 
 var state={quiz:[],idx:0,answered:false,mode:'quick',correctCount:0,startTime:0,timer:null};
 
@@ -747,13 +743,8 @@ function loadQuestionBank() {
     var saved = localStorage.getItem('jj_question_bank');
     if (saved) {
         try {
-            var parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                QUESTION_BANK = parsed;
-            }
-        } catch (e) {
-            localStorage.removeItem('jj_question_bank');
-        }
+            QUESTION_BANK = JSON.parse(saved);
+        } catch (e) {}
     }
 }
 
@@ -897,221 +888,7 @@ function resetQuestionBank() {
     try { updateCategoryFilter(); } catch (e) {}
 }
 
-window.addEventListener('DOMContentLoaded',function(){
-    loadQuestionBank();
-    if (!QUESTION_BANK || !Array.isArray(QUESTION_BANK) || QUESTION_BANK.length === 0) {
-        QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
-    }
-    updateHome();
-});
-
-/* ===== 测试模块 ===== */
-function runTests() {
-    var results = [];
-    var passed = 0;
-    var failed = 0;
-
-    function assert(condition, message) {
-        if (condition) {
-            passed++;
-            results.push({ type: 'PASS', message: message });
-        } else {
-            failed++;
-            results.push({ type: 'FAIL', message: message });
-        }
-    }
-
-    function assertEqual(actual, expected, message) {
-        if (actual === expected) {
-            passed++;
-            results.push({ type: 'PASS', message: message });
-        } else {
-            failed++;
-            results.push({ type: 'FAIL', message: message + ' (实际: ' + actual + ', 期望: ' + expected + ')' });
-        }
-    }
-
-    function assertDeepEqual(actual, expected, message) {
-        var actualStr = JSON.stringify(actual);
-        var expectedStr = JSON.stringify(expected);
-        if (actualStr === expectedStr) {
-            passed++;
-            results.push({ type: 'PASS', message: message });
-        } else {
-            failed++;
-            results.push({ type: 'FAIL', message: message + ' (实际: ' + actualStr + ', 期望: ' + expectedStr + ')' });
-        }
-    }
-
-    function testDBModule() {
-        localStorage.removeItem(DB.KEY);
-
-        assertDeepEqual(DB.get(), DB.defaults(), 'DB.get() 返回默认值');
-
-        DB.save({ test: 'data' });
-        assertDeepEqual(DB.get(), { test: 'data' }, 'DB.save() 和 DB.get() 正常工作');
-
-        localStorage.removeItem(DB.KEY);
-    }
-
-    function testFindQ() {
-        var q = DB.findQ('001');
-        assert(q !== null, 'DB.findQ() 能找到存在的题目');
-        assertEqual(q.id, '001', '找到的题目ID正确');
-        assertEqual(q.category, '专辑', '找到的题目分类正确');
-
-        var notFound = DB.findQ('nonexistent');
-        assertEqual(notFound, null, 'DB.findQ() 对不存在的ID返回null');
-    }
-
-    function testAddRecord() {
-        localStorage.removeItem(DB.KEY);
-
-        DB.addRecord({ qid: '001', ans: 'A', ok: true, time: Date.now() });
-        var data = DB.get();
-
-        assertEqual(data.history.length, 1, 'addRecord 正确添加记录');
-        assertEqual(data.stats.total, 1, '统计总数正确');
-        assertEqual(data.stats.correct, 1, '统计正确数正确');
-
-        DB.addRecord({ qid: '001', ans: 'B', ok: false, time: Date.now() });
-        data = DB.get();
-
-        assertEqual(data.history.length, 2, 'addRecord 连续添加记录');
-        assertEqual(data.stats.total, 2, '统计总数更新正确');
-        assertEqual(data.stats.correct, 1, '统计正确数保持正确');
-
-        localStorage.removeItem(DB.KEY);
-    }
-
-    function testWrongBook() {
-        localStorage.removeItem(DB.KEY);
-
-        DB.addWrong('001');
-        var wrong = DB.getWrong();
-        assertEqual(wrong.length, 1, 'addWrong 添加错题');
-        assertEqual(wrong[0].qid, '001', '错题ID正确');
-        assertEqual(wrong[0].cnt, 1, '错误次数初始为1');
-
-        DB.addWrong('001');
-        wrong = DB.getWrong();
-        assertEqual(wrong.length, 1, '同一错题重复添加不增加条目');
-        assertEqual(wrong[0].cnt, 2, '错误次数递增');
-
-        DB.removeWrong('001');
-        wrong = DB.getWrong();
-        assertEqual(wrong.length, 0, 'removeWrong 删除错题');
-
-        localStorage.removeItem(DB.KEY);
-    }
-
-    function testShuffle() {
-        var arr = [1, 2, 3, 4, 5];
-        var shuffled = shuffle(arr.slice());
-
-        assertEqual(shuffled.length, arr.length, 'shuffle 保持数组长度');
-
-        var sorted = shuffled.slice().sort((a, b) => a - b);
-        assertDeepEqual(sorted, arr, 'shuffle 保持元素不变');
-
-        var isShuffled = JSON.stringify(shuffled) !== JSON.stringify(arr);
-        assert(isShuffled || arr.length <= 1, 'shuffle 确实打乱了数组顺序');
-    }
-
-    function testQuestionValidation() {
-        var testId = '__tmp_' + Date.now();
-        var q = {
-            id: testId,
-            category: '测试',
-            question: '测试题目',
-            options: [
-                { key: 'A', text: '选项A' },
-                { key: 'B', text: '选项B' },
-                { key: 'C', text: '选项C' },
-                { key: 'D', text: '选项D' }
-            ],
-            answer: 'A',
-            explanation: '测试解析'
-        };
-
-        var originalLength = QUESTION_BANK.length;
-        QUESTION_BANK.push(q);
-
-        assertEqual(QUESTION_BANK.length, originalLength + 1, '题目添加成功');
-
-        var found = DB.findQ(testId);
-        assertDeepEqual(found, q, '新增题目可被查询');
-
-        QUESTION_BANK.pop();
-    }
-
-    function testAnswerValidation() {
-        var q = DB.findQ('001');
-        assert(q !== null, '获取测试题目');
-
-        var correctAnswer = q.answer;
-        var wrongAnswer = correctAnswer === 'A' ? 'B' : 'A';
-
-        assert(correctAnswer !== wrongAnswer, '正确答案与错误答案不同');
-        assert(['A', 'B', 'C', 'D'].includes(correctAnswer), '答案在有效范围内');
-    }
-
-    function testCategoryStats() {
-        localStorage.removeItem(DB.KEY);
-
-        var q1 = DB.findQ('001');
-        var q5 = DB.findQ('005');
-        assert(q1 !== null, '题目001存在于题库');
-        assert(q5 !== null, '题目005存在于题库');
-        assertEqual(q1.category, '专辑', '题目001属于专辑分类');
-        assertEqual(q5.category, '专辑', '题目005属于专辑分类');
-
-        DB.addRecord({ qid: '001', ans: 'B', ok: true, time: Date.now() });
-        DB.addRecord({ qid: '005', ans: 'B', ok: false, time: Date.now() });
-
-        var data = DB.get();
-
-        assert(data.stats.cats['专辑'] !== undefined, '分类统计存在');
-        assertEqual(data.stats.cats['专辑'].t, 2, '分类总答题数正确');
-        assertEqual(data.stats.cats['专辑'].c, 1, '分类正确数正确');
-
-        localStorage.removeItem(DB.KEY);
-    }
-
-    testDBModule();
-    testFindQ();
-    testAddRecord();
-    testWrongBook();
-    testShuffle();
-    testQuestionValidation();
-    testAnswerValidation();
-    testCategoryStats();
-
-    var html = '<div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">';
-    html += '<h1>🎵 林俊杰答题网站测试报告</h1>';
-    html += '<div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border-radius: 8px;">';
-    html += '<strong>测试结果：</strong> ' + passed + ' 通过，' + failed + ' 失败';
-    html += '</div>';
-    html += '<ul style="list-style: none; padding: 0;">';
-
-    for (var i = 0; i < results.length; i++) {
-        var style = results[i].type === 'PASS'
-            ? 'color: #10B981; background: rgba(16, 185, 129, 0.1);'
-            : 'color: #EF4444; background: rgba(239, 68, 68, 0.1);';
-        html += '<li style="padding: 8px 12px; margin-bottom: 4px; border-radius: 4px; ' + style + '">';
-        html += results[i].type + ': ' + results[i].message;
-        html += '</li>';
-    }
-
-    html += '</ul></div>';
-
-    var newWindow = window.open('', '_blank');
-    newWindow.document.write(html);
-    newWindow.document.close();
-
-    console.log('测试完成: ' + passed + ' 通过, ' + failed + ' 失败');
-    return { passed: passed, failed: failed, total: passed + failed };
-}
+window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
 </script>
 </body>
 </html>
