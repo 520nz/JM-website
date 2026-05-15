@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰答题 - 单元测试</title>
+    <style>
+        :root {
+            --success: #10B981;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+            --bg: #1a1a2e;
+            --card: #16213e;
+            --text: #eaeaea;
+            --text2: #a0a0a0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 30px; color: var(--info); }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .summary-card .value { font-size: 32px; font-weight: 700; }
+        .summary-card .label { font-size: 14px; color: var(--text2); }
+        .passed .value { color: var(--success); }
+        .failed .value { color: var(--error); }
+        .pending .value { color: var(--warning); }
+        .test-group {
+            background: var(--card);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .test-group-header {
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-group-header .status {
+            font-size: 13px;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+        .status.pass { background: rgba(16,185,129,0.2); color: var(--success); }
+        .status.fail { background: rgba(239,68,68,0.2); color: var(--error); }
+        .test-item {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .test-icon { font-size: 18px; flex-shrink: 0; width: 24px; }
+        .test-icon.pass { color: var(--success); }
+        .test-icon.fail { color: var(--error); }
+        .test-content { flex: 1; }
+        .test-name { font-weight: 500; margin-bottom: 4px; }
+        .test-error { font-size: 13px; color: var(--error); margin-top: 4px; font-family: monospace; }
+        .test-detail { font-size: 13px; color: var(--text2); }
+        #runTests { 
+            display: block; 
+            width: 200px; 
+            margin: 30px auto; 
+            padding: 14px 24px; 
+            background: var(--info); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            cursor: pointer;
+        }
+        #runTests:hover { opacity: 0.9; }
+        #runTests:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 单元测试</h1>
+        
+        <div class="summary">
+            <div class="summary-card passed">
+                <div class="value" id="passedCount">0</div>
+                <div class="label">通过</div>
+            </div>
+            <div class="summary-card failed">
+                <div class="value" id="failedCount">0</div>
+                <div class="label">失败</div>
+            </div>
+            <div class="summary-card pending">
+                <div class="value" id="totalCount">0</div>
+                <div class="label">总计</div>
+            </div>
+        </div>
+        
+        <button id="runTests" onclick="runAllTests()">▶ 运行所有测试</button>
+        
+        <div id="testResults"></div>
+    </div>
+
+<script>
+(function() {
+    'use strict';
+
+    const TestRunner = {
+        results: [],
+        
+        assert(condition, message, detail) {
+            return {
+                pass: !!condition,
+                message,
+                detail,
+                error: condition ? null : (detail || message)
+            };
+        },
+
+        assertEqual(actual, expected, message) {
+            const pass = actual === expected;
+            return {
+                pass,
+                message: message || `Expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+                error: pass ? null : `期望值: ${JSON.stringify(expected)}, 实际值: ${JSON.stringify(actual)}`
+            };
+        },
+
+        assertDeepEqual(actual, expected, message) {
+            const pass = JSON.stringify(actual) === JSON.stringify(expected);
+            return {
+                pass,
+                message: message || `Objects are ${pass ? 'equal' : 'not equal'}`,
+                error: pass ? null : `期望值: ${JSON.stringify(expected)}, 实际值: ${JSON.stringify(actual)}`
+            };
+        },
+
+        assertContains(array, item, message) {
+            const found = array.some(el => JSON.stringify(el) === JSON.stringify(item));
+            return {
+                pass: found,
+                message: message || `Array ${found ? 'contains' : 'does not contain'} item`,
+                error: found ? null : `数组不包含预期项: ${JSON.stringify(item)}`
+            };
+        },
+
+        assertThrows(fn, message) {
+            let threw = false;
+            let error = null;
+            try {
+                fn();
+            } catch (e) {
+                threw = true;
+                error = e;
+            }
+            return {
+                pass: threw,
+                message: message || `Function ${threw ? 'throws' : 'does not throw'}`,
+                error: threw ? null : `期望抛出异常但未抛出`
+            };
+        },
+
+        addResult(group, result) {
+            this.results.push({ group, ...result });
+        },
+
+        getStats() {
+            const passed = this.results.filter(r => r.pass).length;
+            const failed = this.results.filter(r => !r.pass).length;
+            return { passed, failed, total: this.results.length };
+        },
+
+        reset() {
+            this.results = [];
+        }
+    };
+
+    window.TestRunner = TestRunner;
+    window.runAllTests = function() {
+        TestRunner.reset();
+        
+        parseOptionsTests();
+        importDataTests();
+        exportDataTests();
+        wrongBookTests();
+        shuffleTests();
+        dbStorageTests();
+        timerTests();
+        viewSwitchTests();
+
+        renderResults();
+    };
+
+    function parseOptionsTests() {
+        const group = '选项解析逻辑';
+
+        function parseOptions(optsText) {
+            const lines = optsText.split('\n');
+            const options = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                const match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+                if (match) {
+                    options.push({ key: match[1], text: match[2] });
+                }
+            }
+            return options;
+        }
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('A.选项1\nB.选项2\nC.选项3\nD.选项4'),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'},{key:'C',text:'选项3'},{key:'D',text:'选项4'}],
+            '标准点号格式解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('A、选项1\nB、选项2'),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'}],
+            '中文顿号格式解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('A．选项1\nB．选项2'),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'}],
+            '全角点号格式解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('  A.  选项1  \n  B.  选项2  '),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'}],
+            '带空格格式解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('A.选项1\nB.选项2'),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'}],
+            '最少选项验证（2个）'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            parseOptions('A.选项1').length < 2,
+            true,
+            '单选项应返回失败（少于2个）'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('E.选项1\nF.选项2'),
+            [],
+            '非法选项字母（E/F）应被忽略'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions(''),
+            [],
+            '空字符串解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('  \n  \n  '),
+            [],
+            '仅空白字符解析'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            parseOptions('A.选项1\n\nB.选项2\n\n\nC.选项3'),
+            [{key:'A',text:'选项1'},{key:'B',text:'选项2'},{key:'C',text:'选项3'}],
+            '多行空行解析'
+        ));
+    }
+
+    function importDataTests() {
+        const group = '数据导入逻辑';
+
+        function validateImportData(data) {
+            const errors = [];
+            if (!data.questionBank && !data.userData) {
+                errors.push('文件中未找到有效数据');
+                return { valid: false, errors };
+            }
+            if (data.questionBank && !Array.isArray(data.questionBank)) {
+                errors.push('questionBank必须是数组');
+            }
+            if (data.questionBank) {
+                data.questionBank.forEach((q, i) => {
+                    if (!q.id) errors.push(`题目${i+1}缺少id`);
+                    if (!q.question) errors.push(`题目${i+1}缺少question`);
+                    if (!q.options || !Array.isArray(q.options)) errors.push(`题目${i+1}的options格式错误`);
+                });
+            }
+            return { valid: errors.length === 0, errors };
+        }
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ questionBank: [{ id: '001', question: 'test', options: [] }] }),
+            { valid: true, errors: [] },
+            '有效数据验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({}),
+            { valid: false, errors: ['文件中未找到有效数据'] },
+            '空数据验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ userData: { history: [] } }),
+            { valid: true, errors: [] },
+            '仅包含userData验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ questionBank: 'not array' }),
+            { valid: false, errors: ['questionBank必须是数组'] },
+            'questionBank类型错误验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ questionBank: [{ id: '001', question: '', options: [] }] }),
+            { valid: false, errors: ['题目1缺少question'] },
+            '缺少题目内容验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ questionBank: [{ id: '001', options: [] }] }),
+            { valid: false, errors: ['题目1缺少question'] },
+            '缺少question字段验证'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            validateImportData({ questionBank: [{ id: '', question: 'test', options: [] }] }),
+            { valid: false, errors: ['题目1缺少id'] },
+            '缺少id字段验证'
+        ));
+
+        function mergeWrongData(existing, imported) {
+            const wrongMap = {};
+            for (const w of existing) {
+                wrongMap[w.qid] = w;
+            }
+            const merged = Object.values(existing);
+            for (const item of imported) {
+                if (wrongMap[item.qid]) {
+                    wrongMap[item.qid].cnt += item.cnt;
+                } else {
+                    merged.push(item);
+                }
+            }
+            return merged;
+        }
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            mergeWrongData([], [{ qid: '001', cnt: 2 }]),
+            [{ qid: '001', cnt: 2 }],
+            '空错题列表合并'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            mergeWrongData([{ qid: '001', cnt: 1 }], [{ qid: '001', cnt: 2 }]),
+            [{ qid: '001', cnt: 3 }],
+            '重复错题计数合并'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            mergeWrongData([{ qid: '001', cnt: 1 }], [{ qid: '002', cnt: 1 }]),
+            [{ qid: '001', cnt: 1 }, { qid: '002', cnt: 1 }],
+            '不同错题合并'
+        ));
+    }
+
+    function exportDataTests() {
+        const group = '数据导出逻辑';
+
+        function createExportData(questionBank, userData) {
+            return {
+                questionBank,
+                userData,
+                exportTime: new Date().toISOString()
+            };
+        }
+
+        const testQB = [{ id: '001', question: 'test', options: [] }];
+        const testUD = { history: [], stats: {} };
+        
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            typeof createExportData(testQB, testUD).exportTime,
+            'string',
+            '导出数据包含时间戳'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            createExportData(testQB, testUD).questionBank,
+            testQB,
+            '题库数据正确导出'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            createExportData(testQB, testUD).userData,
+            testUD,
+            '用户数据正确导出'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            () => {
+                const data = createExportData(testQB, testUD);
+                return JSON.stringify(JSON.parse(JSON.stringify(data))).includes('001');
+            },
+            true,
+            'JSON序列化后数据完整性'
+        ));
+    }
+
+    function wrongBookTests() {
+        const group = '错题本逻辑';
+
+        function addWrongItem(wrongList, qid) {
+            const existing = wrongList.find(w => w.qid === qid);
+            if (existing) {
+                existing.cnt++;
+                existing.time = Date.now();
+            } else {
+                wrongList.push({ qid, cnt: 1, time: Date.now() });
+            }
+            return wrongList;
+        }
+
+        function removeWrongItem(wrongList, qid) {
+            return wrongList.filter(w => w.qid !== qid);
+        }
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            addWrongItem([], '001'),
+            [{ qid: '001', cnt: 1 }],
+            '首次添加错题'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            addWrongItem([{ qid: '001', cnt: 1, time: 1000 }], '001'),
+            [{ qid: '001', cnt: 2, time: Date.now() }],
+            '重复错题计数递增'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            removeWrongItem([{ qid: '001', cnt: 2 }, { qid: '002', cnt: 1 }], '001'),
+            [{ qid: '002', cnt: 1 }],
+            '移除指定错题'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            removeWrongItem([{ qid: '001', cnt: 1 }], 'nonexistent'),
+            [{ qid: '001', cnt: 1 }],
+            '移除不存在的错题'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            addWrongItem(addWrongItem([], '001'), '001'),
+            [{ qid: '001', cnt: 2 }],
+            '连续添加同一错题'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            addWrongItem([], '001').length,
+            1,
+            '错题列表长度验证'
+        ));
+    }
+
+    function shuffleTests() {
+        const group = '随机打乱算法';
+
+        function shuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = a[i];
+                a[i] = a[j];
+                a[j] = t;
+            }
+            return a;
+        }
+
+        const original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            shuffle(original).length,
+            original.length,
+            '打乱后数组长度不变'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            JSON.stringify(shuffle(original).sort()),
+            JSON.stringify([...original].sort()),
+            '打乱后元素不变'
+        ));
+
+        let differentOrder = false;
+        const base = [...original];
+        for (let i = 0; i < 10; i++) {
+            if (JSON.stringify(shuffle(base)) !== JSON.stringify(base)) {
+                differentOrder = true;
+                break;
+            }
+        }
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            differentOrder,
+            true,
+            '多次打乱应产生不同顺序（概率验证）'
+        ));
+    }
+
+    function dbStorageTests() {
+        const group = '数据库存储逻辑';
+
+        function getDefaults() {
+            return { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } };
+        }
+
+        function addRecord(data, rec) {
+            data.history.push(rec);
+            data.stats.total++;
+            if (rec.ok) data.stats.correct++;
+            return data;
+        }
+
+        function updateCatStats(data, category, correct) {
+            if (!data.stats.cats[category]) {
+                data.stats.cats[category] = { t: 0, c: 0 };
+            }
+            data.stats.cats[category].t++;
+            if (correct) data.stats.cats[category].c++;
+            return data;
+        }
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            getDefaults(),
+            { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } },
+            '默认数据结构'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            addRecord(getDefaults(), { qid: '001', ok: true }),
+            { history: [{ qid: '001', ok: true }], wrong: [], stats: { total: 1, correct: 1, cats: {} } },
+            '正确答题记录'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            addRecord(getDefaults(), { qid: '001', ok: false }),
+            { history: [{ qid: '001', ok: false }], wrong: [], stats: { total: 1, correct: 0, cats: {} } },
+            '错误答题记录'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            updateCatStats(getDefaults(), '专辑', true),
+            { history: [], wrong: [], stats: { total: 0, correct: 0, cats: { '专辑': { t: 1, c: 1 } } } },
+            '分类统计更新（正确）'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            updateCatStats(getDefaults(), '专辑', false),
+            { history: [], wrong: [], stats: { total: 0, correct: 0, cats: { '专辑': { t: 1, c: 0 } } } },
+            '分类统计更新（错误）'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertDeepEqual(
+            updateCatStats({ history: [], wrong: [], stats: { total: 0, correct: 0, cats: { '专辑': { t: 1, c: 1 } } } }, '歌曲', true),
+            { history: [], wrong: [], stats: { total: 0, correct: 0, cats: { '专辑': { t: 1, c: 1 }, '歌曲': { t: 1, c: 1 } } } },
+            '多分类统计'
+        ));
+    }
+
+    function timerTests() {
+        const group = '计时器逻辑';
+
+        function formatTime(ms) {
+            const sec = Math.floor(ms / 1000);
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return m + '分' + s + '秒';
+        }
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            formatTime(0),
+            '0分0秒',
+            '零时间格式化'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            formatTime(1000),
+            '0分1秒',
+            '1秒格式化'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            formatTime(60000),
+            '1分0秒',
+            '1分钟格式化'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            formatTime(90000),
+            '1分30秒',
+            '1分30秒格式化'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            formatTime(3600000),
+            '60分0秒',
+            '1小时格式化'
+        ));
+
+        function tickTimer(startTime) {
+            const sec = Math.floor((Date.now() - startTime) / 1000);
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        const startTime = Date.now() - 125000;
+        const tickResult = tickTimer(startTime);
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            tickResult.startsWith('2:') || tickResult.startsWith('1:'),
+            true,
+            '计时器tick计算'
+        ));
+    }
+
+    function viewSwitchTests() {
+        const group = '视图切换逻辑';
+
+        function shouldShowEmptyPrompt(quiz, idx) {
+            return quiz.length === 0 || idx >= quiz.length;
+        }
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            shouldShowEmptyPrompt([], 0),
+            true,
+            '空题库显示空提示'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            shouldShowEmptyPrompt([{ id: '001' }], 1),
+            true,
+            '答题完成显示空提示'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            shouldShowEmptyPrompt([{ id: '001' }], 0),
+            false,
+            '进行中不显示空提示'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            shouldShowEmptyPrompt([{ id: '001' }], 2),
+            true,
+            '索引超出显示空提示'
+        ));
+
+        function calculateProgress(idx, total) {
+            return Math.round(idx / total * 100);
+        }
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            calculateProgress(0, 10),
+            0,
+            '进度0%'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            calculateProgress(5, 10),
+            50,
+            '进度50%'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            calculateProgress(10, 10),
+            100,
+            '进度100%'
+        ));
+
+        TestRunner.addResult(group, TestRunner.assertEqual(
+            calculateProgress(3, 9),
+            33,
+            '非整除进度计算'
+        ));
+    }
+
+    function renderResults() {
+        const stats = TestRunner.getStats();
+        document.getElementById('passedCount').textContent = stats.passed;
+        document.getElementById('failedCount').textContent = stats.failed;
+        document.getElementById('totalCount').textContent = stats.total;
+
+        const groups = {};
+        TestRunner.results.forEach(r => {
+            if (!groups[r.group]) groups[r.group] = [];
+            groups[r.group].push(r);
+        });
+
+        let html = '';
+        let groupIndex = 0;
+        for (const [name, results] of Object.entries(groups)) {
+            const passed = results.filter(r => r.pass).length;
+            const failed = results.filter(r => !r.pass).length;
+            const total = results.length;
+            
+            html += `<div class="test-group">
+                <div class="test-group-header">
+                    <span>${++groupIndex}. ${name}</span>
+                    <span class="status ${failed === 0 ? 'pass' : 'fail'}">${passed}/${total} 通过</span>
+                </div>`;
+            
+            results.forEach(r => {
+                html += `<div class="test-item">
+                    <span class="test-icon ${r.pass ? 'pass' : 'fail'}">${r.pass ? '✓' : '✗'}</span>
+                    <div class="test-content">
+                        <div class="test-name">${r.message}</div>
+                        ${r.detail ? `<div class="test-detail">${r.detail}</div>` : ''}
+                        ${r.error ? `<div class="test-error">${r.error}</div>` : ''}
+                    </div>
+                </div>`;
+            });
+            
+            html += '</div>';
+        }
+
+        document.getElementById('testResults').innerHTML = html;
+        document.getElementById('runTests').disabled = false;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('runTests').disabled = false;
+    });
+})();
+</script>
+</body>
+</html>
