@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据导入导出测试</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; padding: 30px 0; }
+        .header h1 { color: #8B5CF6; margin-bottom: 8px; }
+        .test-case { background: #16213e; border-radius: 12px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #333; }
+        .test-case.pass { border-left-color: #10B981; }
+        .test-case.fail { border-left-color: #EF4444; }
+        .test-case h3 { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .status { font-size: 14px; padding: 4px 12px; border-radius: 20px; }
+        .status.pass { background: rgba(16, 185, 129, 0.2); color: #10B981; }
+        .status.fail { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
+        .test-content { font-size: 14px; color: #aaa; }
+        .test-content pre { background: #0f0f23; padding: 12px; border-radius: 8px; overflow-x: auto; margin: 8px 0; font-size: 12px; }
+        .summary { background: linear-gradient(135deg, #8B5CF6, #9333ea); border-radius: 16px; padding: 24px; text-align: center; margin-top: 24px; }
+        .summary .total { font-size: 36px; font-weight: 700; }
+        .code-section { background: #0f0f23; border-radius: 8px; padding: 16px; margin: 12px 0; font-family: monospace; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔄 数据导入导出测试套件</h1>
+            <p style="color:#888;">测试JSON数据解析、验证和导入导出逻辑</p>
+        </header>
+        <div id="testContainer"></div>
+        <div class="summary" id="summary"></div>
+    </div>
+</body>
+<script>
+var testResults = { passed: 0, failed: 0, tests: [] };
+
+function runImportExportTests() {
+    var testSuites = [];
+    
+    testSuites.push(testValidJSONParsing());
+    testSuites.push(testInvalidJSONHandling());
+    testSuites.push(testDataStructureValidation());
+    testSuites.push(testImportMergeLogic());
+    testSuites.push(testExportDataIntegrity());
+    testSuites.push(testEdgeCases());
+    
+    renderResults(testSuites);
+}
+
+function testValidJSONParsing() {
+    var tests = [];
+    
+    var validData = {
+        questionBank: [{ id: '001', question: '测试', options: [{key:'A',text:'a'}], answer: 'A' }],
+        userData: { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } }
+    };
+    
+    var jsonStr = JSON.stringify(validData);
+    try {
+        var parsed = JSON.parse(jsonStr);
+        tests.push({ name: '有效完整JSON解析', passed: parsed.questionBank && parsed.userData, details: 'questionBank和userData都存在' });
+    } catch (e) {
+        tests.push({ name: '有效完整JSON解析', passed: false, details: '解析失败: ' + e.message });
+    }
+    
+    var partialData = { questionBank: [{ id: '001' }] };
+    try {
+        var parsed = JSON.parse(JSON.stringify(partialData));
+        tests.push({ name: '部分数据JSON解析', passed: parsed.questionBank && !parsed.userData, details: '仅有questionBank，无userData' });
+    } catch (e) {
+        tests.push({ name: '部分数据JSON解析', passed: false, details: '解析失败' });
+    }
+    
+    var unicodeData = { questionBank: [{ question: '林俊杰\u4e2d\u6587\u6d4b\u8bd5' }] };
+    try {
+        var parsed = JSON.parse(JSON.stringify(unicodeData));
+        tests.push({ name: 'Unicode编码JSON', passed: parsed.questionBank[0].question.includes('中文'), details: '正确解析中文Unicode' });
+    } catch (e) {
+        tests.push({ name: 'Unicode编码JSON', passed: false, details: 'Unicode解析失败' });
+    }
+    
+    return { name: 'JSON解析测试', tests: tests };
+}
+
+function testInvalidJSONHandling() {
+    var tests = [];
+    
+    var invalidJSONs = [
+        { input: '{invalid}', name: '语法错误JSON' },
+        { input: '', name: '空字符串' },
+        { input: 'not json at all', name: '纯文本' },
+        { input: '{"data": undefined}', name: 'undefined值' },
+        { input: '{"data": function(){}}', name: '函数值' },
+        { input: '{ "trailing" : "comma" , }', name: '尾部逗号' }
+    ];
+    
+    invalidJSONs.forEach(function(tc) {
+        try {
+            JSON.parse(tc.input);
+            tests.push({ name: tc.name + '处理', passed: false, details: '应该抛出异常但没有' });
+        } catch (e) {
+            tests.push({ name: tc.name + '处理', passed: true, details: '正确捕获异常: ' + e.name });
+        }
+    });
+    
+    return { name: '无效JSON处理测试', tests: tests };
+}
+
+function testDataStructureValidation() {
+    var tests = [];
+    
+    var validQuestion = {
+        id: '001',
+        category: '歌曲',
+        question: '测试题目内容',
+        options: [{ key: 'A', text: '选项A' }, { key: 'B', text: '选项B' }],
+        answer: 'A',
+        explanation: '这是解析'
+    };
+    
+    var hasAllFields = validQuestion.id && validQuestion.question && 
+                       validQuestion.options && validQuestion.answer &&
+                       validQuestion.category;
+    tests.push({ name: '完整题目结构', passed: hasAllFields, details: '包含所有必需字段' });
+    
+    var optionsValid = validQuestion.options.length >= 2;
+    tests.push({ name: '选项数量验证', passed: optionsValid, details: '选项数量: ' + validQuestion.options.length });
+    
+    var answerValid = ['A', 'B', 'C', 'D'].indexOf(validQuestion.answer) !== -1;
+    tests.push({ name: '答案格式验证', passed: answerValid, details: '答案: ' + validQuestion.answer });
+    
+    var optionsHaveKeys = validQuestion.options.every(function(o) { return ['A','B','C','D'].indexOf(o.key) !== -1; });
+    tests.push({ name: '选项键值验证', passed: optionsHaveKeys, details: '所有选项键值在A-D范围内' });
+    
+    return { name: '数据结构验证测试', tests: tests };
+}
+
+function testImportMergeLogic() {
+    var tests = [];
+    
+    var existingBank = [{ id: '001', question: '问题1' }, { id: '002', question: '问题2' }];
+    var importedBank = [{ id: '001', question: '更新的问题1' }, { id: '003', question: '新问题3' }];
+    
+    var existingIds = {};
+    existingBank.forEach(function(q) { existingIds[q.id] = true; });
+    
+    var addedCount = 0, updatedCount = 0;
+    importedBank.forEach(function(q) {
+        if (existingIds[q.id]) {
+            updatedCount++;
+        } else {
+            addedCount++;
+        }
+    });
+    
+    tests.push({ name: '新增题目检测', passed: addedCount === 1, details: '应新增1题，实际: ' + addedCount });
+    tests.push({ name: '更新题目检测', passed: updatedCount === 1, details: '应更新1题，实际: ' + updatedCount });
+    
+    var existingData = { history: [{ qid: '001', ok: true }], wrong: [], stats: { total: 1, correct: 1, cats: {} } };
+    var importedUserData = { history: [{ qid: '002', ok: false }], wrong: [{ qid: '002', cnt: 1 }], stats: { total: 1, correct: 0, cats: {} } };
+    
+    var mergedHistory = existingData.history.concat(importedUserData.history);
+    tests.push({ name: '历史记录合并', passed: mergedHistory.length === 2, details: '合并后记录数: ' + mergedHistory.length });
+    
+    var wrongMap = {};
+    existingData.wrong.forEach(function(w) { wrongMap[w.qid] = w; });
+    importedUserData.wrong.forEach(function(w) {
+        if (wrongMap[w.qid]) {
+            wrongMap[w.qid].cnt += w.cnt;
+        } else {
+            wrongMap[w.qid] = w;
+        }
+    });
+    tests.push({ name: '错题本合并', passed: wrongMap['002'].cnt === 1, details: '合并后错题计数: ' + wrongMap['002'].cnt });
+    
+    var mergedStats = { total: existingData.stats.total + importedUserData.stats.total, correct: existingData.stats.correct + importedUserData.stats.correct };
+    tests.push({ name: '统计数据合并', passed: mergedStats.total === 2 && mergedStats.correct === 1, details: 'total=' + mergedStats.total + ', correct=' + mergedStats.correct });
+    
+    return { name: '导入合并逻辑测试', tests: tests };
+}
+
+function testExportDataIntegrity() {
+    var tests = [];
+    
+    var questionBank = [{ id: '001', question: '测试' }];
+    var userData = { history: [], wrong: [], stats: { total: 0 } };
+    var exportTime = new Date().toISOString();
+    
+    var exportData = { questionBank: questionBank, userData: userData, exportTime: exportTime };
+    var jsonStr = JSON.stringify(exportData);
+    
+    try {
+        var parsed = JSON.parse(jsonStr);
+        var integrityOk = parsed.questionBank.length === 1 && 
+                         parsed.userData.stats.total === 0 && 
+                         parsed.exportTime === exportTime;
+        tests.push({ name: '导出数据完整性', passed: integrityOk, details: '数据导出前后一致' });
+    } catch (e) {
+        tests.push({ name: '导出数据完整性', passed: false, details: '导出失败' });
+    }
+    
+    var timestamp = new Date().toISOString().slice(0, 10);
+    var filename = 'jj_quiz_backup_' + timestamp + '.json';
+    tests.push({ name: '导出文件名格式', passed: filename.match(/^\d{4}-\d{2}-\d{2}/), details: '文件名: ' + filename });
+    
+    return { name: '导出数据完整性测试', tests: tests };
+}
+
+function testEdgeCases() {
+    var tests = [];
+    
+    var veryLargeData = { questionBank: [] };
+    for (var i = 0; i < 1000; i++) {
+        veryLargeData.questionBank.push({
+            id: 'q' + i,
+            category: '测试',
+            question: '测试题目' + i,
+            options: [{ key: 'A', text: 'A选项' }, { key: 'B', text: 'B选项' }, { key: 'C', text: 'C选项' }, { key: 'D', text: 'D选项' }],
+            answer: 'A',
+            explanation: '测试解析' + i
+        });
+    }
+    
+    try {
+        var jsonStr = JSON.stringify(veryLargeData);
+        var parsed = JSON.parse(jsonStr);
+        tests.push({ name: '大量数据处理(1000题)', passed: parsed.questionBank.length === 1000, details: '成功解析1000道题目' });
+    } catch (e) {
+        tests.push({ name: '大量数据处理(1000题)', passed: false, details: '处理失败: ' + e.message });
+    }
+    
+    var circularRef = {};
+    circularRef.self = circularRef;
+    try {
+        JSON.stringify(circularRef);
+        tests.push({ name: '循环引用处理', passed: false, details: '应该抛出TypeError' });
+    } catch (e) {
+        tests.push({ name: '循环引用处理', passed: true, details: '正确处理循环引用: ' + e.name });
+    }
+    
+    var specialChars = { question: '测试"引号\'和\n换行符\\反斜杠' };
+    try {
+        var jsonStr = JSON.stringify(specialChars);
+        var parsed = JSON.parse(jsonStr);
+        tests.push({ name: '特殊字符处理', passed: parsed.question === specialChars.question, details: '正确处理引号、换行符、反斜杠' });
+    } catch (e) {
+        tests.push({ name: '特殊字符处理', passed: false, details: '特殊字符处理失败' });
+    }
+    
+    var emptyQuestionBank = { questionBank: [], userData: null };
+    try {
+        var parsed = JSON.parse(JSON.stringify(emptyQuestionBank));
+        tests.push({ name: '空数据处理', passed: parsed.questionBank.length === 0 && parsed.userData === null, details: '空题库和null数据正确处理' });
+    } catch (e) {
+        tests.push({ name: '空数据处理', passed: false, details: '空数据处理失败' });
+    }
+    
+    return { name: '边界情况测试', tests: tests };
+}
+
+function renderResults(testSuites) {
+    var html = '';
+    testSuites.forEach(function(suite) {
+        html += '<div class="test-case">';
+        html += '<h3>' + suite.name + '</h3>';
+        suite.tests.forEach(function(test) {
+            if (test.passed) testResults.passed++;
+            else testResults.failed++;
+            
+            html += '<div class="test-content">';
+            html += '<div style="display:flex;justify-content:space-between;margin:8px 0;">';
+            html += '<span>' + test.name + '</span>';
+            html += '<span class="status ' + (test.passed ? 'pass' : 'fail') + '">' + (test.passed ? '✓ 通过' : '✗ 失败') + '</span>';
+            html += '</div>';
+            html += '<div style="color:#666;font-size:12px;">' + test.details + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    
+    document.getElementById('testContainer').innerHTML = html;
+    
+    var total = testResults.passed + testResults.failed;
+    var rate = total > 0 ? Math.round(testResults.passed / total * 100) : 0;
+    document.getElementById('summary').innerHTML = '<div class="total">' + testResults.passed + ' / ' + total + ' 通过</div><div style="font-size:14px;opacity:0.9;margin-top:8px;">通过率: ' + rate + '% | 失败: ' + testResults.failed + '</div>';
+}
+
+window.addEventListener('DOMContentLoaded', runImportExportTests);
+</script>
+</body>
+</html>

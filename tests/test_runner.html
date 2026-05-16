@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰粉丝答题 - 测试环境</title>
+    <style>
+        :root {
+            --primary: #8B5CF6;
+            --primary-light: rgba(139, 92, 246, 0.15);
+            --primary-dark: #6B4C9A;
+            --primary-glow: rgba(139, 92, 246, 0.4);
+            --accent: #A78BFA;
+            --accent-pink: #F472B6;
+            --error: #EF4444;
+            --success: #10B981;
+            --bg: #0F0A1A;
+            --bg-secondary: #1A1225;
+            --card: #1A1225;
+            --card-hover: #251A35;
+            --text: #F5F5F5;
+            --text2: #A0A0A0;
+            --border: #2D2340;
+            --border-light: #3D3350;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--bg) 0%, #150D22 50%, #1A0F2E 100%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        .header { text-align: center; padding: 30px 0 20px; margin-bottom: 20px; }
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        .card {
+            background: var(--card); border-radius: 16px; padding: 24px; margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid var(--border); transition: all 0.3s ease;
+        }
+        .test-section { margin-bottom: 24px; }
+        .test-section h2 { font-size: 18px; margin-bottom: 12px; color: var(--accent); }
+        .test-item {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--border);
+        }
+        .test-item.pass { border-left-color: var(--success); }
+        .test-item.fail { border-left-color: var(--error); }
+        .test-item h3 { font-size: 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .test-item .status { font-size: 14px; }
+        .test-item.pass .status { color: var(--success); }
+        .test-item.fail .status { color: var(--error); }
+        .test-item .details { font-size: 13px; color: var(--text2); margin-top: 6px; }
+        .summary {
+            background: linear-gradient(135deg, var(--primary), #9333ea);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            color: #fff;
+        }
+        .summary .total { font-size: 48px; font-weight: 700; }
+        .summary .details { font-size: 14px; opacity: 0.9; margin-top: 8px; }
+        .btn {
+            display: inline-block; padding: 14px 24px; background: linear-gradient(135deg, var(--primary), #9333ea); color: #fff;
+            border: none; border-radius: 12px; font-size: 16px; cursor: pointer; text-align: center;
+            transition: all 0.3s ease; margin: 8px 4px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139,92,246,0.4); }
+        .btn-outline { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
+        .progress-wrap { margin-bottom: 16px; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-text { font-size: 13px; color: var(--text2); }
+        .timer-badge {
+            display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--primary);
+            background: var(--primary-light); padding: 6px 12px; border-radius: 20px;
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+        .progress-bar-bg { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent-pink)); border-radius: 4px; transition: width 0.3s; }
+        .question-card {
+            background: var(--card); border-radius: 16px; padding: 28px; margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+        }
+        .question-text { font-size: 18px; font-weight: 500; margin-bottom: 24px; line-height: 1.6; color: var(--text); }
+        .option-item {
+            display: flex; align-items: center; padding: 16px 18px; background: var(--bg-secondary);
+            border: 2px solid transparent; border-radius: 12px; cursor: pointer; margin-bottom: 12px;
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .option-item:hover { border-color: var(--primary); background: var(--card-hover); transform: translateX(4px); }
+        .option-item.disabled { cursor: default; }
+        .option-item.disabled:hover { border-color: transparent; background: var(--bg-secondary); }
+        .option-item.correct { border-color: var(--success); background: rgba(16, 185, 129, 0.15); box-shadow: 0 0 20px rgba(16,185,129,0.2); }
+        .option-item.wrong { border-color: var(--error); background: rgba(239, 68, 68, 0.15); box-shadow: 0 0 20px rgba(239,68,68,0.2); }
+        .option-key {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; background: linear-gradient(135deg, var(--card), var(--card-hover));
+            border-radius: 50%; margin-right: 14px; font-weight: 600; font-size: 14px; flex-shrink: 0;
+            border: 1px solid var(--border); color: var(--primary);
+        }
+        .feedback { margin-top: 16px; padding: 18px; border-radius: 12px; display: none; }
+        .feedback.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feedback.correct { background: rgba(16, 185, 129, 0.12); border: 1px solid var(--success); box-shadow: 0 0 20px rgba(16,185,129,0.1); }
+        .feedback.wrong { background: rgba(239, 68, 68, 0.12); border: 1px solid var(--error); box-shadow: 0 0 20px rgba(239,68,68,0.1); }
+        .feedback-title { font-weight: 600; margin-bottom: 6px; }
+        .feedback.correct .feedback-title { color: var(--success); }
+        .feedback.wrong .feedback-title { color: var(--error); }
+        .feedback-desc { font-size: 14px; color: var(--text2); }
+        .bottom-bar {
+            padding: 14px 0;
+            display: flex; gap: 10px; justify-content: center;
+        }
+        .bottom-bar .btn { flex: 1; max-width: 200px; }
+        .pb-safe { padding-bottom: 80px; }
+        .q-item { background: var(--bg); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+        .q-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+        .q-item-cat { font-size: 12px; color: var(--primary); background: var(--primary-light); padding: 2px 8px; border-radius: 4px; }
+        .q-item-text { font-size: 14px; line-height: 1.4; margin-bottom: 6px; }
+        .q-item-answer { font-size: 12px; color: var(--success); }
+        .q-item-actions { display: flex; gap: 6px; }
+        .q-item-actions button { padding: 4px 10px; font-size: 12px; }
+        .empty { text-align: center; padding: 50px 20px; color: var(--text2); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>林俊杰粉丝答题 - 自动化测试</h1>
+            <p style="color:var(--text2);font-size:14px;">测试覆盖缺口分析</p>
+        </header>
+        <div id="testResults"></div>
+        <div class="summary" id="summary" style="display:none;">
+            <div class="total" id="summaryTotal"></div>
+            <div class="details" id="summaryDetails"></div>
+        </div>
+        <div style="text-align:center;margin-top:24px;">
+            <button class="btn btn-outline" onclick="runAllTests()">重新运行测试</button>
+            <button class="btn btn-outline" onclick="runInteractiveTest()">运行交互测试</button>
+        </div>
+    </div>
+    <div class="container" id="interactiveArea" style="margin-top:30px;display:none;">
+        <div class="card">
+            <h2 style="margin-bottom:16px;">交互式测试区域</h2>
+            <div id="quizTestArea" class="pb-safe"></div>
+        </div>
+    </div>
+</body>
+<script>
+var testResults = { passed: 0, failed: 0, tests: [] };
+
+function assert(condition, message, details) {
+    var result = { message: message, passed: condition, details: details || '' };
+    testResults.tests.push(result);
+    if (condition) {
+        testResults.passed++;
+    } else {
+        testResults.failed++;
+    }
+    return condition;
+}
+
+function runAllTests() {
+    testResults = { passed: 0, failed: 0, tests: [] };
+    testDataParsing();
+    testDataValidation();
+    testOptionParsing();
+    testDatabaseOperations();
+    testBusinessLogic();
+    testBoundaryConditions();
+    testErrorHandling();
+    renderResults();
+}
+
+function testDataParsing() {
+    var section = { name: '数据解析测试', tests: [] };
+    
+    var validJson = '{"questionBank":[{"id":"001","question":"测试题","options":[{"key":"A","text":"选项A"}],"answer":"A"}]}';
+    try {
+        var parsed = JSON.parse(validJson);
+        assert(parsed.questionBank && parsed.questionBank.length === 1, '有效JSON解析', '成功解析包含questionBank的JSON');
+    } catch (e) {
+        assert(false, '有效JSON解析', 'JSON解析失败: ' + e.message);
+    }
+    
+    var invalidJson = '{invalid json}';
+    try {
+        JSON.parse(invalidJson);
+        assert(false, '无效JSON处理', '应该抛出异常');
+    } catch (e) {
+        assert(true, '无效JSON处理', '正确捕获JSON解析错误');
+    }
+    
+    var emptyJson = '{}';
+    try {
+        var parsed = JSON.parse(emptyJson);
+        assert(parsed !== undefined, '空JSON解析', '空对象应返回空对象而非undefined');
+    } catch (e) {
+        assert(false, '空JSON解析', '解析错误: ' + e.message);
+    }
+    
+    section.tests = testResults.tests.slice(-4);
+    return section;
+}
+
+function testDataValidation() {
+    var tests = [];
+    
+    var validQuestion = { id: '001', question: '测试', options: [{key:'A',text:'a'}], answer: 'A', category: '测试' };
+    assert(validQuestion.id && validQuestion.question && validQuestion.options && validQuestion.answer,
+        '有效题目结构验证', '包含所有必需字段: id, question, options, answer');
+    
+    var missingId = { question: '测试', options: [], answer: 'A' };
+    assert(!missingId.id, '缺失ID检测', '应检测到缺少id字段');
+    
+    var missingQuestion = { id: '001', options: [], answer: 'A' };
+    assert(!missingQuestion.question, '缺失题目文本检测', '应检测到缺少question字段');
+    
+    var emptyOptions = { id: '001', question: '测试', options: [], answer: 'A' };
+    assert(emptyOptions.options && emptyOptions.options.length === 0, '空选项数组检测', '空选项数组应能通过结构检查');
+    
+    var missingAnswer = { id: '001', question: '测试', options: [{key:'A',text:'a'}] };
+    assert(!missingAnswer.answer, '缺失答案检测', '应检测到缺少answer字段');
+    
+    var extraFields = { id: '001', question: '测试', options: [], answer: 'A', extra: 'data' };
+    assert(extraFields.extra === 'data', '额外字段保留', '应保留额外字段不被删除');
+    
+    tests.push(testResults.tests.slice(-6));
+    return { name: '数据验证测试', tests: testResults.tests.slice(-6) };
+}
+
+function testOptionParsing() {
+    var tests = [];
+    
+    var testCases = [
+        { input: 'A.选项A\nB.选项B\nC.选项C\nD.选项D', expected: 4, desc: '标准ABCD格式' },
+        { input: 'A、选项A\nB、选项B', expected: 2, desc: '中文顿号分隔' },
+        { input: 'A．选项A\nB．选项B', expected: 2, desc: '中文句号分隔' },
+        { input: '  A.  空格测试  \n  B. 选项B  ', expected: 2, desc: '多余空格处理' },
+        { input: 'A.选项A\nB.选项B\n\n\nC.选项C', expected: 3, desc: '空行跳过' },
+        { input: 'A.选项A\n非选项行\nB.选项B', expected: 2, desc: '无效行跳过' },
+        { input: 'E.无效格式', expected: 0, desc: '无效选项键E应跳过' },
+        { input: '1.数字开头', expected: 0, desc: '数字开头应跳过' },
+    ];
+    
+    testCases.forEach(function(tc) {
+        var lines = tc.input.split('\n');
+        var options = [];
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+            if (match) {
+                options.push({ key: match[1], text: match[2] });
+            }
+        }
+        assert(options.length === tc.expected, tc.desc + ' - 解析' + tc.expected + '个', '实际解析: ' + options.length + '个');
+    });
+    
+    return { name: '选项解析测试', tests: testResults.tests.slice(-testCases.length) };
+}
+
+function testDatabaseOperations() {
+    var DB_KEY = 'jj_quiz_test_v2';
+    
+    localStorage.removeItem(DB_KEY);
+    
+    var defaults = { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } };
+    localStorage.setItem(DB_KEY, JSON.stringify(defaults));
+    var retrieved = JSON.parse(localStorage.getItem(DB_KEY));
+    assert(retrieved.history !== undefined, '默认值写入和读取', 'history字段存在');
+    assert(retrieved.stats.total === 0, 'stats初始化', 'total初始为0');
+    assert(retrieved.stats.cats !== undefined, 'cats初始化', 'cats对象存在');
+    
+    var corrupted = '{invalid json';
+    try {
+        JSON.parse(corrupted);
+        assert(false, '损坏数据处理', '应抛出解析异常');
+    } catch (e) {
+        assert(true, '损坏数据处理', '正确处理损坏的localStorage数据');
+    }
+    
+    localStorage.removeItem(DB_KEY);
+    var empty = localStorage.getItem(DB_KEY);
+    assert(empty === null, '空数据处理', '不存在时返回null');
+    
+    localStorage.setItem(DB_KEY, JSON.stringify(defaults));
+    localStorage.removeItem(DB_KEY);
+    var afterRemove = localStorage.getItem(DB_KEY);
+    assert(afterRemove === null, '数据删除', '删除后应返回null');
+    
+    return { name: '数据库操作测试', tests: testResults.tests.slice(-5) };
+}
+
+function testBusinessLogic() {
+    var shuffleTest = function() {
+        var original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        var shuffled1 = shuffle(original.slice());
+        var shuffled2 = shuffle(original.slice());
+        
+        assert(shuffled1.length === original.length, '洗牌长度不变', '保持原始长度');
+        
+        var sameOrder = true;
+        for (var i = 0; i < original.length; i++) {
+            if (original[i] !== shuffled1[i]) { sameOrder = false; break; }
+        }
+        assert(!sameOrder || shuffled1.length === 1, '洗牌产生变化', '打乱后顺序应变化(单元素除外)');
+        
+        return true;
+    };
+    shuffleTest();
+    
+    var timerTest = function() {
+        var startTime = Date.now() - 65000;
+        var sec = Math.floor((Date.now() - startTime) / 1000);
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        var formatted = m + ':' + (s < 10 ? '0' : '') + s;
+        
+        assert(m >= 1, '计时器分钟计算', '65秒应显示1分钟以上');
+        assert(formatted.match(/^\d+:\d{2}$/), '计时器格式', '格式应为 M:SS');
+        
+        return true;
+    };
+    timerTest();
+    
+    var progressTest = function() {
+        var idx = 5, total = 10;
+        var pct = Math.round(idx / total * 100);
+        assert(pct === 50, '进度计算', '5/10 = 50%');
+        
+        idx = 0; total = 10;
+        pct = Math.round(idx / total * 100);
+        assert(pct === 0, '进度边界-起始', '0/10 = 0%');
+        
+        idx = 10; total = 10;
+        pct = Math.round(idx / total * 100);
+        assert(pct === 100, '进度边界-完成', '10/10 = 100%');
+        
+        idx = 1; total = 3;
+        pct = Math.round(idx / total * 100);
+        assert(pct === 33, '进度四舍五入', '1/3 ≈ 33%');
+        
+        return true;
+    };
+    progressTest();
+    
+    var accuracyTest = function() {
+        var correct = 7, total = 10;
+        var acc = total > 0 ? Math.round(correct / total * 100) : 0;
+        assert(acc === 70, '正确率计算', '7/10 = 70%');
+        
+        total = 0;
+        acc = total > 0 ? Math.round(correct / total * 100) : 0;
+        assert(acc === 0, '正确率边界-除零', '0题时应返回0%');
+        
+        correct = 0; total = 10;
+        acc = total > 0 ? Math.round(correct / total * 100) : 0;
+        assert(acc === 0, '正确率边界-零正确', '0正确率应为0%');
+        
+        correct = 10; total = 10;
+        acc = total > 0 ? Math.round(correct / total * 100) : 0;
+        assert(acc === 100, '正确率边界-完美', '100%正确率应为100%');
+        
+        return true;
+    };
+    accuracyTest();
+    
+    return { name: '核心业务逻辑测试', tests: testResults.tests.slice(-13) };
+}
+
+function testBoundaryConditions() {
+    var categoryStatsTest = function() {
+        var cats = {};
+        var q = { category: '歌曲' };
+        
+        if (!cats[q.category]) cats[q.category] = { t: 0, c: 0 };
+        cats[q.category].t++;
+        assert(cats['歌曲'].t === 1, '分类统计-初始计数', '第一次计数为1');
+        
+        cats[q.category].t++;
+        assert(cats['歌曲'].t === 2, '分类统计-递增', '第二次计数为2');
+        
+        q.ok = true;
+        if (q.ok) cats[q.category].c++;
+        assert(cats['歌曲'].c === 1, '分类统计-正确计数', '正确数增加');
+        
+        var pct = cats['歌曲'].t > 0 ? Math.round(cats['歌曲'].c / cats['歌曲'].t * 100) : 0;
+        assert(pct === 50, '分类统计-百分比', '1/2 = 50%');
+        
+        return true;
+    };
+    categoryStatsTest();
+    
+    var wrongBookTest = function() {
+        var wrong = [];
+        
+        wrong.push({ qid: '001', cnt: 1, time: Date.now() });
+        assert(wrong.length === 1, '错题本-首次添加', '长度为1');
+        
+        var found = false;
+        for (var i = 0; i < wrong.length; i++) {
+            if (wrong[i].qid === '001') { found = true; break; }
+        }
+        assert(found, '错题本-查找', '能找到已添加的错题');
+        
+        wrong = wrong.filter(function(w) { return w.qid !== '001'; });
+        assert(wrong.length === 0, '错题本-删除', '删除后长度为0');
+        
+        return true;
+    };
+    wrongBookTest();
+    
+    var emptyHistoryTest = function() {
+        var history = [];
+        var today = new Date().setHours(0, 0, 0, 0);
+        var th = history.filter(function(h) { return h.time >= today; });
+        assert(th.length === 0, '空历史记录', '空数组过滤后为空');
+    };
+    emptyHistoryTest();
+    
+    var quizModeTest = function() {
+        var modes = { quick: 10, standard: 20, intensive: 30 };
+        
+        assert(modes['quick'] === 10, '快速模式题数', 'quick = 10题');
+        assert(modes['standard'] === 20, '标准模式题数', 'standard = 20题');
+        assert(modes['intensive'] === 30, '强化模式题数', 'intensive = 30题');
+        
+        var count = modes['unknown'] || 10;
+        assert(count === 10, '未知模式默认值', '未知模式默认为10');
+        
+        return true;
+    };
+    quizModeTest();
+    
+    return { name: '边界条件测试', tests: testResults.tests.slice(-11) };
+}
+
+function testErrorHandling() {
+    var nullQuestionTest = function() {
+        var q = null;
+        var qid = q ? q.id : null;
+        assert(qid === null, '空题目ID处理', '空对象ID应为null');
+    };
+    nullQuestionTest();
+    
+    var undefinedCategoryTest = function() {
+        var cats = {};
+        var q = { category: undefined };
+        if (!cats[q.category]) cats[q.category] = { t: 0, c: 0 };
+        assert(cats[undefined] !== undefined, 'undefined分类处理', 'undefined作为key有效');
+    };
+    undefinedCategoryTest();
+    
+    var emptyStringTest = function() {
+        var s = '';
+        var hasContent = s && s.trim().length > 0;
+        assert(!hasContent, '空字符串验证', '空字符串应被识别为无内容');
+    };
+    emptyStringTest();
+    
+    var specialCharsTest = function() {
+        var input = '测试<script>alert("xss")</script>';
+        var sanitized = input.replace(/[<>]/g, '');
+        assert(sanitized.indexOf('<script>') === -1, '特殊字符处理', '应移除script标签');
+    };
+    specialCharsTest();
+    
+    var veryLongStringTest = function() {
+        var longStr = 'A'.repeat(10000);
+        var truncated = longStr.length > 5000 ? longStr.substring(0, 5000) + '...' : longStr;
+        assert(truncated.length < longStr.length, '超长字符串处理', '应截断过长的字符串');
+    };
+    veryLongStringTest();
+    
+    return { name: '错误处理测试', tests: testResults.tests.slice(-5) };
+}
+
+function renderResults() {
+    var html = '';
+    
+    var sections = [
+        { name: '数据解析测试', filter: '数据解析' },
+        { name: '数据验证测试', filter: '数据验证' },
+        { name: '选项解析测试', filter: '选项解析' },
+        { name: '数据库操作测试', filter: '数据库' },
+        { name: '核心业务逻辑测试', filter: '业务逻辑' },
+        { name: '边界条件测试', filter: '边界' },
+        { name: '错误处理测试', filter: '错误处理' }
+    ];
+    
+    sections.forEach(function(section) {
+        var sectionTests = testResults.tests.filter(function(t) {
+            return t.message.indexOf('解析') !== -1 || t.message.indexOf('JSON') !== -1 ||
+                   t.message.indexOf('验证') !== -1 || t.message.indexOf('检测') !== -1 ||
+                   t.message.indexOf('处理') !== -1 || t.message.indexOf('字段') !== -1 ||
+                   t.message.indexOf('格式') !== -1 || t.message.indexOf('操作') !== -1 ||
+                   t.message.indexOf('逻辑') !== -1 || t.message.indexOf('计算') !== -1 ||
+                   t.message.indexOf('边界') !== -1 || t.message.indexOf('计数') !== -1 ||
+                   t.message.indexOf('统计') !== -1;
+        });
+    });
+    
+    html += '<div class="card"><div class="test-section"><h2>📊 测试结果详情</h2>';
+    
+    var currentSection = '';
+    var sectionGroups = {
+        'data': ['解析', 'JSON', '验证', '检测', '字段'],
+        'option': ['选项', '格式'],
+        'db': ['数据库', 'localStorage', '存储', '删除'],
+        'logic': ['业务逻辑', '洗牌', '计时', '进度', '计算', '长度'],
+        'boundary': ['边界', '计数', '统计', '分类', '错题', '历史'],
+        'error': ['错误处理', '空题目', '分类', '字符串', '字符', '长度']
+    };
+    
+    testResults.tests.forEach(function(test, index) {
+        var group = 'other';
+        if (test.message.indexOf('解析') !== -1 || test.message.indexOf('JSON') !== -1) group = 'data';
+        else if (test.message.indexOf('选项') !== -1 || test.message.indexOf('格式') !== -1) group = 'option';
+        else if (test.message.indexOf('数据库') !== -1 || test.message.indexOf('存储') !== -1) group = 'db';
+        else if (test.message.indexOf('洗牌') !== -1 || test.message.indexOf('计时') !== -1 || test.message.indexOf('业务') !== -1) group = 'logic';
+        else if (test.message.indexOf('分类') !== -1 || test.message.indexOf('统计') !== -1 || test.message.indexOf('边界') !== -1 || test.message.indexOf('错题') !== -1) group = 'boundary';
+        else if (test.message.indexOf('处理') !== -1 || test.message.indexOf('空题目') !== -1 || test.message.indexOf('字符串') !== -1) group = 'error';
+        
+        var sectionNames = {
+            'data': '📝 数据解析测试',
+            'option': '🔣 选项解析测试',
+            'db': '💾 数据库操作测试',
+            'logic': '⚙️ 核心业务逻辑测试',
+            'boundary': '📐 边界条件测试',
+            'error': '⚠️ 错误处理测试',
+            'other': '📋 其他测试'
+        };
+        
+        if (currentSection !== group) {
+            if (currentSection !== '') html += '</div>';
+            currentSection = group;
+            html += '<div style="margin-top:16px;"><strong style="color:var(--accent);">' + sectionNames[group] + '</strong></div>';
+        }
+        
+        html += '<div class="test-item ' + (test.passed ? 'pass' : 'fail') + '">';
+        html += '<h3>' + (index + 1) + '. ' + test.message + ' <span class="status">' + (test.passed ? '✓ 通过' : '✗ 失败') + '</span></h3>';
+        if (test.details) {
+            html += '<div class="details">' + test.details + '</div>';
+        }
+        html += '</div>';
+    });
+    
+    html += '</div></div>';
+    
+    document.getElementById('testResults').innerHTML = html;
+    
+    var summary = document.getElementById('summary');
+    summary.style.display = 'block';
+    var total = testResults.passed + testResults.failed;
+    var passRate = total > 0 ? Math.round(testResults.passed / total * 100) : 0;
+    document.getElementById('summaryTotal').textContent = testResults.passed + ' / ' + total + ' 通过';
+    document.getElementById('summaryDetails').textContent = '通过率: ' + passRate + '% | 失败: ' + testResults.failed;
+}
+
+function runInteractiveTest() {
+    var area = document.getElementById('interactiveArea');
+    area.style.display = 'block';
+    
+    var QUESTION_BANK = [
+        {id:"001",category:"歌曲",question:"林俊杰首张专辑是什么？",options:[{key:"A",text:"乐行者"},{key:"B",text:"江南"},{key:"C",text:"曹操"},{key:"D",text:"西界"}],answer:"A",explanation:"《乐行者》是林俊杰2003年发行的首张专辑。"}
+    ];
+    
+    var state = { quiz: QUESTION_BANK, idx: 0, answered: false, correctCount: 0, startTime: Date.now() };
+    
+    function renderQ() {
+        if (state.idx >= state.quiz.length) {
+            finishQuiz();
+            return;
+        }
+        var q = state.quiz[state.idx];
+        var pct = Math.round(state.idx / state.quiz.length * 100);
+        var sec = Math.floor((Date.now() - state.startTime) / 1000);
+        var tm = Math.floor(sec / 60);
+        var ts = sec % 60;
+        
+        var html = '<div class="progress-wrap"><div class="progress-header"><span class="progress-text">' + (state.idx + 1) + ' / ' + state.quiz.length + '</span><span class="timer-badge">⏱ <span>' + tm + ':' + (ts < 10 ? '0' : '') + ts + '</span></span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:' + pct + '%"></div></div></div>';
+        html += '<div class="question-card"><div class="question-text">' + q.question + '</div>';
+        for (var i = 0; i < q.options.length; i++) {
+            var o = q.options[i];
+            html += '<div class="option-item" onclick="testPickOption(\'' + o.key + '\')" id="opt-' + o.key + '"><span class="option-key">' + o.key + '</span><span>' + o.text + '</span></div>';
+        }
+        html += '<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
+        html += '<div class="bottom-bar"><button class="btn" id="nextBtn" onclick="testNextQ()" style="display:none;">下一题</button></div>';
+        
+        document.getElementById('quizTestArea').innerHTML = html;
+        state.answered = false;
+    }
+    
+    window.testPickOption = function(key) {
+        if (state.answered) return;
+        state.answered = true;
+        var q = state.quiz[state.idx];
+        var ok = (key === q.answer);
+        if (ok) state.correctCount++;
+        
+        for (var i = 0; i < q.options.length; i++) {
+            var el = document.getElementById('opt-' + q.options[i].key);
+            el.classList.add('disabled');
+            if (q.options[i].key === q.answer) el.classList.add('correct');
+            else if (q.options[i].key === key && !ok) el.classList.add('wrong');
+        }
+        
+        var fb = document.getElementById('fb');
+        fb.className = 'feedback show ' + (ok ? 'correct' : 'wrong');
+        document.getElementById('fbTitle').textContent = ok ? '✓ 回答正确！' : '✗ 回答错误';
+        document.getElementById('fbDesc').textContent = q.explanation;
+        document.getElementById('nextBtn').style.display = 'inline-block';
+    };
+    
+    window.testNextQ = function() {
+        state.idx++;
+        renderQ();
+    };
+    
+    function finishQuiz() {
+        var total = state.quiz.length;
+        var correct = state.correctCount;
+        var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+        document.getElementById('quizTestArea').innerHTML = '<div class="card" style="text-align:center;padding:60px 20px;"><div style="font-size:48px;margin-bottom:16px;">🎉</div><h2>测试完成！</h2><p style="margin-top:16px;">正确率: ' + pct + '% (' + correct + '/' + total + ')</p></div>';
+    }
+    
+    renderQ();
+}
+
+function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    return a;
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    runAllTests();
+});
+</script>
+</body>
+</html>

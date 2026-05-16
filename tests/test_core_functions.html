@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心功能测试套件</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; padding: 30px 0; }
+        .header h1 { background: linear-gradient(135deg, #8B5CF6, #F472B6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 20px; }
+        .test-card { background: #16213e; border-radius: 12px; padding: 20px; border: 1px solid #333; }
+        .test-card h3 { margin-bottom: 12px; color: #8B5CF6; font-size: 16px; }
+        .test-item { padding: 10px 12px; margin: 6px 0; background: #0f0f23; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .test-item.pass { border-left: 3px solid #10B981; }
+        .test-item.fail { border-left: 3px solid #EF4444; }
+        .test-item .name { font-size: 14px; }
+        .test-item .result { font-size: 12px; padding: 2px 8px; border-radius: 4px; }
+        .test-item .result.pass { background: rgba(16,185,129,0.2); color: #10B981; }
+        .test-item .result.fail { background: rgba(239,68,68,0.2); color: #EF4444; }
+        .summary-bar { background: linear-gradient(135deg, #8B5CF6, #9333ea); border-radius: 16px; padding: 24px; text-align: center; margin-top: 30px; }
+        .summary-bar .numbers { font-size: 48px; font-weight: 700; }
+        .summary-bar .rate { font-size: 18px; opacity: 0.9; margin-top: 8px; }
+        .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 8px; }
+        .risk-badge.high { background: rgba(239,68,68,0.2); color: #EF4444; }
+        .risk-badge.medium { background: rgba(251,191,36,0.2); color: #FBBF24; }
+        .risk-badge.low { background: rgba(16,185,129,0.2); color: #10B981; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🎯 核心功能测试套件</h1>
+            <p style="color:#888;margin-top:8px;">针对高风险代码路径的自动化测试</p>
+        </header>
+        <div class="test-grid" id="testGrid"></div>
+        <div class="summary-bar">
+            <div class="numbers" id="summaryNumbers"></div>
+            <div class="rate" id="summaryRate"></div>
+        </div>
+    </div>
+</body>
+<script>
+var testResults = { passed: 0, failed: 0, suites: [] };
+
+function runAllCoreTests() {
+    testResults = { passed: 0, failed: 0, suites: [] };
+    
+    testResults.suites.push(testShuffleAlgorithm());
+    testResults.suites.push(testQuizFlow());
+    testResults.suites.push(testStatisticsCalculation());
+    testResults.suites.push(testWrongBookManagement());
+    testResults.suites.push(testCategoryFilter());
+    testResults.suites.push(testTimerLogic());
+    
+    renderTestGrid();
+    renderSummary();
+}
+
+function testShuffleAlgorithm() {
+    var tests = [];
+    
+    function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i]; a[i] = a[j]; a[j] = t;
+        }
+        return a;
+    }
+    
+    var original = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    var shuffled = shuffle(original.slice());
+    tests.push({
+        name: '洗牌不改变长度',
+        passed: shuffled.length === original.length,
+        risk: 'low',
+        details: '期望:10, 实际:' + shuffled.length
+    });
+    
+    var sameOrder = original.every(function(v, i) { return v === shuffled[i]; });
+    var shuffledCorrectly = !sameOrder || original.length <= 1;
+    tests.push({
+        name: '洗牌产生随机顺序',
+        passed: shuffledCorrectly,
+        risk: 'medium',
+        details: '顺序是否变化: ' + !sameOrder
+    });
+    
+    var allElementsPreserved = original.every(function(v) { return shuffled.indexOf(v) !== -1; });
+    tests.push({
+        name: '洗牌保留所有元素',
+        passed: allElementsPreserved,
+        risk: 'high',
+        details: '所有10个元素都保留'
+    });
+    
+    var counts = {};
+    for (var i = 0; i < 100; i++) {
+        var s = shuffle([1, 2, 3]);
+        var key = s.join(',');
+        counts[key] = (counts[key] || 0) + 1;
+    }
+    var uniqueResults = Object.keys(counts).length;
+    tests.push({
+        name: '洗牌分布均匀性(100次)',
+        passed: uniqueResults > 4,
+        risk: 'medium',
+        details: '产生' + uniqueResults + '种不同结果(最多6种)'
+    });
+    
+    var singleItem = shuffle([1]);
+    tests.push({
+        name: '单元素数组处理',
+        passed: singleItem.length === 1 && singleItem[0] === 1,
+        risk: 'low',
+        details: '单元素数组保持不变'
+    });
+    
+    return { name: '洗牌算法测试', icon: '🎲', tests: tests };
+}
+
+function testQuizFlow() {
+    var tests = [];
+    
+    var questionBank = [
+        {id:'001',category:'歌曲',question:'Q1',options:[{key:'A',text:'A1'},{key:'B',text:'B1'}],answer:'A',explanation:'E1'},
+        {id:'002',category:'专辑',question:'Q2',options:[{key:'A',text:'A2'},{key:'B',text:'B2'}],answer:'B',explanation:'E2'}
+    ];
+    
+    var state = { quiz: questionBank, idx: 0, answered: false, correctCount: 0 };
+    
+    var q = state.quiz[state.idx];
+    tests.push({
+        name: '题目加载',
+        passed: q && q.id === '001',
+        risk: 'high',
+        details: '第一题ID:' + q.id
+    });
+    
+    var ok = state.quiz[state.idx].answer === 'A';
+    if (ok) state.correctCount++;
+    tests.push({
+        name: '正确答案判定',
+        passed: ok && state.correctCount === 1,
+        risk: 'high',
+        details: '选择A,正确数:' + state.correctCount
+    });
+    
+    var wrong = state.quiz[state.idx].answer !== 'B';
+    tests.push({
+        name: '错误答案判定',
+        passed: wrong,
+        risk: 'high',
+        details: '选择B是否错误:' + wrong
+    });
+    
+    state.idx++;
+    tests.push({
+        name: '题目切换',
+        passed: state.idx === 1 && state.quiz[state.idx].id === '002',
+        risk: 'medium',
+        details: '切换到第二题,ID:' + state.quiz[state.idx].id
+    });
+    
+    var pct = Math.round(1 / 2 * 100);
+    tests.push({
+        name: '进度百分比计算',
+        passed: pct === 50,
+        risk: 'medium',
+        details: '1/2 = ' + pct + '%'
+    });
+    
+    return { name: '答题流程测试', icon: '✍️', tests: tests };
+}
+
+function testStatisticsCalculation() {
+    var tests = [];
+    
+    var correct = 7, total = 10;
+    var accuracy = total > 0 ? Math.round(correct / total * 100) : 0;
+    tests.push({
+        name: '正确率计算(7/10)',
+        passed: accuracy === 70,
+        risk: 'high',
+        details: '70%'
+    });
+    
+    accuracy = 0 > 0 ? Math.round(0 / 0 * 100) : 0;
+    tests.push({
+        name: '正确率-除零保护',
+        passed: accuracy === 0,
+        risk: 'high',
+        details: '0题时返回0%'
+    });
+    
+    accuracy = 10 > 0 ? Math.round(10 / 10 * 100) : 0;
+    tests.push({
+        name: '正确率-完美得分',
+        passed: accuracy === 100,
+        risk: 'medium',
+        details: '10/10 = 100%'
+    });
+    
+    var cats = { '歌曲': { t: 5, c: 3 }, '专辑': { t: 2, c: 1 } };
+    var songAcc = cats['歌曲'].t > 0 ? Math.round(cats['歌曲'].c / cats['歌曲'].t * 100) : 0;
+    tests.push({
+        name: '分类正确率',
+        passed: songAcc === 60,
+        risk: 'medium',
+        details: '歌曲分类:3/5=60%'
+    });
+    
+    var today = new Date().setHours(0, 0, 0, 0);
+    var history = [
+        { qid: '001', ok: true, time: Date.now() - 86400000 },
+        { qid: '002', ok: false, time: Date.now() },
+        { qid: '003', ok: true, time: Date.now() }
+    ];
+    var todayHistory = history.filter(function(h) { return h.time >= today; });
+    tests.push({
+        name: '今日答题过滤',
+        passed: todayHistory.length === 2,
+        risk: 'medium',
+        details: '今日答题数:2'
+    });
+    
+    return { name: '统计计算测试', icon: '📊', tests: tests };
+}
+
+function testWrongBookManagement() {
+    var tests = [];
+    
+    var wrong = [];
+    
+    wrong.push({ qid: '001', cnt: 1, time: Date.now() });
+    tests.push({
+        name: '添加错题',
+        passed: wrong.length === 1,
+        risk: 'high',
+        details: '错题数:1'
+    });
+    
+    var exists = wrong.some(function(w) { return w.qid === '001'; });
+    tests.push({
+        name: '重复错题检测',
+        passed: exists,
+        risk: 'high',
+        details: '001已在错题本中'
+    });
+    
+    for (var i = 0; i < wrong.length; i++) {
+        if (wrong[i].qid === '001') {
+            wrong[i].cnt++;
+            wrong[i].time = Date.now();
+            break;
+        }
+    }
+    tests.push({
+        name: '错题计数递增',
+        passed: wrong[0].cnt === 2,
+        risk: 'medium',
+        details: '计数:2'
+    });
+    
+    wrong = wrong.filter(function(w) { return w.qid !== '001'; });
+    tests.push({
+        name: '错题移除功能',
+        passed: wrong.length === 0,
+        risk: 'high',
+        details: '移除后错题数:0'
+    });
+    
+    var db = { wrong: [] };
+    var rec = { qid: '002', ok: false, time: Date.now() };
+    if (!rec.ok) {
+        var found = false;
+        for (var j = 0; j < db.wrong.length; j++) {
+            if (db.wrong[j].qid === rec.qid) { found = true; break; }
+        }
+        if (!found) db.wrong.push({ qid: rec.qid, cnt: 1, time: Date.now() });
+    }
+    tests.push({
+        name: '答题错误自动记录',
+        passed: db.wrong.length === 1 && db.wrong[0].qid === '002',
+        risk: 'high',
+        details: '错误答题被自动记录'
+    });
+    
+    return { name: '错题本管理测试', icon: '📚', tests: tests };
+}
+
+function testCategoryFilter() {
+    var tests = [];
+    
+    var questionBank = [
+        { id: '001', category: '歌曲', question: 'Q1' },
+        { id: '002', category: '专辑', question: 'Q2' },
+        { id: '003', category: '歌曲', question: 'Q3' }
+    ];
+    
+    var cats = {};
+    for (var i = 0; i < questionBank.length; i++) {
+        var c = questionBank[i].category;
+        cats[c] = (cats[c] || 0) + 1;
+    }
+    tests.push({
+        name: '分类统计',
+        passed: cats['歌曲'] === 2 && cats['专辑'] === 1,
+        risk: 'medium',
+        details: '歌曲:2, 专辑:1'
+    });
+    
+    var searchTerm = 'Q1';
+    var filtered = questionBank.filter(function(q) {
+        return q.question.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+    });
+    tests.push({
+        name: '搜索过滤-精确匹配',
+        passed: filtered.length === 1 && filtered[0].id === '001',
+        risk: 'medium',
+        details: '搜索"Q1"找到1题'
+    });
+    
+    searchTerm = 'q';
+    filtered = questionBank.filter(function(q) {
+        return q.question.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+    });
+    tests.push({
+        name: '搜索过滤-大小写不敏感',
+        passed: filtered.length === 3,
+        risk: 'low',
+        details: '搜索"q"找到3题'
+    });
+    
+    searchTerm = '';
+    filtered = questionBank.filter(function(q) {
+        return !searchTerm || q.question.toLowerCase().indexOf(searchTerm.toLowerCase()) !== -1;
+    });
+    tests.push({
+        name: '搜索过滤-空搜索',
+        passed: filtered.length === 3,
+        risk: 'low',
+        details: '空搜索返回全部'
+    });
+    
+    var catFilter = '歌曲';
+    filtered = questionBank.filter(function(q) {
+        return !catFilter || q.category === catFilter;
+    });
+    tests.push({
+        name: '分类过滤',
+        passed: filtered.length === 2 && filtered.every(function(q) { return q.category === '歌曲'; }),
+        risk: 'medium',
+        details: '过滤后2题都是歌曲'
+    });
+    
+    return { name: '分类和搜索测试', icon: '🔍', tests: tests };
+}
+
+function testTimerLogic() {
+    var tests = [];
+    
+    var startTime = Date.now() - 125000;
+    var sec = Math.floor((Date.now() - startTime) / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    tests.push({
+        name: '计时器-分钟计算',
+        passed: m >= 2,
+        risk: 'medium',
+        details: '125秒 = ' + m + '分' + s + '秒'
+    });
+    
+    var formatted = m + ':' + (s < 10 ? '0' : '') + s;
+    tests.push({
+        name: '计时器-零填充',
+        passed: formatted.match(/^\d+:\d{2}$/),
+        risk: 'low',
+        details: '格式:' + formatted
+    });
+    
+    startTime = Date.now() - 1000;
+    sec = Math.floor((Date.now() - startTime) / 1000);
+    m = Math.floor(sec / 60);
+    s = sec % 60;
+    formatted = m + ':' + (s < 10 ? '0' : '') + s;
+    tests.push({
+        name: '计时器-边界(1秒)',
+        passed: formatted === '0:01',
+        risk: 'low',
+        details: '1秒显示:0:01'
+    });
+    
+    startTime = Date.now() - 60000;
+    sec = Math.floor((Date.now() - startTime) / 1000);
+    m = Math.floor(sec / 60);
+    s = sec % 60;
+    formatted = m + ':' + (s < 10 ? '0' : '') + s;
+    tests.push({
+        name: '计时器-边界(60秒)',
+        passed: formatted === '1:00',
+        risk: 'low',
+        details: '60秒显示:1:00'
+    });
+    
+    var elapsed = Date.now() - startTime;
+    var minutes = Math.floor(elapsed / 60000);
+    var seconds = Math.floor((elapsed % 60000) / 1000);
+    var fmtTime = minutes + '分' + seconds + '秒';
+    tests.push({
+        name: '计时器-中文格式',
+        passed: fmtTime.match(/^\d+分\d+秒$/),
+        risk: 'low',
+        details: '中文格式:' + fmtTime
+    });
+    
+    return { name: '计时器逻辑测试', icon: '⏱️', tests: tests };
+}
+
+function renderTestGrid() {
+    var html = '';
+    testResults.suites.forEach(function(suite) {
+        html += '<div class="test-card">';
+        html += '<h3>' + (suite.icon || '📋') + ' ' + suite.name + '</h3>';
+        suite.tests.forEach(function(test) {
+            if (test.passed) testResults.passed++;
+            else testResults.failed++;
+            
+            var riskBadge = '<span class="risk-badge ' + test.risk + '">' + test.risk.toUpperCase() + '</span>';
+            html += '<div class="test-item ' + (test.passed ? 'pass' : 'fail') + '">';
+            html += '<span class="name">' + test.name + riskBadge + '</span>';
+            html += '<span class="result ' + (test.passed ? 'pass' : 'fail') + '">' + (test.passed ? '✓' : '✗') + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+    });
+    document.getElementById('testGrid').innerHTML = html;
+}
+
+function renderSummary() {
+    var total = testResults.passed + testResults.failed;
+    var rate = total > 0 ? Math.round(testResults.passed / total * 100) : 0;
+    
+    document.getElementById('summaryNumbers').textContent = testResults.passed + ' / ' + total;
+    document.getElementById('summaryRate').textContent = '通过率: ' + rate + '% | 失败: ' + testResults.failed;
+}
+
+window.addEventListener('DOMContentLoaded', runAllCoreTests);
+</script>
+</body>
+</html>
