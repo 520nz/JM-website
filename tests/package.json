@@ -1,0 +1,13 @@
+{
+  "name": "jj-quiz-tests",
+  "version": "1.0.0",
+  "description": "Automated test suite for JJ Quiz application",
+  "scripts": {
+    "test": "node test-runner.js",
+    "test:coverage": "node test-runner.js --coverage"
+  },
+  "devDependencies": {
+    "jsdom": "^22.0.0",
+    "qunit": "^0.2.8"
+  }
+}
