@@ -1,0 +1,2248 @@
+================================================================================
+测试缺口分析报告
+生成时间: 2026-05-25 07:07:40
+================================================================================
+
+## 1. 代码变更分析
+--------------------------------------------------------------------------------
+近期（30天内）未发现代码提交。
+
+## 2. 代码库分析
+--------------------------------------------------------------------------------
+文件: index.html
+总行数: 893
+提取的函数数: 47
+复杂逻辑区域: 111
+事件处理器: 0
+
+### 2.1 关键函数列表
+
+- switchView (复杂度: 7, 条件: 是, 循环: 是)
+- selectMode (复杂度: 4, 条件: 是, 循环: 是)
+- startCatQuiz (复杂度: 4, 条件: 是, 循环: 是)
+- startWrongBookQuiz (复杂度: 4, 条件: 是, 循环: 是)
+- updateHome (复杂度: 1, 条件: 否, 循环: 是)
+
+### 2.2 复杂逻辑区域
+
+- [high] Line 475: JSON解析
+- [high] Line 745: JSON解析
+- [high] Line 775: JSON解析
+- [high] Line 475: 本地存储操作
+- [high] Line 477: 本地存储操作
+- [high] Line 738: 本地存储操作
+- [high] Line 742: 本地存储操作
+- [medium] Line 890: 事件绑定
+- [medium] Line 480: 数组方法
+- [medium] Line 551: 数组方法
+
+### 2.3 用户交互流程
+
+- startTimer: 开始交互
+- startRandomQuiz: 开始交互
+- startCatQuiz: 开始交互
+- startWrongBookQuiz: 开始交互
+- pickOption: 选择交互
+- nextQ: 导航交互
+- importData: 导入交互
+- exportData: 导出交互
+
+## 3. 风险区域识别
+--------------------------------------------------------------------------------
+
+共识别到 126 个风险区域：
+
+
+### 3.1 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~487
+- **描述**: 函数switchView复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function switchView(v){
+    var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+    var el=document.getElementById('view-'+v);if(el)el.clas...
+```
+
+### 3.2 🟡 selectMode
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~506
+- **描述**: 函数selectMode复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function selectMode(m){state.mode=m;var btns=document.querySelectorAll('.mode-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');var t=document.querySelector('.mode-btn[data-mode="...
+```
+
+### 3.3 🟡 startCatQuiz
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~516
+- **描述**: 函数startCatQuiz复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function startCatQuiz(cat){var f=[];for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].category===cat)f.push(QUESTION_BANK[i]);}...
+```
+
+### 3.4 🟡 startWrongBookQuiz
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~517
+- **描述**: 函数startWrongBookQuiz复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function startWrongBookQuiz(){var wl=DB.getWrong();var qs=[];for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(q)qs.push(q);}...
+```
+
+### 3.5 🟠 pickOption
+- **文件**: index.html
+- **风险类型**: 核心业务
+- **优先级**: HIGH
+- **位置**: Line ~531
+- **描述**: 函数pickOption复杂度评估：核心业务
+- **代码片段**:
+```javascript
+function pickOption(key){
+    if(state.answered)return;state.answered=true;
+    var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+    DB.addRecord({qid:q.id,ans:key,ok:ok...
+```
+
+### 3.6 🟠 shuffle
+- **文件**: index.html
+- **风险类型**: 循环逻辑, 共享工具
+- **优先级**: HIGH
+- **位置**: Line ~571
+- **描述**: 函数shuffle复杂度评估：循环逻辑, 共享工具
+- **代码片段**:
+```javascript
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}...
+```
+
+### 3.7 🟠 renderQuestionList
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: HIGH
+- **位置**: Line ~609
+- **描述**: 函数renderQuestionList复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function renderQuestionList() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var catFilter = document.getElementById('categoryFilter').value;
+    var html = '';
+   ...
+```
+
+### 3.8 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~646
+- **描述**: 函数showEditForm复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function showEditForm(qid) {
+    var q = null;
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        if (QUESTION_BANK[i].id === qid) { q = QUESTION_BANK[i]; break; }...
+```
+
+### 3.9 🟠 saveQuestion
+- **文件**: index.html
+- **风险类型**: 核心业务
+- **优先级**: HIGH
+- **位置**: Line ~670
+- **描述**: 函数saveQuestion复杂度评估：核心业务
+- **代码片段**:
+```javascript
+function saveQuestion() {
+    var id = document.getElementById('editId').value;
+    var category = document.getElementById('editCategory').value;
+    var question = document.getElementById('editQuesti...
+```
+
+### 3.10 🟠 deleteQuestion
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: HIGH
+- **位置**: Line ~730
+- **描述**: 函数deleteQuestion复杂度评估：循环逻辑
+- **代码片段**:
+```javascript
+function deleteQuestion(qid) {
+    if (!confirm('确定删除此题目？')) return;
+    QUESTION_BANK = QUESTION_BANK.filter(function(q) { return q.id !== qid; }...
+```
+
+### 3.11 🟡 loadQuestionBank
+- **文件**: index.html
+- **风险类型**: 一般逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~741
+- **描述**: 函数loadQuestionBank复杂度评估：基础逻辑
+- **代码片段**:
+```javascript
+function loadQuestionBank() {
+    var saved = localStorage.getItem('jj_question_bank');
+    if (saved) {
+        try {
+            QUESTION_BANK = JSON.parse(saved);
+        }...
+```
+
+### 3.12 🟡 exportData
+- **文件**: index.html
+- **风险类型**: 核心业务
+- **优先级**: MEDIUM
+- **位置**: Line ~751
+- **描述**: 函数exportData复杂度评估：核心业务
+- **代码片段**:
+```javascript
+function exportData() {
+    var data = {
+        questionBank: QUESTION_BANK,
+        userData: DB.get(),
+        exportTime: new Date().toISOString()
+    }...
+```
+
+### 3.13 🟠 importData
+- **文件**: index.html
+- **风险类型**: 核心业务
+- **优先级**: HIGH
+- **位置**: Line ~768
+- **描述**: 函数importData复杂度评估：核心业务
+- **代码片段**:
+```javascript
+function importData(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var data;
+        try {
+         ...
+```
+
+### 3.14 🟡 addWrong
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~479
+- **描述**: 函数addWrong复杂度评估：循环逻辑
+
+### 3.15 🟡 findQ
+- **文件**: index.html
+- **风险类型**: 循环逻辑
+- **优先级**: MEDIUM
+- **位置**: Line ~482
+- **描述**: 函数findQ复杂度评估：循环逻辑
+
+### 3.16 🟠 switchView
+- **文件**: index.html
+- **风险类型**: JSON解析
+- **优先级**: HIGH
+- **位置**: Line 475
+- **描述**: 复杂JSON解析操作
+- **代码片段**:
+```javascript
+     472: 
+     473: var DB={
+     474:     KEY:'jj_quiz_v2',
+>>>  475:     get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+     476:     defaults:function(){...
+```
+
+### 3.17 🟠 loadQuestionBank
+- **文件**: index.html
+- **风险类型**: JSON解析
+- **优先级**: HIGH
+- **位置**: Line 745
+- **描述**: 复杂JSON解析操作
+- **代码片段**:
+```javascript
+     742:     var saved = localStorage.getItem('jj_question_bank');
+     743:     if (saved) {
+     744:         try {
+>>>  745:             QUESTION_BANK = JSON.parse(saved);
+     746:         } catc...
+```
+
+### 3.18 🟠 importData
+- **文件**: index.html
+- **风险类型**: JSON解析
+- **优先级**: HIGH
+- **位置**: Line 775
+- **描述**: 复杂JSON解析操作
+- **代码片段**:
+```javascript
+     772:     reader.onload = function(e) {
+     773:         var data;
+     774:         try {
+>>>  775:             data = JSON.parse(e.target.result);
+     776:         } catch (err) {
+     777:   ...
+```
+
+### 3.19 🟠 switchView
+- **文件**: index.html
+- **风险类型**: 本地存储操作
+- **优先级**: HIGH
+- **位置**: Line 475
+- **描述**: 复杂本地存储操作操作
+- **代码片段**:
+```javascript
+     472: 
+     473: var DB={
+     474:     KEY:'jj_quiz_v2',
+>>>  475:     get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+     476:     defaults:function(){...
+```
+
+### 3.20 🟠 switchView
+- **文件**: index.html
+- **风险类型**: 本地存储操作
+- **优先级**: HIGH
+- **位置**: Line 477
+- **描述**: 复杂本地存储操作操作
+- **代码片段**:
+```javascript
+     474:     KEY:'jj_quiz_v2',
+     475:     get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+     476:     defaults:function(){return{history:[],wrong:[],sta...
+```
+
+### 3.21 🟠 saveQuestionBank
+- **文件**: index.html
+- **风险类型**: 本地存储操作
+- **优先级**: HIGH
+- **位置**: Line 738
+- **描述**: 复杂本地存储操作操作
+- **代码片段**:
+```javascript
+     735: }
+     736: 
+     737: function saveQuestionBank() {
+>>>  738:     localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
+     739: }
+     740: 
+     741: function loadQues...
+```
+
+### 3.22 🟠 loadQuestionBank
+- **文件**: index.html
+- **风险类型**: 本地存储操作
+- **优先级**: HIGH
+- **位置**: Line 742
+- **描述**: 复杂本地存储操作操作
+- **代码片段**:
+```javascript
+     739: }
+     740: 
+     741: function loadQuestionBank() {
+>>>  742:     var saved = localStorage.getItem('jj_question_bank');
+     743:     if (saved) {
+     744:         try {
+     745:         ...
+```
+
+### 3.23 🟡 resetQuestionBank
+- **文件**: index.html
+- **风险类型**: 事件绑定
+- **优先级**: MEDIUM
+- **位置**: Line 890
+- **描述**: 复杂事件绑定操作
+- **代码片段**:
+```javascript
+     887:     try { updateCategoryFilter(); } catch (e) {}
+     888: }
+     889: 
+>>>  890: window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
+     891: </script...
+```
+
+### 3.24 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 数组方法
+- **优先级**: MEDIUM
+- **位置**: Line 480
+- **描述**: 复杂数组方法操作
+- **代码片段**:
+```javascript
+     477:     save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+     478:     addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;va...
+```
+
+### 3.25 🟡 updateHome
+- **文件**: index.html
+- **风险类型**: 数组方法
+- **优先级**: MEDIUM
+- **位置**: Line 551
+- **描述**: 复杂数组方法操作
+- **代码片段**:
+```javascript
+     548:     document.getElementById('quizArea').innerHTML=html;
+     549: }
+     550: 
+>>>  551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(f...
+```
+
+### 3.26 🟡 updateHome
+- **文件**: index.html
+- **风险类型**: 数组方法
+- **优先级**: MEDIUM
+- **位置**: Line 551
+- **描述**: 复杂数组方法操作
+- **代码片段**:
+```javascript
+     548:     document.getElementById('quizArea').innerHTML=html;
+     549: }
+     550: 
+>>>  551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(f...
+```
+
+### 3.27 🟡 deleteQuestion
+- **文件**: index.html
+- **风险类型**: 数组方法
+- **优先级**: MEDIUM
+- **位置**: Line 732
+- **描述**: 复杂数组方法操作
+- **代码片段**:
+```javascript
+     729: 
+     730: function deleteQuestion(qid) {
+     731:     if (!confirm('确定删除此题目？')) return;
+>>>  732:     QUESTION_BANK = QUESTION_BANK.filter(function(q) { return q.id !== qid; });
+     733: ...
+```
+
+### 3.28 🟡 switchView
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 312
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     309:                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+     310:                     <div style="display:flex;gap:10px;flex-wrap...
+```
+
+### 3.29 🟡 switchView
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 488
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     485: var VIEW_NAMES={home:'首页',practice:'练习',wrongbook:'错题本',stats:'统计',admin:'管理'};
+     486: 
+     487: function switchView(v){
+>>>  488:     var views=document.querySelectorAll('.view');for(va...
+```
+
+### 3.30 🟡 switchView
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 489
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     486: 
+     487: function switchView(v){
+     488:     var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+>>>  489:     var el=documen...
+```
+
+### 3.31 🟡 switchView
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 490
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     487: function switchView(v){
+     488:     var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+     489:     var el=document.getElemen...
+```
+
+### 3.32 🟡 selectMode
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 501
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     498:             state.quiz = [];
+     499:             state.idx = 0;
+     500:             stopTimer();
+>>>  501:             document.getElementById('quizArea').innerHTML = '<div class="card" ...
+```
+
+### 3.33 🟡 selectMode
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 506
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     503:     }
+     504: }
+     505: 
+>>>  506: function selectMode(m){state.mode=m;var btns=document.querySelectorAll('.mode-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');va...
+```
+
+### 3.34 🟡 selectMode
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 506
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     503:     }
+     504: }
+     505: 
+>>>  506: function selectMode(m){state.mode=m;var btns=document.querySelectorAll('.mode-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');va...
+```
+
+### 3.35 🟡 tickTimer
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 511
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     508: 
+     509: function startTimer(){state.startTime=Date.now();if(state.timer)clearInterval(state.timer);state.timer=setInterval(tickTimer,1000);}
+     510: function stopTimer(){if(state.timer)...
+```
+
+### 3.36 🟡 showCategoryView
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 515
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     512: function fmtTime(ms){var sec=Math.floor(ms/1000);var m=Math.floor(sec/60);var s=sec%60;return m+'分'+s+'秒';}
+     513: 
+     514: function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK)....
+```
+
+### 3.37 🟡 pickOption
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 528
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     525:     for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><sp...
+```
+
+### 3.38 🟡 pickOption
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 535
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     532:     if(state.answered)return;state.answered=true;
+     533:     var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+     534:     DB.addRecord({qid:q.id,ans:key,o...
+```
+
+### 3.39 🟡 pickOption
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 536
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     533:     var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+     534:     DB.addRecord({qid:q.id,ans:key,ok:ok,time:Date.now()});if(!ok)DB.addWrong(q.id);
+     535:  ...
+```
+
+### 3.40 🟡 nextQ
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 537
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     534:     DB.addRecord({qid:q.id,ans:key,ok:ok,time:Date.now()});if(!ok)DB.addWrong(q.id);
+     535:     for(var i=0;i<q.options.length;i++){var el=document.getElementById('opt-'+q.options[i].key)...
+```
+
+### 3.41 🟡 nextQ
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 538
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     535:     for(var i=0;i<q.options.length;i++){var el=document.getElementById('opt-'+q.options[i].key);el.classList.add('disabled');if(q.options[i].key===q.answer)el.classList.add('correct');else i...
+```
+
+### 3.42 🟡 nextQ
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 539
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     536:     var fb=document.getElementById('fb');fb.className='feedback show '+(ok?'correct':'wrong');
+     537:     document.getElementById('fbTitle').textContent=ok?'✓ 回答正确！':'✗ 回答错误';
+     538:  ...
+```
+
+### 3.43 🟡 finishQuiz
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 548
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     545: function finishQuiz(){
+     546:     stopTimer();var elapsed=Date.now()-state.startTime;var total=state.quiz.length;var correct=state.correctCount;var wrong=total-correct;var pct=total>0?Mat...
+```
+
+### 3.44 🟡 updateHome
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 551
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     548:     document.getElementById('quizArea').innerHTML=html;
+     549: }
+     550: 
+>>>  551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(f...
+```
+
+### 3.45 🟡 updateHome
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 551
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     548:     document.getElementById('quizArea').innerHTML=html;
+     549: }
+     550: 
+>>>  551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(f...
+```
+
+### 3.46 🟡 renderWrongBook
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 554
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(function(h){return h.time>=today;});document.getElementById('todayCount').textContent=th.l...
+```
+
+### 3.47 🟡 renderWrongBook
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 554
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     551: function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var th=d.history.filter(function(h){return h.time>=today;});document.getElementById('todayCount').textContent=th.l...
+```
+
+### 3.48 🟡 renderStats
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 563
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     560: function removeWrong(qid){DB.removeWrong(qid);renderWrongBook();}
+     561: 
+     562: function renderStats(){
+>>>  563:     var d=DB.get();document.getElementById('sTotal').textContent=d.st...
+```
+
+### 3.49 🟡 renderStats
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 563
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     560: function removeWrong(qid){DB.removeWrong(qid);renderWrongBook();}
+     561: 
+     562: function renderStats(){
+>>>  563:     var d=DB.get();document.getElementById('sTotal').textContent=d.st...
+```
+
+### 3.50 🟡 renderStats
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 564
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     561: 
+     562: function renderStats(){
+     563:     var d=DB.get();document.getElementById('sTotal').textContent=d.stats.total;document.getElementById('sCorrect').textContent=d.stats.correct;
+>...
+```
+
+### 3.51 🟡 renderStats
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 564
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     561: 
+     562: function renderStats(){
+     563:     var d=DB.get();document.getElementById('sTotal').textContent=d.stats.total;document.getElementById('sCorrect').textContent=d.stats.correct;
+>...
+```
+
+### 3.52 🟡 renderStats
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 565
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     562: function renderStats(){
+     563:     var d=DB.get();document.getElementById('sTotal').textContent=d.stats.total;document.getElementById('sCorrect').textContent=d.stats.correct;
+     564:   ...
+```
+
+### 3.53 🟡 updateCategoryFilter
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 585
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     582:     for (var i = 0; i < QUESTION_BANK.length; i++) {
+     583:         cats[QUESTION_BANK[i].category] = true;
+     584:     }
+>>>  585:     var sel = document.getElementById('categoryFilter...
+```
+
+### 3.54 🟡 updateEditCategoryOptions
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 600
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     597:     for (var i = 0; i < QUESTION_BANK.length; i++) {
+     598:         cats[QUESTION_BANK[i].category] = true;
+     599:     }
+>>>  600:     var sel = document.getElementById('editCategory')...
+```
+
+### 3.55 🟡 renderQuestionList
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 610
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     607: }
+     608: 
+     609: function renderQuestionList() {
+>>>  610:     var search = document.getElementById('searchInput').value.toLowerCase();
+     611:     var catFilter = document.getElemen...
+```
+
+### 3.56 🟡 renderQuestionList
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 611
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     608: 
+     609: function renderQuestionList() {
+     610:     var search = document.getElementById('searchInput').value.toLowerCase();
+>>>  611:     var catFilter = document.getElementById('categ...
+```
+
+### 3.57 🟡 filterQuestions
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 628
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     625:         html += '<div class="q-item-answer">答案: ' + q.answer + '</div>';
+     626:         html += '</div>';
+     627:     }
+>>>  628:     document.getElementById('questionList').innerHTML =...
+```
+
+### 3.58 🟡 showAddForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 636
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     633: }
+     634: 
+     635: function showAddForm() {
+>>>  636:     document.getElementById('modalTitle').textContent = '新增题目';
+     637:     document.getElementById('editId').value = '';
+     638...
+```
+
+### 3.59 🟡 showAddForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 637
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     634: 
+     635: function showAddForm() {
+     636:     document.getElementById('modalTitle').textContent = '新增题目';
+>>>  637:     document.getElementById('editId').value = '';
+     638:     docume...
+```
+
+### 3.60 🟡 showAddForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 638
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     635: function showAddForm() {
+     636:     document.getElementById('modalTitle').textContent = '新增题目';
+     637:     document.getElementById('editId').value = '';
+>>>  638:     document.getEleme...
+```
+
+### 3.61 🟡 showAddForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 639
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     636:     document.getElementById('modalTitle').textContent = '新增题目';
+     637:     document.getElementById('editId').value = '';
+     638:     document.getElementById('editCategory').value = '专辑'...
+```
+
+### 3.62 🟡 showAddForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 640
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     637:     document.getElementById('editId').value = '';
+     638:     document.getElementById('editCategory').value = '专辑';
+     639:     document.getElementById('editQuestion').value = '';
+>>>  6...
+```
+
+### 3.63 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 641
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     638:     document.getElementById('editCategory').value = '专辑';
+     639:     document.getElementById('editQuestion').value = '';
+     640:     document.getElementById('editOptions').value = 'A.\n...
+```
+
+### 3.64 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 642
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     639:     document.getElementById('editQuestion').value = '';
+     640:     document.getElementById('editOptions').value = 'A.\nB.\nC.\nD.';
+     641:     document.getElementById('editAnswer').val...
+```
+
+### 3.65 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 643
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     640:     document.getElementById('editOptions').value = 'A.\nB.\nC.\nD.';
+     641:     document.getElementById('editAnswer').value = 'A';
+     642:     document.getElementById('editExplanation')...
+```
+
+### 3.66 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 652
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     649:         if (QUESTION_BANK[i].id === qid) { q = QUESTION_BANK[i]; break; }
+     650:     }
+     651:     if (!q) return;
+>>>  652:     document.getElementById('modalTitle').textContent = '编辑题...
+```
+
+### 3.67 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 653
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     650:     }
+     651:     if (!q) return;
+     652:     document.getElementById('modalTitle').textContent = '编辑题目';
+>>>  653:     document.getElementById('editId').value = q.id;
+     654:     docu...
+```
+
+### 3.68 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 654
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     651:     if (!q) return;
+     652:     document.getElementById('modalTitle').textContent = '编辑题目';
+     653:     document.getElementById('editId').value = q.id;
+>>>  654:     document.getElementB...
+```
+
+### 3.69 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 655
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     652:     document.getElementById('modalTitle').textContent = '编辑题目';
+     653:     document.getElementById('editId').value = q.id;
+     654:     document.getElementById('editCategory').value = q....
+```
+
+### 3.70 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 660
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     657:     for (var j = 0; j < q.options.length; j++) {
+     658:         opts += q.options[j].key + '.' + q.options[j].text + '\n';
+     659:     }
+>>>  660:     document.getElementById('editOptio...
+```
+
+### 3.71 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 661
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     658:         opts += q.options[j].key + '.' + q.options[j].text + '\n';
+     659:     }
+     660:     document.getElementById('editOptions').value = opts.trim();
+>>>  661:     document.getElement...
+```
+
+### 3.72 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 662
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     659:     }
+     660:     document.getElementById('editOptions').value = opts.trim();
+     661:     document.getElementById('editAnswer').value = q.answer;
+>>>  662:     document.getElementById('e...
+```
+
+### 3.73 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 663
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     660:     document.getElementById('editOptions').value = opts.trim();
+     661:     document.getElementById('editAnswer').value = q.answer;
+     662:     document.getElementById('editExplanation')...
+```
+
+### 3.74 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 667
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     664: }
+     665: 
+     666: function closeModal() {
+>>>  667:     document.getElementById('editModal').style.display = 'none';
+     668: }
+     669: 
+     670: function saveQuestion() {...
+```
+
+### 3.75 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 671
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     668: }
+     669: 
+     670: function saveQuestion() {
+>>>  671:     var id = document.getElementById('editId').value;
+     672:     var category = document.getElementById('editCategory').value;
+ ...
+```
+
+### 3.76 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 672
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     669: 
+     670: function saveQuestion() {
+     671:     var id = document.getElementById('editId').value;
+>>>  672:     var category = document.getElementById('editCategory').value;
+     673:    ...
+```
+
+### 3.77 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 673
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     670: function saveQuestion() {
+     671:     var id = document.getElementById('editId').value;
+     672:     var category = document.getElementById('editCategory').value;
+>>>  673:     var questi...
+```
+
+### 3.78 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 674
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     671:     var id = document.getElementById('editId').value;
+     672:     var category = document.getElementById('editCategory').value;
+     673:     var question = document.getElementById('editQu...
+```
+
+### 3.79 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 675
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     672:     var category = document.getElementById('editCategory').value;
+     673:     var question = document.getElementById('editQuestion').value.trim();
+     674:     var optsText = document.get...
+```
+
+### 3.80 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 676
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     673:     var question = document.getElementById('editQuestion').value.trim();
+     674:     var optsText = document.getElementById('editOptions').value.trim();
+     675:     var answer = document...
+```
+
+### 3.81 🟡 importData
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 760
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     757:     var json = JSON.stringify(data, null, 2);
+     758:     var blob = new Blob([json], { type: 'application/json' });
+     759:     var url = URL.createObjectURL(blob);
+>>>  760:     var a ...
+```
+
+### 3.82 🟡 showResetConfirm
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 857
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     854: 
+     855: /* ===== 恢复默认题库 ===== */
+     856: function showResetConfirm() {
+>>>  857:     var modal = document.getElementById('resetModal');
+     858:     modal.style.display = 'flex';
+     ...
+```
+
+### 3.83 🟡 closeResetModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 861
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     858:     modal.style.display = 'flex';
+     859:     modal.style.alignItems = 'center';
+     860:     modal.style.justifyContent = 'center';
+>>>  861:     document.getElementById('resetConfirmInp...
+```
+
+### 3.84 🟡 closeResetModal
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 866
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     863: }
+     864: 
+     865: function closeResetModal() {
+>>>  866:     document.getElementById('resetModal').style.display = 'none';
+     867: }
+     868: 
+     869: function checkResetInput() {...
+```
+
+### 3.85 🟡 checkResetInput
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 870
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     867: }
+     868: 
+     869: function checkResetInput() {
+>>>  870:     var input = document.getElementById('resetConfirmInput').value;
+     871:     var btn = document.getElementById('resetConfir...
+```
+
+### 3.86 🟡 checkResetInput
+- **文件**: index.html
+- **风险类型**: DOM操作
+- **优先级**: MEDIUM
+- **位置**: Line 871
+- **描述**: 复杂DOM操作操作
+- **代码片段**:
+```javascript
+     868: 
+     869: function checkResetInput() {
+     870:     var input = document.getElementById('resetConfirmInput').value;
+>>>  871:     var btn = document.getElementById('resetConfirmBtn');
+    ...
+```
+
+### 3.87 🟠 saveQuestion
+- **文件**: index.html
+- **风险类型**: 正则表达式
+- **优先级**: HIGH
+- **位置**: Line 689
+- **描述**: 复杂正则表达式操作
+- **代码片段**:
+```javascript
+     686:     for (var i = 0; i < lines.length; i++) {
+     687:         var line = lines[i].trim();
+     688:         if (!line) continue;
+>>>  689:         var match = line.match(/^([A-D])[.、．]\s*(....
+```
+
+### 3.88 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 491
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     488:     var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+     489:     var el=document.getElementById('view-'+v);if(el)el.classLis...
+```
+
+### 3.89 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 492
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     489:     var el=document.getElementById('view-'+v);if(el)el.classList.add('active');
+     490:     var navs=document.querySelectorAll('.nav-item');for(var j=0;j<navs.length;j++){navs[j].classList...
+```
+
+### 3.90 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 493
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     490:     var navs=document.querySelectorAll('.nav-item');for(var j=0;j<navs.length;j++){navs[j].classList.remove('active');if(navs[j].textContent===VIEW_NAMES[v])navs[j].classList.add('active');}...
+```
+
+### 3.91 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 494
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     491:     if(v==='home')updateHome();
+     492:     if(v==='wrongbook')renderWrongBook();
+     493:     if(v==='stats')renderStats();
+>>>  494:     if(v==='admin')renderAdmin();
+     495:     // 练...
+```
+
+### 3.92 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 496
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     493:     if(v==='stats')renderStats();
+     494:     if(v==='admin')renderAdmin();
+     495:     // 练习视图：没有答题或已完成时显示提示
+>>>  496:     if(v==='practice'){
+     497:         if(state.quiz.length ===...
+```
+
+### 3.93 🟡 checkResetInput
+- **文件**: index.html
+- **风险类型**: 严格比较
+- **优先级**: MEDIUM
+- **位置**: Line 872
+- **描述**: 复杂严格比较操作
+- **代码片段**:
+```javascript
+     869: function checkResetInput() {
+     870:     var input = document.getElementById('resetConfirmInput').value;
+     871:     var btn = document.getElementById('resetConfirmBtn');
+>>>  872:     i...
+```
+
+### 3.94 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 479
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     476:     defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
+     477:     save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+     478:     addRec...
+```
+
+### 3.95 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 482
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     479:     addWrong:function(qid){var d=DB.get();var f=null;for(var i=0;i<d.wrong.length;i++){if(d.wrong[i].qid===qid){f=d.wrong[i];break;}}if(f){f.cnt++;f.time=Date.now();}else{d.wrong.push({qid:q...
+```
+
+### 3.96 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 488
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     485: var VIEW_NAMES={home:'首页',practice:'练习',wrongbook:'错题本',stats:'统计',admin:'管理'};
+     486: 
+     487: function switchView(v){
+>>>  488:     var views=document.querySelectorAll('.view');for(va...
+```
+
+### 3.97 🟡 switchView
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 490
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     487: function switchView(v){
+     488:     var views=document.querySelectorAll('.view');for(var i=0;i<views.length;i++)views[i].classList.remove('active');
+     489:     var el=document.getElemen...
+```
+
+### 3.98 🟡 selectMode
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 506
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     503:     }
+     504: }
+     505: 
+>>>  506: function selectMode(m){state.mode=m;var btns=document.querySelectorAll('.mode-btn');for(var i=0;i<btns.length;i++)btns[i].classList.remove('active');va...
+```
+
+### 3.99 🟡 showCategoryView
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 515
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     512: function fmtTime(ms){var sec=Math.floor(ms/1000);var m=Math.floor(sec/60);var s=sec%60;return m+'分'+s+'秒';}
+     513: 
+     514: function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK)....
+```
+
+### 3.100 🟡 startCatQuiz
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 516
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     513: 
+     514: function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+     515: functio...
+```
+
+### 3.101 🟡 startWrongBookQuiz
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 517
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     514: function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+     515: function showCateg...
+```
+
+### 3.102 🟡 renderQ
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 525
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     522:     var sec=Math.floor((Date.now()-state.startTime)/1000);var tm=Math.floor(sec/60);var ts=sec%60;
+     523:     var html='<div class="progress-wrap"><div class="progress-header"><span class...
+```
+
+### 3.103 🟡 pickOption
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 535
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     532:     if(state.answered)return;state.answered=true;
+     533:     var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+     534:     DB.addRecord({qid:q.id,ans:key,o...
+```
+
+### 3.104 🟡 renderWrongBook
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 556
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     553: function renderWrongBook(){
+     554:     var wl=DB.getWrong();var el=document.getElementById('wrongBookList');var btn=document.getElementById('wrongBookBtn');
+     555:     if(wl.length===0...
+```
+
+### 3.105 🟡 shuffle
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 567
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     564:     var acc=d.stats.total>0?Math.round(d.stats.correct/d.stats.total*100):0;document.getElementById('sAcc').textContent=acc+'%';document.getElementById('sWrong').textContent=d.wrong.length;
+...
+```
+
+### 3.106 🟡 shuffle
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 571
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     568:     catEl.innerHTML=html;
+     569: }
+     570: 
+>>>  571: function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[...
+```
+
+### 3.107 🟡 updateCategoryFilter
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 582
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     579: 
+     580: function updateCategoryFilter() {
+     581:     var cats = {};
+>>>  582:     for (var i = 0; i < QUESTION_BANK.length; i++) {
+     583:         cats[QUESTION_BANK[i].category] = t...
+```
+
+### 3.108 🟡 updateEditCategoryOptions
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 589
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     586:     var cur = sel.value;
+     587:     var opts = '<option value="">全部类别</option>';
+     588:     var keys = Object.keys(cats).sort();
+>>>  589:     for (var j = 0; j < keys.length; j++) {
+ ...
+```
+
+### 3.109 🟡 updateEditCategoryOptions
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 597
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     594: 
+     595: function updateEditCategoryOptions() {
+     596:     var cats = {};
+>>>  597:     for (var i = 0; i < QUESTION_BANK.length; i++) {
+     598:         cats[QUESTION_BANK[i].category...
+```
+
+### 3.110 🟡 renderQuestionList
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 603
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     600:     var sel = document.getElementById('editCategory');
+     601:     var keys = Object.keys(cats).sort();
+     602:     var opts = '';
+>>>  603:     for (var j = 0; j < keys.length; j++) {
+ ...
+```
+
+### 3.111 🟡 renderQuestionList
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 613
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     610:     var search = document.getElementById('searchInput').value.toLowerCase();
+     611:     var catFilter = document.getElementById('categoryFilter').value;
+     612:     var html = '';
+>>>  ...
+```
+
+### 3.112 🟡 showEditForm
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 648
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     645: 
+     646: function showEditForm(qid) {
+     647:     var q = null;
+>>>  648:     for (var i = 0; i < QUESTION_BANK.length; i++) {
+     649:         if (QUESTION_BANK[i].id === qid) { q = QU...
+```
+
+### 3.113 🟡 closeModal
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 657
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     654:     document.getElementById('editCategory').value = q.category;
+     655:     document.getElementById('editQuestion').value = q.question;
+     656:     var opts = '';
+>>>  657:     for (var ...
+```
+
+### 3.114 🟡 saveQuestion
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 686
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     683:     // 解析选项
+     684:     var lines = optsText.split('\n');
+     685:     var options = [];
+>>>  686:     for (var i = 0; i < lines.length; i++) {
+     687:         var line = lines[i].trim(...
+```
+
+### 3.115 🟡 deleteQuestion
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 713
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     710:         });
+     711:     } else {
+     712:         // 编辑
+>>>  713:         for (var j = 0; j < QUESTION_BANK.length; j++) {
+     714:             if (QUESTION_BANK[j].id === id) {
+     715...
+```
+
+### 3.116 🟡 importData
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 788
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     785:         var updatedCount = 0;
+     786:         if (data.questionBank) {
+     787:             var existingIds = {};
+>>>  788:             for (var i = 0; i < QUESTION_BANK.length; i++) {
+  ...
+```
+
+### 3.117 🟡 importData
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 791
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     788:             for (var i = 0; i < QUESTION_BANK.length; i++) {
+     789:                 existingIds[QUESTION_BANK[i].id] = true;
+     790:             }
+>>>  791:             for (var j = 0; ...
+```
+
+### 3.118 🟡 importData
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 794
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     791:             for (var j = 0; j < data.questionBank.length; j++) {
+     792:                 var q = data.questionBank[j];
+     793:                 if (existingIds[q.id]) {
+>>>  794:         ...
+```
+
+### 3.119 🟡 showResetConfirm
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 815
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     812:             }
+     813:             if (data.userData.wrong) {
+     814:                 var wrongMap = {};
+>>>  815:                 for (var w = 0; w < existingData.wrong.length; w++) {
+  ...
+```
+
+### 3.120 🟡 showResetConfirm
+- **文件**: index.html
+- **风险类型**: 循环计数
+- **优先级**: MEDIUM
+- **位置**: Line 818
+- **描述**: 复杂循环计数操作
+- **代码片段**:
+```javascript
+     815:                 for (var w = 0; w < existingData.wrong.length; w++) {
+     816:                     wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
+     817:                 }
+>...
+```
+
+### 3.121 🟡 loadQuestionBank
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 744
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     741: function loadQuestionBank() {
+     742:     var saved = localStorage.getItem('jj_question_bank');
+     743:     if (saved) {
+>>>  744:         try {
+     745:             QUESTION_BANK = JSO...
+```
+
+### 3.122 🟡 importData
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 774
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     771:     var reader = new FileReader();
+     772:     reader.onload = function(e) {
+     773:         var data;
+>>>  774:         try {
+     775:             data = JSON.parse(e.target.result);
+ ...
+```
+
+### 3.123 🟡 showResetConfirm
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 848
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     845:             msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+     846:         }
+     847:         alert(msg);
+>>>  848:         try { updateHome(); } catch (e) {}
+     849: ...
+```
+
+### 3.124 🟡 showResetConfirm
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 849
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     846:         }
+     847:         alert(msg);
+     848:         try { updateHome(); } catch (e) {}
+>>>  849:         try { renderQuestionList(); } catch (e) {}
+     850:     };
+     851:     reade...
+```
+
+### 3.125 🟡 resetQuestionBank
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 886
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     883:     localStorage.removeItem('jj_question_bank');
+     884:     closeResetModal();
+     885:     alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+>>>  886:     try { renderQuestionList()...
+```
+
+### 3.126 🟡 resetQuestionBank
+- **文件**: index.html
+- **风险类型**: 异常处理
+- **优先级**: MEDIUM
+- **位置**: Line 887
+- **描述**: 复杂异常处理操作
+- **代码片段**:
+```javascript
+     884:     closeResetModal();
+     885:     alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+     886:     try { renderQuestionList(); } catch (e) {}
+>>>  887:     try { updateCategoryFilter()...
+```
+
+## 4. 测试缺口清单
+--------------------------------------------------------------------------------
+
+建议补充 14 个测试用例：
+
+
+### GAP-001: test_core_business_logic
+- **风险区域**: pickOption
+- **测试分类**: 核心业务
+- **描述**: 测试核心业务逻辑的正确性
+- **预期行为**: 核心业务逻辑应该按照预期执行，边界情况应该有明确处理
+- **测试代码**:
+```javascript
+
+// 测试: 核心业务逻辑
+function testCoreBusinessLogic() {
+    // 测试答题流程
+    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};
+
+    // 测试随机题目生成
+    const questions = shuffle(QUESTION_BANK).slice(0, 10);
+    assertEqual(questions.length, 10, '应该生成指定数量的题目');
+    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');
+
+    // 测试答案验证
+    const question = {id: '001', answer: 'A'};
+    const isCorrect = 'A' === question.answer;
+    assertEqual(isCorrect, true, '正确答案应该返回true');
+
+    const isWrong = 'B' === question.answer;
+    assertEqual(isWrong, false, '错误答案应该返回false');
+}
+
+```
+
+### GAP-002: test_shared_utilities
+- **风险区域**: shuffle
+- **测试分类**: 共享工具
+- **描述**: 测试共享工具函数的正确性和可靠性
+- **预期行为**: 共享工具函数应该是确定性的、可预测的，并正确处理错误输入
+- **测试代码**:
+```javascript
+
+// 测试: 共享工具函数
+function testSharedUtilities() {
+    // 测试DB模块
+    const defaultData = DB.defaults();
+    assertEqual('history' in defaultData, true, '默认数据应该包含history');
+    assertEqual('wrong' in defaultData, true, '默认数据应该包含wrong');
+    assertEqual('stats' in defaultData, true, '默认数据应该包含stats');
+
+    // 测试findQ函数
+    const found = DB.findQ('001');
+    assertEqual(found !== null, true, '应该能找到指定题目');
+    assertEqual(found.id, '001', '找到的题目ID应该匹配');
+
+    const notFound = DB.findQ('nonexistent');
+    assertEqual(notFound, null, '不存在的题目应该返回null');
+
+    // 测试状态管理
+    const initialState = {quiz: [], idx: 0, answered: false, mode: 'quick', correctCount: 0, startTime: 0, timer: null};
+    assertEqual(initialState.quiz.length, 0, '初始状态quiz应该为空');
+    assertEqual(initialState.mode, 'quick', '默认模式应该是quick');
+}
+
+```
+
+### GAP-003: test_renderQuestionList
+- **风险区域**: renderQuestionList
+- **测试分类**: 循环逻辑
+- **描述**: 测试renderQuestionList函数
+- **预期行为**: renderQuestionList应该按照设计规范正确执行
+- **测试代码**:
+```javascript
+
+// 测试: renderQuestionList函数
+function testRenderquestionlist() {
+    // TODO: 为 renderQuestionList 编写具体测试用例
+    // 风险类型: 循环逻辑
+    // 优先级: high
+
+    // 测试基本功能
+    // assert(condition, '测试描述');
+}
+
+```
+
+### GAP-004: test_core_business_logic
+- **风险区域**: saveQuestion
+- **测试分类**: 核心业务
+- **描述**: 测试核心业务逻辑的正确性
+- **预期行为**: 核心业务逻辑应该按照预期执行，边界情况应该有明确处理
+- **测试代码**:
+```javascript
+
+// 测试: 核心业务逻辑
+function testCoreBusinessLogic() {
+    // 测试答题流程
+    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};
+
+    // 测试随机题目生成
+    const questions = shuffle(QUESTION_BANK).slice(0, 10);
+    assertEqual(questions.length, 10, '应该生成指定数量的题目');
+    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');
+
+    // 测试答案验证
+    const question = {id: '001', answer: 'A'};
+    const isCorrect = 'A' === question.answer;
+    assertEqual(isCorrect, true, '正确答案应该返回true');
+
+    const isWrong = 'B' === question.answer;
+    assertEqual(isWrong, false, '错误答案应该返回false');
+}
+
+```
+
+### GAP-005: test_deleteQuestion
+- **风险区域**: deleteQuestion
+- **测试分类**: 循环逻辑
+- **描述**: 测试deleteQuestion函数
+- **预期行为**: deleteQuestion应该按照设计规范正确执行
+- **测试代码**:
+```javascript
+
+// 测试: deleteQuestion函数
+function testDeletequestion() {
+    // TODO: 为 deleteQuestion 编写具体测试用例
+    // 风险类型: 循环逻辑
+    // 优先级: high
+
+    // 测试基本功能
+    // assert(condition, '测试描述');
+}
+
+```
+
+### GAP-006: test_core_business_logic
+- **风险区域**: importData
+- **测试分类**: 核心业务
+- **描述**: 测试核心业务逻辑的正确性
+- **预期行为**: 核心业务逻辑应该按照预期执行，边界情况应该有明确处理
+- **测试代码**:
+```javascript
+
+// 测试: 核心业务逻辑
+function testCoreBusinessLogic() {
+    // 测试答题流程
+    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};
+
+    // 测试随机题目生成
+    const questions = shuffle(QUESTION_BANK).slice(0, 10);
+    assertEqual(questions.length, 10, '应该生成指定数量的题目');
+    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');
+
+    // 测试答案验证
+    const question = {id: '001', answer: 'A'};
+    const isCorrect = 'A' === question.answer;
+    assertEqual(isCorrect, true, '正确答案应该返回true');
+
+    const isWrong = 'B' === question.answer;
+    assertEqual(isWrong, false, '错误答案应该返回false');
+}
+
+```
+
+### GAP-007: test_json_parsing
+- **风险区域**: switchView
+- **测试分类**: JSON解析
+- **描述**: 测试JSON解析的边界情况和错误处理
+- **预期行为**: JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值
+- **测试代码**:
+```javascript
+
+// 测试: JSON解析边界情况
+function testJSONParsing() {
+    // 测试正常JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value"}'), '正常JSON应该解析成功');
+
+    // 测试空对象
+    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');
+
+    // 测试包含特殊字符的JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value with \"quotes\""}'), '带引号的JSON应该解析成功');
+
+    // 测试无效JSON应该被捕获
+    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');
+}
+
+```
+
+### GAP-008: test_json_parsing
+- **风险区域**: loadQuestionBank
+- **测试分类**: JSON解析
+- **描述**: 测试JSON解析的边界情况和错误处理
+- **预期行为**: JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值
+- **测试代码**:
+```javascript
+
+// 测试: JSON解析边界情况
+function testJSONParsing() {
+    // 测试正常JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value"}'), '正常JSON应该解析成功');
+
+    // 测试空对象
+    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');
+
+    // 测试包含特殊字符的JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value with \"quotes\""}'), '带引号的JSON应该解析成功');
+
+    // 测试无效JSON应该被捕获
+    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');
+}
+
+```
+
+### GAP-009: test_json_parsing
+- **风险区域**: importData
+- **测试分类**: JSON解析
+- **描述**: 测试JSON解析的边界情况和错误处理
+- **预期行为**: JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值
+- **测试代码**:
+```javascript
+
+// 测试: JSON解析边界情况
+function testJSONParsing() {
+    // 测试正常JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value"}'), '正常JSON应该解析成功');
+
+    // 测试空对象
+    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');
+
+    // 测试包含特殊字符的JSON
+    assertDoesNotThrow(() => JSON.parse('{"key":"value with \"quotes\""}'), '带引号的JSON应该解析成功');
+
+    // 测试无效JSON应该被捕获
+    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');
+}
+
+```
+
+### GAP-010: test_local_storage_operations
+- **风险区域**: switchView
+- **测试分类**: 本地存储
+- **描述**: 测试本地存储的读写和数据持久化
+- **预期行为**: localStorage应该正确保存和读取数据，对于异常情况应该有降级处理
+- **测试代码**:
+```javascript
+
+// 测试: 本地存储操作
+function testLocalStorageOperations() {
+    // 测试数据保存
+    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));
+    const retrieved = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');
+
+    // 测试数据更新
+    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));
+    const updated = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(updated.data, 'updated', '数据应该正确更新');
+
+    // 测试数据删除
+    localStorage.removeItem('test_key');
+    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');
+
+    // 测试空值处理
+    localStorage.setItem('empty_key', '');
+    const emptyVal = localStorage.getItem('empty_key');
+    // 应该处理空字符串的情况
+}
+
+```
+
+### GAP-011: test_local_storage_operations
+- **风险区域**: switchView
+- **测试分类**: 本地存储
+- **描述**: 测试本地存储的读写和数据持久化
+- **预期行为**: localStorage应该正确保存和读取数据，对于异常情况应该有降级处理
+- **测试代码**:
+```javascript
+
+// 测试: 本地存储操作
+function testLocalStorageOperations() {
+    // 测试数据保存
+    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));
+    const retrieved = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');
+
+    // 测试数据更新
+    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));
+    const updated = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(updated.data, 'updated', '数据应该正确更新');
+
+    // 测试数据删除
+    localStorage.removeItem('test_key');
+    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');
+
+    // 测试空值处理
+    localStorage.setItem('empty_key', '');
+    const emptyVal = localStorage.getItem('empty_key');
+    // 应该处理空字符串的情况
+}
+
+```
+
+### GAP-012: test_local_storage_operations
+- **风险区域**: saveQuestionBank
+- **测试分类**: 本地存储
+- **描述**: 测试本地存储的读写和数据持久化
+- **预期行为**: localStorage应该正确保存和读取数据，对于异常情况应该有降级处理
+- **测试代码**:
+```javascript
+
+// 测试: 本地存储操作
+function testLocalStorageOperations() {
+    // 测试数据保存
+    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));
+    const retrieved = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');
+
+    // 测试数据更新
+    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));
+    const updated = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(updated.data, 'updated', '数据应该正确更新');
+
+    // 测试数据删除
+    localStorage.removeItem('test_key');
+    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');
+
+    // 测试空值处理
+    localStorage.setItem('empty_key', '');
+    const emptyVal = localStorage.getItem('empty_key');
+    // 应该处理空字符串的情况
+}
+
+```
+
+### GAP-013: test_local_storage_operations
+- **风险区域**: loadQuestionBank
+- **测试分类**: 本地存储
+- **描述**: 测试本地存储的读写和数据持久化
+- **预期行为**: localStorage应该正确保存和读取数据，对于异常情况应该有降级处理
+- **测试代码**:
+```javascript
+
+// 测试: 本地存储操作
+function testLocalStorageOperations() {
+    // 测试数据保存
+    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));
+    const retrieved = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');
+
+    // 测试数据更新
+    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));
+    const updated = JSON.parse(localStorage.getItem('test_key'));
+    assertEqual(updated.data, 'updated', '数据应该正确更新');
+
+    // 测试数据删除
+    localStorage.removeItem('test_key');
+    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');
+
+    // 测试空值处理
+    localStorage.setItem('empty_key', '');
+    const emptyVal = localStorage.getItem('empty_key');
+    // 应该处理空字符串的情况
+}
+
+```
+
+### GAP-014: test_saveQuestion
+- **风险区域**: saveQuestion
+- **测试分类**: 正则表达式
+- **描述**: 测试saveQuestion函数
+- **预期行为**: saveQuestion应该按照设计规范正确执行
+- **测试代码**:
+```javascript
+
+// 测试: saveQuestion函数
+function testSaveQuestion() {
+    // 测试新增题目
+    const newQuestion = {
+        id: 'new_' + Date.now(),
+        category: '测试分类',
+        question: '这是测试题目',
+        options: [{key: 'A', text: '选项A'}, {key: 'B', text: '选项B'}],
+        answer: 'A',
+        explanation: '这是测试解析'
+    };
+
+    // 验证题目结构
+    assertEqual('id' in newQuestion, true, '题目应该有id');
+    assertEqual('question' in newQuestion, true, '题目应该有question');
+    assertEqual('options' in newQuestion, true, '题目应该有options');
+    assertEqual('answer' in newQuestion, true, '题目应该有answer');
+    assertEqual(newQuestion.options.length >= 2, true, '题目至少有2个选项');
+}
+
+```
+
+## 5. 测试覆盖分析
+--------------------------------------------------------------------------------
+- **总函数数**: 47
+- **已测试函数数**: []
+- **未测试函数数**: 0
+- **关键区域未测试数**: 7
+- **覆盖率估算**: 0.0%
+
+### 5.1 关键区域覆盖情况
+- ⚠️ **startRandomQuiz** (复杂度: 1)
+- ⚠️ **renderQ** (复杂度: 2)
+- ⚠️ **pickOption** (复杂度: 3)
+- ⚠️ **shuffle** (复杂度: 3)
+- ⚠️ **saveQuestion** (复杂度: 3)
+- ⚠️ **exportData** (复杂度: 1)
+- ⚠️ **importData** (复杂度: 2)
+
+## 6. 建议与总结
+--------------------------------------------------------------------------------
+
+### 6.1 高优先级补充建议
+
+建议优先补充以下 14 个测试用例以降低回归风险：
+
+- [GAP-001] **test_core_business_logic** - 核心业务
+- [GAP-002] **test_shared_utilities** - 共享工具
+- [GAP-003] **test_renderQuestionList** - 循环逻辑
+- [GAP-004] **test_core_business_logic** - 核心业务
+- [GAP-005] **test_deleteQuestion** - 循环逻辑
+- [GAP-006] **test_core_business_logic** - 核心业务
+- [GAP-007] **test_json_parsing** - JSON解析
+- [GAP-008] **test_json_parsing** - JSON解析
+- [GAP-009] **test_json_parsing** - JSON解析
+- [GAP-010] **test_local_storage_operations** - 本地存储
+- [GAP-011] **test_local_storage_operations** - 本地存储
+- [GAP-012] **test_local_storage_operations** - 本地存储
+- [GAP-013] **test_local_storage_operations** - 本地存储
+- [GAP-014] **test_saveQuestion** - 正则表达式
+
+### 6.2 测试实现建议
+
+1. **测试框架选择**: 建议使用 Jest 或 Mocha + Chai 进行JavaScript单元测试
+2. **测试隔离**: 每个测试应该独立运行，不依赖其他测试的状态
+3. **边界条件**: 特别注意空值、异常数据、超大数值等边界情况
+4. **持续集成**: 建议在CI/CD流程中集成测试，确保每次提交都有测试覆盖
+5. **覆盖率目标**: 建议核心业务逻辑覆盖率达到80%以上
+        
+
+### 6.3 跳过区域说明
+
+根据分析，以下区域可以暂不补充测试：
+- 纯UI样式调整和CSS修改
+- 纯粹的外观变化（如按钮位置、颜色调整）
+- 不涉及业务逻辑的注释和文档更新
+- 保持现有行为不变的重构
+        
+
+================================================================================
+报告结束
+================================================================================

@@ -1,0 +1,1002 @@
+{
+  "generated_at": "2026-05-25T07:07:41.085749",
+  "changes": [],
+  "risk_areas": [
+    {
+      "function": "switchView",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数switchView复杂度评估：循环逻辑",
+      "location": "Line ~487"
+    },
+    {
+      "function": "selectMode",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数selectMode复杂度评估：循环逻辑",
+      "location": "Line ~506"
+    },
+    {
+      "function": "startCatQuiz",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数startCatQuiz复杂度评估：循环逻辑",
+      "location": "Line ~516"
+    },
+    {
+      "function": "startWrongBookQuiz",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数startWrongBookQuiz复杂度评估：循环逻辑",
+      "location": "Line ~517"
+    },
+    {
+      "function": "pickOption",
+      "type": "核心业务",
+      "priority": "high",
+      "description": "函数pickOption复杂度评估：核心业务",
+      "location": "Line ~531"
+    },
+    {
+      "function": "shuffle",
+      "type": "循环逻辑, 共享工具",
+      "priority": "high",
+      "description": "函数shuffle复杂度评估：循环逻辑, 共享工具",
+      "location": "Line ~571"
+    },
+    {
+      "function": "renderQuestionList",
+      "type": "循环逻辑",
+      "priority": "high",
+      "description": "函数renderQuestionList复杂度评估：循环逻辑",
+      "location": "Line ~609"
+    },
+    {
+      "function": "showEditForm",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数showEditForm复杂度评估：循环逻辑",
+      "location": "Line ~646"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "核心业务",
+      "priority": "high",
+      "description": "函数saveQuestion复杂度评估：核心业务",
+      "location": "Line ~670"
+    },
+    {
+      "function": "deleteQuestion",
+      "type": "循环逻辑",
+      "priority": "high",
+      "description": "函数deleteQuestion复杂度评估：循环逻辑",
+      "location": "Line ~730"
+    },
+    {
+      "function": "loadQuestionBank",
+      "type": "一般逻辑",
+      "priority": "medium",
+      "description": "函数loadQuestionBank复杂度评估：基础逻辑",
+      "location": "Line ~741"
+    },
+    {
+      "function": "exportData",
+      "type": "核心业务",
+      "priority": "medium",
+      "description": "函数exportData复杂度评估：核心业务",
+      "location": "Line ~751"
+    },
+    {
+      "function": "importData",
+      "type": "核心业务",
+      "priority": "high",
+      "description": "函数importData复杂度评估：核心业务",
+      "location": "Line ~768"
+    },
+    {
+      "function": "addWrong",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数addWrong复杂度评估：循环逻辑",
+      "location": "Line ~479"
+    },
+    {
+      "function": "findQ",
+      "type": "循环逻辑",
+      "priority": "medium",
+      "description": "函数findQ复杂度评估：循环逻辑",
+      "location": "Line ~482"
+    },
+    {
+      "function": "switchView",
+      "type": "JSON解析",
+      "priority": "high",
+      "description": "复杂JSON解析操作",
+      "location": "Line 475"
+    },
+    {
+      "function": "loadQuestionBank",
+      "type": "JSON解析",
+      "priority": "high",
+      "description": "复杂JSON解析操作",
+      "location": "Line 745"
+    },
+    {
+      "function": "importData",
+      "type": "JSON解析",
+      "priority": "high",
+      "description": "复杂JSON解析操作",
+      "location": "Line 775"
+    },
+    {
+      "function": "switchView",
+      "type": "本地存储操作",
+      "priority": "high",
+      "description": "复杂本地存储操作操作",
+      "location": "Line 475"
+    },
+    {
+      "function": "switchView",
+      "type": "本地存储操作",
+      "priority": "high",
+      "description": "复杂本地存储操作操作",
+      "location": "Line 477"
+    },
+    {
+      "function": "saveQuestionBank",
+      "type": "本地存储操作",
+      "priority": "high",
+      "description": "复杂本地存储操作操作",
+      "location": "Line 738"
+    },
+    {
+      "function": "loadQuestionBank",
+      "type": "本地存储操作",
+      "priority": "high",
+      "description": "复杂本地存储操作操作",
+      "location": "Line 742"
+    },
+    {
+      "function": "resetQuestionBank",
+      "type": "事件绑定",
+      "priority": "medium",
+      "description": "复杂事件绑定操作",
+      "location": "Line 890"
+    },
+    {
+      "function": "switchView",
+      "type": "数组方法",
+      "priority": "medium",
+      "description": "复杂数组方法操作",
+      "location": "Line 480"
+    },
+    {
+      "function": "updateHome",
+      "type": "数组方法",
+      "priority": "medium",
+      "description": "复杂数组方法操作",
+      "location": "Line 551"
+    },
+    {
+      "function": "updateHome",
+      "type": "数组方法",
+      "priority": "medium",
+      "description": "复杂数组方法操作",
+      "location": "Line 551"
+    },
+    {
+      "function": "deleteQuestion",
+      "type": "数组方法",
+      "priority": "medium",
+      "description": "复杂数组方法操作",
+      "location": "Line 732"
+    },
+    {
+      "function": "switchView",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 312"
+    },
+    {
+      "function": "switchView",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 488"
+    },
+    {
+      "function": "switchView",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 489"
+    },
+    {
+      "function": "switchView",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 490"
+    },
+    {
+      "function": "selectMode",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 501"
+    },
+    {
+      "function": "selectMode",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 506"
+    },
+    {
+      "function": "selectMode",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 506"
+    },
+    {
+      "function": "tickTimer",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 511"
+    },
+    {
+      "function": "showCategoryView",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 515"
+    },
+    {
+      "function": "pickOption",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 528"
+    },
+    {
+      "function": "pickOption",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 535"
+    },
+    {
+      "function": "pickOption",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 536"
+    },
+    {
+      "function": "nextQ",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 537"
+    },
+    {
+      "function": "nextQ",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 538"
+    },
+    {
+      "function": "nextQ",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 539"
+    },
+    {
+      "function": "finishQuiz",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 548"
+    },
+    {
+      "function": "updateHome",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 551"
+    },
+    {
+      "function": "updateHome",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 551"
+    },
+    {
+      "function": "renderWrongBook",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 554"
+    },
+    {
+      "function": "renderWrongBook",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 554"
+    },
+    {
+      "function": "renderStats",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 563"
+    },
+    {
+      "function": "renderStats",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 563"
+    },
+    {
+      "function": "renderStats",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 564"
+    },
+    {
+      "function": "renderStats",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 564"
+    },
+    {
+      "function": "renderStats",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 565"
+    },
+    {
+      "function": "updateCategoryFilter",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 585"
+    },
+    {
+      "function": "updateEditCategoryOptions",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 600"
+    },
+    {
+      "function": "renderQuestionList",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 610"
+    },
+    {
+      "function": "renderQuestionList",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 611"
+    },
+    {
+      "function": "filterQuestions",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 628"
+    },
+    {
+      "function": "showAddForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 636"
+    },
+    {
+      "function": "showAddForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 637"
+    },
+    {
+      "function": "showAddForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 638"
+    },
+    {
+      "function": "showAddForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 639"
+    },
+    {
+      "function": "showAddForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 640"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 641"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 642"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 643"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 652"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 653"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 654"
+    },
+    {
+      "function": "showEditForm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 655"
+    },
+    {
+      "function": "closeModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 660"
+    },
+    {
+      "function": "closeModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 661"
+    },
+    {
+      "function": "closeModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 662"
+    },
+    {
+      "function": "closeModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 663"
+    },
+    {
+      "function": "closeModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 667"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 671"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 672"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 673"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 674"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 675"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 676"
+    },
+    {
+      "function": "importData",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 760"
+    },
+    {
+      "function": "showResetConfirm",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 857"
+    },
+    {
+      "function": "closeResetModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 861"
+    },
+    {
+      "function": "closeResetModal",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 866"
+    },
+    {
+      "function": "checkResetInput",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 870"
+    },
+    {
+      "function": "checkResetInput",
+      "type": "DOM操作",
+      "priority": "medium",
+      "description": "复杂DOM操作操作",
+      "location": "Line 871"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "正则表达式",
+      "priority": "high",
+      "description": "复杂正则表达式操作",
+      "location": "Line 689"
+    },
+    {
+      "function": "switchView",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 491"
+    },
+    {
+      "function": "switchView",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 492"
+    },
+    {
+      "function": "switchView",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 493"
+    },
+    {
+      "function": "switchView",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 494"
+    },
+    {
+      "function": "switchView",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 496"
+    },
+    {
+      "function": "checkResetInput",
+      "type": "严格比较",
+      "priority": "medium",
+      "description": "复杂严格比较操作",
+      "location": "Line 872"
+    },
+    {
+      "function": "switchView",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 479"
+    },
+    {
+      "function": "switchView",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 482"
+    },
+    {
+      "function": "switchView",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 488"
+    },
+    {
+      "function": "switchView",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 490"
+    },
+    {
+      "function": "selectMode",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 506"
+    },
+    {
+      "function": "showCategoryView",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 515"
+    },
+    {
+      "function": "startCatQuiz",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 516"
+    },
+    {
+      "function": "startWrongBookQuiz",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 517"
+    },
+    {
+      "function": "renderQ",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 525"
+    },
+    {
+      "function": "pickOption",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 535"
+    },
+    {
+      "function": "renderWrongBook",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 556"
+    },
+    {
+      "function": "shuffle",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 567"
+    },
+    {
+      "function": "shuffle",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 571"
+    },
+    {
+      "function": "updateCategoryFilter",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 582"
+    },
+    {
+      "function": "updateEditCategoryOptions",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 589"
+    },
+    {
+      "function": "updateEditCategoryOptions",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 597"
+    },
+    {
+      "function": "renderQuestionList",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 603"
+    },
+    {
+      "function": "renderQuestionList",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 613"
+    },
+    {
+      "function": "showEditForm",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 648"
+    },
+    {
+      "function": "closeModal",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 657"
+    },
+    {
+      "function": "saveQuestion",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 686"
+    },
+    {
+      "function": "deleteQuestion",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 713"
+    },
+    {
+      "function": "importData",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 788"
+    },
+    {
+      "function": "importData",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 791"
+    },
+    {
+      "function": "importData",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 794"
+    },
+    {
+      "function": "showResetConfirm",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 815"
+    },
+    {
+      "function": "showResetConfirm",
+      "type": "循环计数",
+      "priority": "medium",
+      "description": "复杂循环计数操作",
+      "location": "Line 818"
+    },
+    {
+      "function": "loadQuestionBank",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 744"
+    },
+    {
+      "function": "importData",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 774"
+    },
+    {
+      "function": "showResetConfirm",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 848"
+    },
+    {
+      "function": "showResetConfirm",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 849"
+    },
+    {
+      "function": "resetQuestionBank",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 886"
+    },
+    {
+      "function": "resetQuestionBank",
+      "type": "异常处理",
+      "priority": "medium",
+      "description": "复杂异常处理操作",
+      "location": "Line 887"
+    }
+  ],
+  "test_gaps": [
+    {
+      "id": "GAP-001",
+      "test_name": "test_core_business_logic",
+      "category": "核心业务",
+      "description": "测试核心业务逻辑的正确性",
+      "expected_behavior": "核心业务逻辑应该按照预期执行，边界情况应该有明确处理",
+      "code": "\n// 测试: 核心业务逻辑\nfunction testCoreBusinessLogic() {\n    // 测试答题流程\n    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};\n\n    // 测试随机题目生成\n    const questions = shuffle(QUESTION_BANK).slice(0, 10);\n    assertEqual(questions.length, 10, '应该生成指定数量的题目');\n    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');\n\n    // 测试答案验证\n    const question = {id: '001', answer: 'A'};\n    const isCorrect = 'A' === question.answer;\n    assertEqual(isCorrect, true, '正确答案应该返回true');\n\n    const isWrong = 'B' === question.answer;\n    assertEqual(isWrong, false, '错误答案应该返回false');\n}\n"
+    },
+    {
+      "id": "GAP-002",
+      "test_name": "test_shared_utilities",
+      "category": "共享工具",
+      "description": "测试共享工具函数的正确性和可靠性",
+      "expected_behavior": "共享工具函数应该是确定性的、可预测的，并正确处理错误输入",
+      "code": "\n// 测试: 共享工具函数\nfunction testSharedUtilities() {\n    // 测试DB模块\n    const defaultData = DB.defaults();\n    assertEqual('history' in defaultData, true, '默认数据应该包含history');\n    assertEqual('wrong' in defaultData, true, '默认数据应该包含wrong');\n    assertEqual('stats' in defaultData, true, '默认数据应该包含stats');\n\n    // 测试findQ函数\n    const found = DB.findQ('001');\n    assertEqual(found !== null, true, '应该能找到指定题目');\n    assertEqual(found.id, '001', '找到的题目ID应该匹配');\n\n    const notFound = DB.findQ('nonexistent');\n    assertEqual(notFound, null, '不存在的题目应该返回null');\n\n    // 测试状态管理\n    const initialState = {quiz: [], idx: 0, answered: false, mode: 'quick', correctCount: 0, startTime: 0, timer: null};\n    assertEqual(initialState.quiz.length, 0, '初始状态quiz应该为空');\n    assertEqual(initialState.mode, 'quick', '默认模式应该是quick');\n}\n"
+    },
+    {
+      "id": "GAP-003",
+      "test_name": "test_renderQuestionList",
+      "category": "循环逻辑",
+      "description": "测试renderQuestionList函数",
+      "expected_behavior": "renderQuestionList应该按照设计规范正确执行",
+      "code": "\n// 测试: renderQuestionList函数\nfunction testRenderquestionlist() {\n    // TODO: 为 renderQuestionList 编写具体测试用例\n    // 风险类型: 循环逻辑\n    // 优先级: high\n\n    // 测试基本功能\n    // assert(condition, '测试描述');\n}\n"
+    },
+    {
+      "id": "GAP-004",
+      "test_name": "test_core_business_logic",
+      "category": "核心业务",
+      "description": "测试核心业务逻辑的正确性",
+      "expected_behavior": "核心业务逻辑应该按照预期执行，边界情况应该有明确处理",
+      "code": "\n// 测试: 核心业务逻辑\nfunction testCoreBusinessLogic() {\n    // 测试答题流程\n    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};\n\n    // 测试随机题目生成\n    const questions = shuffle(QUESTION_BANK).slice(0, 10);\n    assertEqual(questions.length, 10, '应该生成指定数量的题目');\n    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');\n\n    // 测试答案验证\n    const question = {id: '001', answer: 'A'};\n    const isCorrect = 'A' === question.answer;\n    assertEqual(isCorrect, true, '正确答案应该返回true');\n\n    const isWrong = 'B' === question.answer;\n    assertEqual(isWrong, false, '错误答案应该返回false');\n}\n"
+    },
+    {
+      "id": "GAP-005",
+      "test_name": "test_deleteQuestion",
+      "category": "循环逻辑",
+      "description": "测试deleteQuestion函数",
+      "expected_behavior": "deleteQuestion应该按照设计规范正确执行",
+      "code": "\n// 测试: deleteQuestion函数\nfunction testDeletequestion() {\n    // TODO: 为 deleteQuestion 编写具体测试用例\n    // 风险类型: 循环逻辑\n    // 优先级: high\n\n    // 测试基本功能\n    // assert(condition, '测试描述');\n}\n"
+    },
+    {
+      "id": "GAP-006",
+      "test_name": "test_core_business_logic",
+      "category": "核心业务",
+      "description": "测试核心业务逻辑的正确性",
+      "expected_behavior": "核心业务逻辑应该按照预期执行，边界情况应该有明确处理",
+      "code": "\n// 测试: 核心业务逻辑\nfunction testCoreBusinessLogic() {\n    // 测试答题流程\n    const mockState = {quiz: [], idx: 0, answered: false, correctCount: 0};\n\n    // 测试随机题目生成\n    const questions = shuffle(QUESTION_BANK).slice(0, 10);\n    assertEqual(questions.length, 10, '应该生成指定数量的题目');\n    assertEqual(questions.length, [...new Set(questions.map(q => q.id))].length, '题目不应该重复');\n\n    // 测试答案验证\n    const question = {id: '001', answer: 'A'};\n    const isCorrect = 'A' === question.answer;\n    assertEqual(isCorrect, true, '正确答案应该返回true');\n\n    const isWrong = 'B' === question.answer;\n    assertEqual(isWrong, false, '错误答案应该返回false');\n}\n"
+    },
+    {
+      "id": "GAP-007",
+      "test_name": "test_json_parsing",
+      "category": "JSON解析",
+      "description": "测试JSON解析的边界情况和错误处理",
+      "expected_behavior": "JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值",
+      "code": "\n// 测试: JSON解析边界情况\nfunction testJSONParsing() {\n    // 测试正常JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value\"}'), '正常JSON应该解析成功');\n\n    // 测试空对象\n    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');\n\n    // 测试包含特殊字符的JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value with \\\"quotes\\\"\"}'), '带引号的JSON应该解析成功');\n\n    // 测试无效JSON应该被捕获\n    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');\n}\n"
+    },
+    {
+      "id": "GAP-008",
+      "test_name": "test_json_parsing",
+      "category": "JSON解析",
+      "description": "测试JSON解析的边界情况和错误处理",
+      "expected_behavior": "JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值",
+      "code": "\n// 测试: JSON解析边界情况\nfunction testJSONParsing() {\n    // 测试正常JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value\"}'), '正常JSON应该解析成功');\n\n    // 测试空对象\n    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');\n\n    // 测试包含特殊字符的JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value with \\\"quotes\\\"\"}'), '带引号的JSON应该解析成功');\n\n    // 测试无效JSON应该被捕获\n    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');\n}\n"
+    },
+    {
+      "id": "GAP-009",
+      "test_name": "test_json_parsing",
+      "category": "JSON解析",
+      "description": "测试JSON解析的边界情况和错误处理",
+      "expected_behavior": "JSON.parse应该正确解析有效JSON，对于无效JSON应该抛出错误或返回默认值",
+      "code": "\n// 测试: JSON解析边界情况\nfunction testJSONParsing() {\n    // 测试正常JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value\"}'), '正常JSON应该解析成功');\n\n    // 测试空对象\n    assertDoesNotThrow(() => JSON.parse('{}'), '空对象应该解析成功');\n\n    // 测试包含特殊字符的JSON\n    assertDoesNotThrow(() => JSON.parse('{\"key\":\"value with \\\"quotes\\\"\"}'), '带引号的JSON应该解析成功');\n\n    // 测试无效JSON应该被捕获\n    assertDoesCatch(() => { try { JSON.parse('invalid'); } catch(e) { throw e; } }, '无效JSON应该抛出错误');\n}\n"
+    },
+    {
+      "id": "GAP-010",
+      "test_name": "test_local_storage_operations",
+      "category": "本地存储",
+      "description": "测试本地存储的读写和数据持久化",
+      "expected_behavior": "localStorage应该正确保存和读取数据，对于异常情况应该有降级处理",
+      "code": "\n// 测试: 本地存储操作\nfunction testLocalStorageOperations() {\n    // 测试数据保存\n    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));\n    const retrieved = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');\n\n    // 测试数据更新\n    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));\n    const updated = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(updated.data, 'updated', '数据应该正确更新');\n\n    // 测试数据删除\n    localStorage.removeItem('test_key');\n    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');\n\n    // 测试空值处理\n    localStorage.setItem('empty_key', '');\n    const emptyVal = localStorage.getItem('empty_key');\n    // 应该处理空字符串的情况\n}\n"
+    },
+    {
+      "id": "GAP-011",
+      "test_name": "test_local_storage_operations",
+      "category": "本地存储",
+      "description": "测试本地存储的读写和数据持久化",
+      "expected_behavior": "localStorage应该正确保存和读取数据，对于异常情况应该有降级处理",
+      "code": "\n// 测试: 本地存储操作\nfunction testLocalStorageOperations() {\n    // 测试数据保存\n    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));\n    const retrieved = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');\n\n    // 测试数据更新\n    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));\n    const updated = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(updated.data, 'updated', '数据应该正确更新');\n\n    // 测试数据删除\n    localStorage.removeItem('test_key');\n    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');\n\n    // 测试空值处理\n    localStorage.setItem('empty_key', '');\n    const emptyVal = localStorage.getItem('empty_key');\n    // 应该处理空字符串的情况\n}\n"
+    },
+    {
+      "id": "GAP-012",
+      "test_name": "test_local_storage_operations",
+      "category": "本地存储",
+      "description": "测试本地存储的读写和数据持久化",
+      "expected_behavior": "localStorage应该正确保存和读取数据，对于异常情况应该有降级处理",
+      "code": "\n// 测试: 本地存储操作\nfunction testLocalStorageOperations() {\n    // 测试数据保存\n    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));\n    const retrieved = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');\n\n    // 测试数据更新\n    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));\n    const updated = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(updated.data, 'updated', '数据应该正确更新');\n\n    // 测试数据删除\n    localStorage.removeItem('test_key');\n    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');\n\n    // 测试空值处理\n    localStorage.setItem('empty_key', '');\n    const emptyVal = localStorage.getItem('empty_key');\n    // 应该处理空字符串的情况\n}\n"
+    },
+    {
+      "id": "GAP-013",
+      "test_name": "test_local_storage_operations",
+      "category": "本地存储",
+      "description": "测试本地存储的读写和数据持久化",
+      "expected_behavior": "localStorage应该正确保存和读取数据，对于异常情况应该有降级处理",
+      "code": "\n// 测试: 本地存储操作\nfunction testLocalStorageOperations() {\n    // 测试数据保存\n    localStorage.setItem('test_key', JSON.stringify({data: 'test'}));\n    const retrieved = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(retrieved.data, 'test', '数据应该正确保存和读取');\n\n    // 测试数据更新\n    localStorage.setItem('test_key', JSON.stringify({data: 'updated'}));\n    const updated = JSON.parse(localStorage.getItem('test_key'));\n    assertEqual(updated.data, 'updated', '数据应该正确更新');\n\n    // 测试数据删除\n    localStorage.removeItem('test_key');\n    assertEqual(localStorage.getItem('test_key'), null, '数据应该被正确删除');\n\n    // 测试空值处理\n    localStorage.setItem('empty_key', '');\n    const emptyVal = localStorage.getItem('empty_key');\n    // 应该处理空字符串的情况\n}\n"
+    },
+    {
+      "id": "GAP-014",
+      "test_name": "test_saveQuestion",
+      "category": "正则表达式",
+      "description": "测试saveQuestion函数",
+      "expected_behavior": "saveQuestion应该按照设计规范正确执行",
+      "code": "\n// 测试: saveQuestion函数\nfunction testSaveQuestion() {\n    // 测试新增题目\n    const newQuestion = {\n        id: 'new_' + Date.now(),\n        category: '测试分类',\n        question: '这是测试题目',\n        options: [{key: 'A', text: '选项A'}, {key: 'B', text: '选项B'}],\n        answer: 'A',\n        explanation: '这是测试解析'\n    };\n\n    // 验证题目结构\n    assertEqual('id' in newQuestion, true, '题目应该有id');\n    assertEqual('question' in newQuestion, true, '题目应该有question');\n    assertEqual('options' in newQuestion, true, '题目应该有options');\n    assertEqual('answer' in newQuestion, true, '题目应该有answer');\n    assertEqual(newQuestion.options.length >= 2, true, '题目至少有2个选项');\n}\n"
+    }
+  ]
+}
