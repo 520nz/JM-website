@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰答题测试</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .test-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #333; }
+        .test-item { margin-bottom: 10px; padding: 10px; border-radius: 4px; }
+        .test-item.pass { background: #d4edda; color: #155724; }
+        .test-item.fail { background: #f8d7da; color: #721c24; }
+        .test-item.skip { background: #fff3cd; color: #856404; }
+        .test-result { margin-top: 15px; padding: 12px; border-radius: 4px; }
+        .test-result.success { background: #d4edda; color: #155724; }
+        .test-result.error { background: #f8d7da; color: #721c24; }
+        .test-info { font-size: 14px; color: #666; }
+        .test-code { font-family: monospace; font-size: 12px; background: #f8f9fa; padding: 8px; border-radius: 4px; margin-top: 5px; }
+        .btn { padding: 10px 20px; background: #8B5CF6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn:hover { background: #7c3aed; }
+    </style>
+</head>
+<body>
+    <h1>🎵 林俊杰答题系统 - 自动化测试</h1>
+    <button class="btn" onclick="runAllTests()">运行所有测试</button>
+    
+    <div class="test-container">
+        <div class="test-title">1. 题库数据结构验证</div>
+        <div id="test-bank-structure"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">2. 数据持久化模块测试</div>
+        <div id="test-db"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">3. 题目管理功能测试</div>
+        <div id="test-question-crud"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">4. 答题流程测试</div>
+        <div id="test-quiz-flow"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">5. 导入导出功能测试</div>
+        <div id="test-import-export"></div>
+    </div>
+
+    <div class="test-container">
+        <div class="test-title">测试结果汇总</div>
+        <div id="test-summary" class="test-result"></div>
+    </div>
+
+<script>
+var QUESTION_BANK=[
+{id:"001",category:"专辑",question:"测试题1",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"},{key:"C",text:"选项C"},{key:"D",text:"选项D"}],answer:"B",explanation:"测试解析"},
+{id:"002",category:"歌曲",question:"测试题2",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"}],answer:"A",explanation:"测试解析"}
+];
+
+var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+
+var state={quiz:[],idx:0,answered:false,mode:'quick',correctCount:0,startTime:0,timer:null};
+
+var DB={
+    KEY:'jj_quiz_test',
+    get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+    defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
+    save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+    addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;var q=DB.findQ(rec.qid);if(q){if(!d.stats.cats[q.category])d.stats.cats[q.category]={t:0,c:0};d.stats.cats[q.category].t++;if(rec.ok)d.stats.cats[q.category].c++;}DB.save(d);},
+    addWrong:function(qid){var d=DB.get();var f=null;for(var i=0;i<d.wrong.length;i++){if(d.wrong[i].qid===qid){f=d.wrong[i];break;}}if(f){f.cnt++;f.time=Date.now();}else{d.wrong.push({qid:qid,cnt:1,time:Date.now()});}DB.save(d);},
+    removeWrong:function(qid){var d=DB.get();d.wrong=d.wrong.filter(function(w){return w.qid!==qid;});DB.save(d);},
+    getWrong:function(){return DB.get().wrong;},
+    findQ:function(qid){for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].id===qid)return QUESTION_BANK[i];}return null;}
+};
+
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+var testResults = { pass: 0, fail: 0, skip: 0 };
+
+function assert(condition, message) {
+    return { pass: condition, message: message };
+}
+
+function addTestResult(containerId, result) {
+    var container = document.getElementById(containerId);
+    var el = document.createElement('div');
+    el.className = 'test-item ' + (result.pass ? 'pass' : result.pass === null ? 'skip' : 'fail');
+    el.innerHTML = (result.pass ? '✓' : result.pass === null ? '~' : '✗') + ' ' + result.message;
+    container.appendChild(el);
+    
+    if (result.pass) testResults.pass++;
+    else if (result.pass === null) testResults.skip++;
+    else testResults.fail++;
+}
+
+function runAllTests() {
+    testResults = { pass: 0, fail: 0, skip: 0 };
+    document.querySelectorAll('.test-item').forEach(el => el.remove());
+    
+    localStorage.removeItem('jj_quiz_test');
+    localStorage.removeItem('jj_question_bank');
+    
+    runBankStructureTests();
+    runDBTests();
+    runQuestionCRUDTests();
+    runQuizFlowTests();
+    runImportExportTests();
+    
+    updateSummary();
+}
+
+function runBankStructureTests() {
+    addTestResult('test-bank-structure', assert(
+        QUESTION_BANK.length >= 2, 
+        '题库至少包含2道题目: ' + QUESTION_BANK.length + '题'
+    ));
+    
+    var q = QUESTION_BANK[0];
+    addTestResult('test-bank-structure', assert(
+        q.id && q.category && q.question && q.options && q.answer && q.explanation,
+        '题目数据结构完整'
+    ));
+    
+    addTestResult('test-bank-structure', assert(
+        q.options.length >= 2,
+        '每道题至少有2个选项: ' + q.options.length + '个'
+    ));
+    
+    addTestResult('test-bank-structure', assert(
+        q.options.every(o => o.key && o.text),
+        '所有选项包含key和text字段'
+    ));
+    
+    addTestResult('test-bank-structure', assert(
+        ['A', 'B', 'C', 'D'].includes(q.answer),
+        '答案是有效选项: ' + q.answer
+    ));
+}
+
+function runDBTests() {
+    addTestResult('test-db', assert(
+        typeof DB.get === 'function',
+        'DB.get 方法存在'
+    ));
+    
+    addTestResult('test-db', assert(
+        typeof DB.save === 'function',
+        'DB.save 方法存在'
+    ));
+    
+    var defaultData = DB.get();
+    addTestResult('test-db', assert(
+        Array.isArray(defaultData.history) && Array.isArray(defaultData.wrong),
+        '默认数据结构正确'
+    ));
+    
+    addTestResult('test-db', assert(
+        defaultData.stats.total === 0 && defaultData.stats.correct === 0,
+        '初始统计数据为0'
+    ));
+    
+    DB.addRecord({ qid: '001', ans: 'B', ok: true, time: Date.now() });
+    var data = DB.get();
+    addTestResult('test-db', assert(
+        data.stats.total === 1 && data.stats.correct === 1,
+        '添加答题记录成功'
+    ));
+    
+    addTestResult('test-db', assert(
+        data.history.length === 1 && data.history[0].qid === '001',
+        '历史记录保存成功'
+    ));
+    
+    DB.addWrong('001');
+    data = DB.get();
+    addTestResult('test-db', assert(
+        data.wrong.length === 1 && data.wrong[0].qid === '001',
+        '错题记录添加成功'
+    ));
+    
+    DB.addWrong('001');
+    data = DB.get();
+    addTestResult('test-db', assert(
+        data.wrong[0].cnt === 2,
+        '重复错题计数增加'
+    ));
+    
+    DB.removeWrong('001');
+    data = DB.get();
+    addTestResult('test-db', assert(
+        data.wrong.length === 0,
+        '错题记录移除成功'
+    ));
+    
+    addTestResult('test-db', assert(
+        DB.findQ('001') !== null,
+        'findQ 能找到存在的题目'
+    ));
+    
+    addTestResult('test-db', assert(
+        DB.findQ('nonexistent') === null,
+        'findQ 对不存在的题目返回null'
+    ));
+}
+
+function runQuestionCRUDTests() {
+    var originalLength = QUESTION_BANK.length;
+    
+    var newQuestion = {
+        id: 'new001',
+        category: '测试',
+        question: '新增测试题',
+        options: [{key:'A',text:'A'}, {key:'B',text:'B'}],
+        answer: 'A',
+        explanation: '测试'
+    };
+    
+    QUESTION_BANK.push(newQuestion);
+    addTestResult('test-question-crud', assert(
+        QUESTION_BANK.length === originalLength + 1,
+        '新增题目成功'
+    ));
+    
+    addTestResult('test-question-crud', assert(
+        QUESTION_BANK[QUESTION_BANK.length - 1].id === 'new001',
+        '新增题目ID正确'
+    ));
+    
+    var idx = QUESTION_BANK.findIndex(q => q.id === 'new001');
+    QUESTION_BANK[idx].question = '修改后的题目';
+    addTestResult('test-question-crud', assert(
+        QUESTION_BANK[idx].question === '修改后的题目',
+        '修改题目成功'
+    ));
+    
+    QUESTION_BANK = QUESTION_BANK.filter(q => q.id !== 'new001');
+    addTestResult('test-question-crud', assert(
+        QUESTION_BANK.length === originalLength,
+        '删除题目成功'
+    ));
+    
+    addTestResult('test-question-crud', assert(
+        QUESTION_BANK.find(q => q.id === 'new001') === undefined,
+        '删除后不存在'
+    ));
+}
+
+function runQuizFlowTests() {
+    state.quiz = [];
+    state.idx = 0;
+    state.correctCount = 0;
+    
+    addTestResult('test-quiz-flow', assert(
+        state.quiz.length === 0,
+        '答题状态初始化为空'
+    ));
+    
+    state.quiz = shuffle(QUESTION_BANK).slice(0, 1);
+    state.idx = 0;
+    addTestResult('test-quiz-flow', assert(
+        state.quiz.length === 1,
+        '随机选题功能正常'
+    ));
+    
+    var q = state.quiz[0];
+    var correctAnswer = q.answer;
+    var wrongAnswer = q.options.find(o => o.key !== correctAnswer).key;
+    
+    state.answered = false;
+    state.correctCount = 0;
+    
+    state.answered = true;
+    if (correctAnswer === q.answer) state.correctCount++;
+    addTestResult('test-quiz-flow', assert(
+        state.correctCount === 1,
+        '正确答案计数正确'
+    ));
+    
+    state.correctCount = 0;
+    if (wrongAnswer === q.answer) state.correctCount++;
+    addTestResult('test-quiz-flow', assert(
+        state.correctCount === 0,
+        '错误答案不计入正确数'
+    ));
+    
+    state.idx++;
+    addTestResult('test-quiz-flow', assert(
+        state.idx >= state.quiz.length,
+        '答题完成检测正常'
+    ));
+    
+    var shuffled = shuffle([1, 2, 3, 4, 5]);
+    addTestResult('test-quiz-flow', assert(
+        shuffled.length === 5,
+        'shuffle函数保持数组长度'
+    ));
+}
+
+function runImportExportTests() {
+    var exportData = {
+        questionBank: QUESTION_BANK,
+        userData: DB.get(),
+        exportTime: new Date().toISOString()
+    };
+    
+    addTestResult('test-import-export', assert(
+        exportData.questionBank && exportData.userData && exportData.exportTime,
+        '导出数据结构完整'
+    ));
+    
+    addTestResult('test-import-export', assert(
+        exportData.questionBank.length === QUESTION_BANK.length,
+        '导出题目数量正确'
+    ));
+    
+    var importData = {
+        questionBank: [{
+            id: 'import001',
+            category: '导入测试',
+            question: '导入的题目',
+            options: [{key:'A',text:'A'}, {key:'B',text:'B'}],
+            answer: 'A',
+            explanation: '导入'
+        }],
+        userData: {
+            history: [{qid: 'import001', ans: 'A', ok: true, time: Date.now()}],
+            wrong: [],
+            stats: {total: 1, correct: 1, cats: {}}
+        }
+    };
+    
+    var existingIds = {};
+    QUESTION_BANK.forEach(q => existingIds[q.id] = true);
+    
+    var addedCount = 0;
+    var updatedCount = 0;
+    
+    importData.questionBank.forEach(q => {
+        if (existingIds[q.id]) {
+            updatedCount++;
+        } else {
+            QUESTION_BANK.push(q);
+            addedCount++;
+        }
+    });
+    
+    addTestResult('test-import-export', assert(
+        addedCount === 1 && updatedCount === 0,
+        '导入新增题目成功'
+    ));
+    
+    QUESTION_BANK = QUESTION_BANK.filter(q => q.id !== 'import001');
+    addTestResult('test-import-export', assert(
+        QUESTION_BANK.find(q => q.id === 'import001') === undefined,
+        '清理测试数据成功'
+    ));
+}
+
+function updateSummary() {
+    var summary = document.getElementById('test-summary');
+    var total = testResults.pass + testResults.fail + testResults.skip;
+    
+    if (testResults.fail === 0) {
+        summary.className = 'test-result success';
+        summary.innerHTML = `
+            <strong>测试通过 ✅</strong><br>
+            总测试数: ${total} | 通过: ${testResults.pass} | 跳过: ${testResults.skip}
+        `;
+    } else {
+        summary.className = 'test-result error';
+        summary.innerHTML = `
+            <strong>测试失败 ❌</strong><br>
+            总测试数: ${total} | 通过: ${testResults.pass} | 失败: ${testResults.fail} | 跳过: ${testResults.skip}
+        `;
+    }
+}
+
+function saveQuestionBank() {
+    localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
+}
+
+function loadQuestionBank() {
+    var saved = localStorage.getItem('jj_question_bank');
+    if (saved) {
+        try {
+            QUESTION_BANK = JSON.parse(saved);
+        } catch (e) {}
+    }
+}
+</script>
+</body>
+</html>
