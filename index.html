@@ -808,7 +808,21 @@ function importData(event) {
         if (data.userData) {
             var existingData = DB.get();
             if (data.userData.history) {
-                existingData.history = existingData.history.concat(data.userData.history);
+                // 为历史记录去重，防止多次导入导致重复
+                var existingHistorySet = new Set();
+                for (var h = 0; h < existingData.history.length; h++) {
+                    var record = existingData.history[h];
+                    // 使用 qid + time 作为唯一标识
+                    existingHistorySet.add(record.qid + '_' + record.time);
+                }
+                for (var m = 0; m < data.userData.history.length; m++) {
+                    var newRecord = data.userData.history[m];
+                    var recordKey = newRecord.qid + '_' + newRecord.time;
+                    if (!existingHistorySet.has(recordKey)) {
+                        existingData.history.push(newRecord);
+                        existingHistorySet.add(recordKey);
+                    }
+                }
             }
             if (data.userData.wrong) {
                 var wrongMap = {};
@@ -818,23 +832,34 @@ function importData(event) {
                 for (var x = 0; x < data.userData.wrong.length; x++) {
                     var wrongItem = data.userData.wrong[x];
                     if (wrongMap[wrongItem.qid]) {
-                        wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+                        // 取较大的错误次数而不是简单相加，避免多次导入导致错误次数虚高
+                        wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt);
+                        // 更新时间为较新的时间
+                        if (wrongItem.time > wrongMap[wrongItem.qid].time) {
+                            wrongMap[wrongItem.qid].time = wrongItem.time;
+                        }
                     } else {
                         existingData.wrong.push(wrongItem);
                     }
                 }
             }
             if (data.userData.stats) {
+                // 不简单叠加统计数据，而是重新从历史记录计算
+                // 这样能确保统计数据的准确性，避免多次导入导致统计虚高
                 if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
-                existingData.stats.total += data.userData.stats.total || 0;
-                existingData.stats.correct += data.userData.stats.correct || 0;
-                if (data.userData.stats.cats) {
-                    for (var catName in data.userData.stats.cats) {
-                        if (!existingData.stats.cats[catName]) {
-                            existingData.stats.cats[catName] = {t: 0, c: 0};
+                // 清空现有统计，准备重新计算
+                existingData.stats = {total: 0, correct: 0, cats: {}};
+                for (var n = 0; n < existingData.history.length; n++) {
+                    var rec = existingData.history[n];
+                    existingData.stats.total++;
+                    if (rec.ok) existingData.stats.correct++;
+                    var q = DB.findQ(rec.qid);
+                    if (q) {
+                        if (!existingData.stats.cats[q.category]) {
+                            existingData.stats.cats[q.category] = {t: 0, c: 0};
                         }
-                        existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
-                        existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                        existingData.stats.cats[q.category].t++;
+                        if (rec.ok) existingData.stats.cats[q.category].c++;
                     }
                 }
             }
@@ -847,6 +872,8 @@ function importData(event) {
         alert(msg);
         try { updateHome(); } catch (e) {}
         try { renderQuestionList(); } catch (e) {}
+        try { renderStats(); } catch (e) {}
+        try { renderWrongBook(); } catch (e) {}
     };
     reader.readAsText(file);
     event.target.value = '';
