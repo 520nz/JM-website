@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰答题 - 测试套件</title>
+    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-2.20.0.css">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+</head>
+<body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+    <script src="https://code.jquery.com/qunit/qunit-2.20.0.js"></script>
+    <script>
+    // ==================== 测试辅助函数 ====================
+    // 模拟 localStorage
+    const mockStorage = {};
+    const localStorage = {
+        getItem: function(key) { return mockStorage[key] || null; },
+        setItem: function(key, value) { mockStorage[key] = value; },
+        removeItem: function(key) { delete mockStorage[key]; },
+        clear: function() { Object.keys(mockStorage).forEach(k => delete mockStorage[k]); }
+    };
+
+    // ==================== 核心逻辑代码（被测试的代码） ====================
+    // 题库数据
+    var QUESTION_BANK = [
+        {id:"001",category:"专辑",question:"林俊杰首张专辑是？",options:[{key:"A",text:"乐行者"},{key:"B",text:"第二天堂"},{key:"C",text:"她说"},{key:"D",text:"学不会"}],answer:"A",explanation:"首张专辑是乐行者"},
+        {id:"002",category:"歌曲",question:"《江南》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"李瑞洵"},{key:"C",text:"方文山"},{key:"D",text:"林秋离"}],answer:"B",explanation:"李瑞洵作词"},
+        {id:"003",category:"个人信息",question:"林俊杰的出生日期是？",options:[{key:"A",text:"1981年3月27日"},{key:"B",text:"1982年3月27日"},{key:"C",text:"1981年5月27日"},{key:"D",text:"1980年3月27日"}],answer:"A",explanation:"1981年3月27日出生于新加坡"}
+    ];
+
+    var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+
+    // DB 模块
+    var DB = {
+        KEY: 'jj_quiz_test',
+        get: function() {
+            var d = localStorage.getItem(DB.KEY);
+            return d ? JSON.parse(d) : DB.defaults();
+        },
+        defaults: function() {
+            return {history: [], wrong: [], stats: {total: 0, correct: 0, cats: {}}};
+        },
+        save: function(d) {
+            localStorage.setItem(DB.KEY, JSON.stringify(d));
+        },
+        addRecord: function(rec) {
+            var d = DB.get();
+            d.history.push(rec);
+            d.stats.total++;
+            if (rec.ok) d.stats.correct++;
+            var q = DB.findQ(rec.qid);
+            if (q) {
+                if (!d.stats.cats[q.category]) d.stats.cats[q.category] = {t: 0, c: 0};
+                d.stats.cats[q.category].t++;
+                if (rec.ok) d.stats.cats[q.category].c++;
+            }
+            DB.save(d);
+        },
+        addWrong: function(qid) {
+            var d = DB.get();
+            var f = null;
+            for (var i = 0; i < d.wrong.length; i++) {
+                if (d.wrong[i].qid === qid) { f = d.wrong[i]; break; }
+            }
+            if (f) { f.cnt++; f.time = Date.now(); }
+            else { d.wrong.push({qid: qid, cnt: 1, time: Date.now()}); }
+            DB.save(d);
+        },
+        removeWrong: function(qid) {
+            var d = DB.get();
+            d.wrong = d.wrong.filter(function(w) { return w.qid !== qid; });
+            DB.save(d);
+        },
+        getWrong: function() { return DB.get().wrong; },
+        findQ: function(qid) {
+            for (var i = 0; i < QUESTION_BANK.length; i++) {
+                if (QUESTION_BANK[i].id === qid) return QUESTION_BANK[i];
+            }
+            return null;
+        }
+    };
+
+    // 随机打乱函数
+    function shuffle(arr) {
+        var a = arr.slice();
+        for (var i = a.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var t = a[i];
+            a[i] = a[j];
+            a[j] = t;
+        }
+        return a;
+    }
+
+    // 选项解析函数
+    function parseOptions(optsText) {
+        var lines = optsText.split('\n');
+        var options = [];
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+            if (match) {
+                options.push({ key: match[1], text: match[2] });
+            }
+        }
+        return options;
+    }
+
+    // 计算正确率
+    function calculateAccuracy(history) {
+        if (!history || history.length === 0) return 0;
+        var correct = history.filter(function(h) { return h.ok; }).length;
+        return Math.round(correct / history.length * 100);
+    }
+
+    // 验证题目数据完整性
+    function validateQuestion(q) {
+        if (!q.id || !q.category || !q.question) return false;
+        if (!q.options || !Array.isArray(q.options) || q.options.length < 2) return false;
+        if (!q.answer || !['A', 'B', 'C', 'D'].includes(q.answer)) return false;
+        return true;
+    }
+
+    // 验证导入数据格式
+    function validateImportData(data) {
+        if (!data || typeof data !== 'object') return { valid: false, error: '数据格式错误' };
+        if (data.questionBank && !Array.isArray(data.questionBank)) return { valid: false, error: 'questionBank必须是数组' };
+        if (data.userData && typeof data.userData !== 'object') return { valid: false, error: 'userData必须是对象' };
+        return { valid: true };
+    }
+
+    // ==================== 测试用例 ====================
+
+    // ===== DB存储模块测试 ====================
+    QUnit.module('DB存储模块', function() {
+        QUnit.test('DB.get() 应返回默认数据结构', function(assert) {
+            localStorage.clear();
+            var result = DB.get();
+            assert.deepEqual(result, {history: [], wrong: [], stats: {total: 0, correct: 0, cats: {}}});
+        });
+
+        QUnit.test('DB.save() 应正确保存数据', function(assert) {
+            localStorage.clear();
+            var testData = {history: [], wrong: [], stats: {total: 10, correct: 8, cats: {}}};
+            DB.save(testData);
+            var result = JSON.parse(localStorage.getItem(DB.KEY));
+            assert.deepEqual(result, testData);
+        });
+
+        QUnit.test('DB.addRecord() 应正确添加答题记录', function(assert) {
+            localStorage.clear();
+            DB.addRecord({qid: '001', ans: 'A', ok: true, time: Date.now()});
+            var d = DB.get();
+            assert.equal(d.history.length, 1);
+            assert.equal(d.stats.total, 1);
+            assert.equal(d.stats.correct, 1);
+        });
+
+        QUnit.test('DB.addRecord() 错误答案应正确更新统计', function(assert) {
+            localStorage.clear();
+            DB.addRecord({qid: '001', ans: 'B', ok: false, time: Date.now()});
+            var d = DB.get();
+            assert.equal(d.history.length, 1);
+            assert.equal(d.stats.total, 1);
+            assert.equal(d.stats.correct, 0);
+        });
+
+        QUnit.test('DB.addWrong() 应添加错题记录', function(assert) {
+            localStorage.clear();
+            DB.addWrong('001');
+            var d = DB.get();
+            assert.equal(d.wrong.length, 1);
+            assert.equal(d.wrong[0].qid, '001');
+            assert.equal(d.wrong[0].cnt, 1);
+        });
+
+        QUnit.test('DB.addWrong() 重复错题应增加计数', function(assert) {
+            localStorage.clear();
+            DB.addWrong('001');
+            DB.addWrong('001');
+            var d = DB.get();
+            assert.equal(d.wrong.length, 1);
+            assert.equal(d.wrong[0].cnt, 2);
+        });
+
+        QUnit.test('DB.removeWrong() 应删除错题', function(assert) {
+            localStorage.clear();
+            DB.addWrong('001');
+            DB.removeWrong('001');
+            var d = DB.get();
+            assert.equal(d.wrong.length, 0);
+        });
+
+        QUnit.test('DB.findQ() 应返回题目对象', function(assert) {
+            var q = DB.findQ('001');
+            assert.ok(q);
+            assert.equal(q.id, '001');
+            assert.equal(q.category, '专辑');
+        });
+
+        QUnit.test('DB.findQ() 不存在的题目应返回null', function(assert) {
+            var q = DB.findQ('999');
+            assert.strictEqual(q, null);
+        });
+
+        QUnit.test('分类统计应正确更新', function(assert) {
+            localStorage.clear();
+            DB.addRecord({qid: '001', ans: 'A', ok: true, time: Date.now()});
+            var d = DB.get();
+            assert.ok(d.stats.cats['专辑']);
+            assert.equal(d.stats.cats['专辑'].t, 1);
+            assert.equal(d.stats.cats['专辑'].c, 1);
+        });
+    });
+
+    // ===== 核心逻辑测试 ====================
+    QUnit.module('核心逻辑', function() {
+        QUnit.test('shuffle() 应返回打乱后的数组', function(assert) {
+            var arr = [1, 2, 3, 4, 5];
+            var result = shuffle(arr);
+            assert.equal(result.length, arr.length);
+            // 检查所有元素都存在
+            arr.forEach(function(item) {
+                assert.ok(result.includes(item));
+            });
+        });
+
+        QUnit.test('shuffle() 不应修改原数组', function(assert) {
+            var arr = [1, 2, 3, 4, 5];
+            var original = arr.slice();
+            shuffle(arr);
+            assert.deepEqual(arr, original);
+        });
+
+        QUnit.test('shuffle() 空数组应返回空数组', function(assert) {
+            var result = shuffle([]);
+            assert.deepEqual(result, []);
+        });
+
+        QUnit.test('parseOptions() 应正确解析标准格式选项', function(assert) {
+            var text = 'A.选项1\nB.选项2\nC.选项3\nD.选项4';
+            var result = parseOptions(text);
+            assert.equal(result.length, 4);
+            assert.equal(result[0].key, 'A');
+            assert.equal(result[0].text, '选项1');
+        });
+
+        QUnit.test('parseOptions() 应正确解析中文分隔符', function(text) {
+            var text = 'A、选项1\nB、选项2\nC、选项3';
+            var result = parseOptions(text);
+            assert.equal(result.length, 3);
+            assert.equal(result[1].key, 'B');
+        });
+
+        QUnit.test('parseOptions() 应忽略无效行', function(assert) {
+            var text = 'A.选项1\n无效行\nB.选项2';
+            var result = parseOptions(text);
+            assert.equal(result.length, 2);
+        });
+
+        QUnit.test('parseOptions() 空输入应返回空数组', function(assert) {
+            var result = parseOptions('');
+            assert.deepEqual(result, []);
+        });
+
+        QUnit.test('calculateAccuracy() 空记录返回0', function(assert) {
+            var result = calculateAccuracy([]);
+            assert.equal(result, 0);
+        });
+
+        QUnit.test('calculateAccuracy() 正确计算正确率', function(assert) {
+            var history = [
+                {ok: true}, {ok: true}, {ok: false}, {ok: true}
+            ];
+            var result = calculateAccuracy(history);
+            assert.equal(result, 75);
+        });
+
+        QUnit.test('calculateAccuracy() 全对返回100', function(assert) {
+            var history = [{ok: true}, {ok: true}];
+            var result = calculateAccuracy(history);
+            assert.equal(result, 100);
+        });
+
+        QUnit.test('calculateAccuracy() 全错返回0', function(assert) {
+            var history = [{ok: false}, {ok: false}];
+            var result = calculateAccuracy(history);
+            assert.equal(result, 0);
+        });
+    });
+
+    // ===== 数据验证测试 ====================
+    QUnit.module('数据验证', function() {
+        QUnit.test('validateQuestion() 有效题目应通过验证', function(assert) {
+            var q = {
+                id: '001',
+                category: '专辑',
+                question: '测试题目',
+                options: [{key: 'A', text: '选项1'}, {key: 'B', text: '选项2'}],
+                answer: 'A'
+            };
+            assert.ok(validateQuestion(q));
+        });
+
+        QUnit.test('validateQuestion() 缺少ID应失败', function(assert) {
+            var q = {
+                category: '专辑',
+                question: '测试题目',
+                options: [{key: 'A', text: '选项1'}],
+                answer: 'A'
+            };
+            assert.notOk(validateQuestion(q));
+        });
+
+        QUnit.test('validateQuestion() 缺少分类应失败', function(assert) {
+            var q = {
+                id: '001',
+                question: '测试题目',
+                options: [{key: 'A', text: '选项1'}],
+                answer: 'A'
+            };
+            assert.notOk(validateQuestion(q));
+        });
+
+        QUnit.test('validateQuestion() 选项少于2个应失败', function(assert) {
+            var q = {
+                id: '001',
+                category: '专辑',
+                question: '测试题目',
+                options: [{key: 'A', text: '选项1'}],
+                answer: 'A'
+            };
+            assert.notOk(validateQuestion(q));
+        });
+
+        QUnit.test('validateQuestion() 无效答案应失败', function(assert) {
+            var q = {
+                id: '001',
+                category: '专辑',
+                question: '测试题目',
+                options: [{key: 'A', text: '选项1'}, {key: 'B', text: '选项2'}],
+                answer: 'E'
+            };
+            assert.notOk(validateQuestion(q));
+        });
+
+        QUnit.test('validateImportData() 有效数据应通过', function(assert) {
+            var data = {
+                questionBank: [{id: '001', category: '测试', question: '?', options: [{key: 'A', text: '1'}], answer: 'A', explanation: ''}],
+                userData: {history: [], wrong: [], stats: {total: 0, correct: 0, cats: {}}}
+            };
+            var result = validateImportData(data);
+            assert.ok(result.valid);
+        });
+
+        QUnit.test('validateImportData() 空数据应失败', function(assert) {
+            var result = validateImportData(null);
+            assert.notOk(result.valid);
+        });
+
+        QUnit.test('validateImportData() questionBank非数组应失败', function(assert) {
+            var result = validateImportData({questionBank: 'not array'});
+            assert.notOk(result.valid);
+        });
+
+        QUnit.test('validateImportData() userData非对象应失败', function(assert) {
+            var result = validateImportData({userData: 'not object'});
+            assert.notOk(result.valid);
+        });
+
+        QUnit.test('validateImportData() 无questionBank和userData应通过', function(assert) {
+            var result = validateImportData({other: 'data'});
+            assert.ok(result.valid);
+        });
+    });
+
+    // ===== 边界条件测试 ====================
+    QUnit.module('边界条件', function() {
+        QUnit.test('DB处理大量答题记录', function(assert) {
+            localStorage.clear();
+            for (var i = 0; i < 100; i++) {
+                DB.addRecord({qid: '001', ans: 'A', ok: i % 2 === 0, time: Date.now()});
+            }
+            var d = DB.get();
+            assert.equal(d.history.length, 100);
+            assert.equal(d.stats.total, 100);
+            assert.equal(d.stats.correct, 50);
+        });
+
+        QUnit.test('分类统计多个分类', function(assert) {
+            localStorage.clear();
+            DB.addRecord({qid: '001', ans: 'A', ok: true, time: Date.now()});
+            DB.addRecord({qid: '002', ans: 'B', ok: true, time: Date.now()});
+            DB.addRecord({qid: '003', ans: 'C', ok: false, time: Date.now()});
+            var d = DB.get();
+            assert.ok(d.stats.cats['专辑']);
+            assert.ok(d.stats.cats['歌曲']);
+            assert.ok(d.stats.cats['个人信息']);
+        });
+
+        QUnit.test('选项解析处理多种格式', function(assert) {
+            // 测试全角句号
+            var result1 = parseOptions('A．选项1\nB．选项2');
+            assert.equal(result1.length, 2);
+
+            // 测试带空格
+            var result2 = parseOptions('A.  选项选项1\nB.选项2');
+            assert.equal(result2.length, 2);
+
+            // 测试只有字母
+            var result3 = parseOptions('A选项1\nB选项2');
+            assert.equal(result3.length, 0);
+        });
+    });
+
+    // ===== 关键业务流程测试 ====================
+    QUnit.module('关键业务流程', function() {
+        QUnit.test('完整答题流程', function(assert) {
+            localStorage.clear();
+
+            // 模拟答题：正确答案
+            DB.addRecord({qid: '001', ans: 'A', ok: true, time: Date.now()});
+
+            // 模拟答题：错误答案
+            DB.addRecord({qid: '002', ans: 'A', ok: false, time: Date.now()});
+            DB.addWrong('002');
+
+            var d = DB.get();
+
+            // 验证记录
+            assert.equal(d.history.length, 2);
+            assert.equal(d.stats.total, 2);
+            assert.equal(d.stats.correct, 1);
+
+            // 验证错题本
+            assert.equal(d.wrong.length, 1);
+            assert.equal(d.wrong[0].qid, '002');
+            assert.equal(d.wrong[0].cnt, 1);
+        });
+
+        QUnit.test('错题复习流程', function(assert) {
+            localStorage.clear();
+
+            // 添加错题
+            DB.addWrong('001');
+            DB.addWrong('002');
+            DB.addWrong('001'); // 再错一次
+
+            // 验证错题数量
+            var wrongList = DB.getWrong();
+            assert.equal(wrongList.length, 2);
+
+            // 移除做对的错题
+            DB.removeWrong('001');
+
+            // 验证剩余错题
+            var remaining = DB.getWrong();
+            assert.equal(remaining.length, 1);
+            assert.equal(remaining[0].qid, '002');
+        });
+
+        QUnit.test('数据持久化验证', function(assert) {
+            localStorage.clear();
+
+            // 保存一些数据
+            var testData = {
+                history: [{qid: '001', ans: 'A', ok: true, time: 1234567890}],
+                wrong: [{qid: '002', cnt: 1, time: 1234567890}],
+                stats: {total: 1, correct: 1, cats: {'专辑': {t: 1, c: 1}}}
+            };
+            DB.save(testData);
+
+            // 重新获取
+            var retrieved = DB.get();
+
+            // 验证数据完整性
+            assert.deepEqual(retrieved.history, testData.history);
+            assert.deepEqual(retrieved.wrong, testData.wrong);
+            assert.deepEqual(retrieved.stats, testData.stats);
+        });
+    });
+    </script>
+</body>
+</html>
