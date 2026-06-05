@@ -888,6 +888,16 @@ function resetQuestionBank() {
 }
 
 window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
+
+function runTests() {
+    var script = document.createElement('script');
+    script.src = 'test_quiz.js';
+    script.onload = function() {
+        console.log('测试脚本加载完成，开始执行测试...');
+    };
+    document.head.appendChild(script);
+}
 </script>
+<script src="test_quiz.js"></script>
 </body>
 </html>
