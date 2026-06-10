@@ -512,7 +512,7 @@ function tickTimer(){var sec=Math.floor((Date.now()-state.startTime)/1000);var m
 function fmtTime(ms){var sec=Math.floor(ms/1000);var m=Math.floor(sec/60);var s=sec%60;return m+'分'+s+'秒';}
 
 function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
-function showCategoryView(){var cats={};for(var i=0;i<QUESTION_BANK.length;i++){var c=QUESTION_BANK[i].category;cats[c]=(cats[c]||0)+1;}var html='';for(var name in cats){html+='<div class="category-item" onclick="startCatQuiz(\''+name+'\')"><span class="category-name">'+name+'</span><span class="category-count">'+cats[name]+'题</span></div>';}document.getElementById('categoryList').innerHTML=html;switchView('category');}
+function showCategoryView(){var cats={};for(var i=0;i<QUESTION_BANK.length;i++){var c=QUESTION_BANK[i].category;cats[c]=(cats[c]||0)+1;}var names=Object.keys(cats);var html='';for(var idx=0;idx<names.length;idx++){html+='<div class="category-item" onclick="startCatQuiz(\''+escapeHtml(names[idx])+'\')"><span class="category-name" data-cn></span><span class="category-count">'+cats[names[idx]]+'题</span></div>';}document.getElementById('categoryList').innerHTML=html;var spans=document.querySelectorAll('#categoryList [data-cn]');for(var si=0;si<spans.length;si++){spans[si].textContent=names[si]||'';}switchView('category');}
 function startCatQuiz(cat){var f=[];for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].category===cat)f.push(QUESTION_BANK[i]);}state.quiz=shuffle(f).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
 function startWrongBookQuiz(){var wl=DB.getWrong();var qs=[];for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(q)qs.push(q);}if(qs.length===0)return;state.quiz=shuffle(qs);state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
 
@@ -521,11 +521,14 @@ function renderQ(){
     var q=state.quiz[state.idx];var pct=Math.round(state.idx/state.quiz.length*100);
     var sec=Math.floor((Date.now()-state.startTime)/1000);var tm=Math.floor(sec/60);var ts=sec%60;
     var html='<div class="progress-wrap"><div class="progress-header"><span class="progress-text">'+(state.idx+1)+' / '+state.quiz.length+'</span><span class="timer-badge">⏱ <span id="timerVal">'+tm+':'+(ts<10?'0':'')+ts+'</span></span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:'+pct+'%"></div></div></div>';
-    html+='<div class="question-card"><div class="question-text">'+q.question+'</div>';
-    for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><span>'+o.text+'</span></div>';}
+    html+='<div class="question-card"><div class="question-text"></div>';
+    for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><span data-text=""></span></div>';}
     html+='<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
     html+='<div class="bottom-bar"><button class="btn" id="nextBtn" onclick="nextQ()" style="display:none;">下一题</button><button class="btn btn-outline" onclick="quitQuiz()">返回首页</button></div>';
-    document.getElementById('quizArea').innerHTML=html;state.answered=false;
+    document.getElementById('quizArea').innerHTML=html;
+    document.querySelector('.question-text').textContent=q.question||'';
+    for(var k=0;k<q.options.length;k++){var span=document.querySelector('#opt-'+q.options[k].key+' [data-text]');if(span)span.textContent=q.options[k].text||'';}
+    state.answered=false;
 }
 
 function pickOption(key){
@@ -553,8 +556,9 @@ function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var 
 function renderWrongBook(){
     var wl=DB.getWrong();var el=document.getElementById('wrongBookList');var btn=document.getElementById('wrongBookBtn');
     if(wl.length===0){el.innerHTML='<div class="empty"><p>暂无错题记录</p><p style="font-size:13px;margin-top:8px;">答错的题目会自动加入这里</p></div>';btn.style.display='none';return;}
-    var html='<div class="error-list">';for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(!q)continue;html+='<div class="error-item"><div class="q">'+q.question+'</div><div class="info"><span>错误'+wl[i].cnt+'次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\''+q.id+'\')">移除</button></div></div>';}html+='</div>';
+    var html='<div class="error-list">';for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(!q)continue;html+='<div class="error-item"><div class="q" data-qtext></div><div class="info"><span>错误'+wl[i].cnt+'次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\''+q.id+'\')">移除</button></div></div>';}html+='</div>';
     el.innerHTML=html;btn.style.display='block';btn.textContent='开始复习 ('+wl.length+'题)';
+    var qitems=el.querySelectorAll('[data-qtext]');var qi=0;for(var wi=0;wi<wl.length;wi++){var q2=DB.findQ(wl[wi].qid);if(!q2)continue;if(qitems[qi])qitems[qi].textContent=q2.question||'';qi++;}
 }
 
 function removeWrong(qid){DB.removeWrong(qid);renderWrongBook();}
@@ -564,10 +568,12 @@ function renderStats(){
     var acc=d.stats.total>0?Math.round(d.stats.correct/d.stats.total*100):0;document.getElementById('sAcc').textContent=acc+'%';document.getElementById('sWrong').textContent=d.wrong.length;
     var catEl=document.getElementById('catStats');var cats=d.stats.cats;var keys=Object.keys(cats);
     if(keys.length===0){catEl.innerHTML='<div class="empty"><p>暂无数据</p></div>';return;}
-    var html='';for(var i=0;i<keys.length;i++){var name=keys[i];var s=cats[name];var pct=s.t>0?Math.round(s.c/s.t*100):0;html+='<div class="cat-stat-row"><span class="cat-stat-name">'+name+'</span><div class="cat-stat-bar-wrap"><div class="cat-stat-bar-bg"><div class="cat-stat-bar" style="width:'+pct+'%"></div></div></div><span class="cat-stat-pct">'+pct+'%</span></div>';}
+    var html='';for(var i=0;i<keys.length;i++){var name=keys[i];var s=cats[name];var pct=s.t>0?Math.round(s.c/s.t*100):0;html+='<div class="cat-stat-row"><span class="cat-stat-name" data-cat></span><div class="cat-stat-bar-wrap"><div class="cat-stat-bar-bg"><div class="cat-stat-bar" style="width:'+pct+'%"></div></div></div><span class="cat-stat-pct">'+pct+'%</span></div>';}
     catEl.innerHTML=html;
+    var spans=catEl.querySelectorAll('[data-cat]');for(var si=0;si<spans.length;si++){spans[si].textContent=keys[si]||'';}
 }
 
+function escapeHtml(s){if(s===null||s===undefined)return'';return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
 
 /* ===== 管理功能 ===== */
@@ -610,22 +616,39 @@ function renderQuestionList() {
     var search = document.getElementById('searchInput').value.toLowerCase();
     var catFilter = document.getElementById('categoryFilter').value;
     var html = '';
+    var questionText = '';
+    var answerText = '';
+    var categoryText = '';
     for (var i = 0; i < QUESTION_BANK.length; i++) {
         var q = QUESTION_BANK[i];
         if (catFilter && q.category !== catFilter) continue;
         if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
         html += '<div class="q-item">';
         html += '<div class="q-item-header">';
-        html += '<span class="q-item-cat">' + q.category + '</span>';
+        html += '<span class="q-item-cat" data-cat></span>';
         html += '<div class="q-item-actions">';
         html += '<button class="btn btn-outline btn-sm" onclick="showEditForm(\'' + q.id + '\')">编辑</button>';
         html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
         html += '</div></div>';
-        html += '<div class="q-item-text">' + q.question + '</div>';
-        html += '<div class="q-item-answer">答案: ' + q.answer + '</div>';
+        html += '<div class="q-item-text" data-q></div>';
+        html += '<div class="q-item-answer" data-ans></div>';
         html += '</div>';
     }
     document.getElementById('questionList').innerHTML = html || '<div class="empty"><p>暂无题目</p></div>';
+    var items = document.querySelectorAll('#questionList .q-item');
+    var idx = 0;
+    for (var j = 0; j < QUESTION_BANK.length; j++) {
+        var q2 = QUESTION_BANK[j];
+        if (catFilter && q2.category !== catFilter) continue;
+        if (search && q2.question.toLowerCase().indexOf(search) === -1) continue;
+        var item = items[idx];
+        if (item) {
+            var catEl = item.querySelector('[data-cat]'); if (catEl) catEl.textContent = q2.category || '';
+            var qEl = item.querySelector('[data-q]'); if (qEl) qEl.textContent = q2.question || '';
+            var ansEl = item.querySelector('[data-ans]'); if (ansEl) ansEl.textContent = '答案: ' + (q2.answer || '');
+        }
+        idx++;
+    }
 }
 
 function filterQuestions() {
@@ -742,7 +765,16 @@ function loadQuestionBank() {
     var saved = localStorage.getItem('jj_question_bank');
     if (saved) {
         try {
-            QUESTION_BANK = JSON.parse(saved);
+            var parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+                var valid = [];
+                for (var i = 0; i < parsed.length; i++) {
+                    if (validateQuestion(parsed[i])) {
+                        valid.push(parsed[i]);
+                    }
+                }
+                QUESTION_BANK = valid;
+            }
         } catch (e) {}
     }
 }
@@ -765,6 +797,37 @@ function exportData() {
     alert('数据已导出！');
 }
 
+function validateQuestion(q) {
+    if (!q || typeof q !== 'object') return false;
+    if (typeof q.id !== 'string' || !q.id) return false;
+    if (typeof q.category !== 'string' || !q.category) return false;
+    if (typeof q.question !== 'string' || !q.question) return false;
+    if (!Array.isArray(q.options) || q.options.length < 2) return false;
+    for (var i = 0; i < q.options.length; i++) {
+        var opt = q.options[i];
+        if (!opt || typeof opt !== 'object') return false;
+        if (typeof opt.key !== 'string' || !/^[A-D]$/.test(opt.key)) return false;
+        if (typeof opt.text !== 'string' || !opt.text) return false;
+    }
+    if (typeof q.answer !== 'string' || !/^[A-D]$/.test(q.answer)) return false;
+    if (typeof q.explanation !== 'string') return false;
+    return true;
+}
+
+function validateWrongItem(w) {
+    return w && typeof w === 'object' &&
+        typeof w.qid === 'string' && w.qid &&
+        typeof w.cnt !== 'undefined' && !isNaN(Number(w.cnt));
+}
+
+function validateHistoryItem(h) {
+    return h && typeof h === 'object' &&
+        typeof h.qid === 'string' &&
+        typeof h.ans === 'string' &&
+        typeof h.ok === 'boolean' &&
+        typeof h.time === 'number';
+}
+
 function importData(event) {
     var file = event.target.files[0];
     if (!file) return;
@@ -783,13 +846,19 @@ function importData(event) {
         }
         var addedCount = 0;
         var updatedCount = 0;
+        var invalidQuestions = 0;
         if (data.questionBank) {
+            if (!Array.isArray(data.questionBank)) {
+                alert('导入失败：questionBank 必须是数组');
+                return;
+            }
             var existingIds = {};
             for (var i = 0; i < QUESTION_BANK.length; i++) {
                 existingIds[QUESTION_BANK[i].id] = true;
             }
             for (var j = 0; j < data.questionBank.length; j++) {
                 var q = data.questionBank[j];
+                if (!validateQuestion(q)) { invalidQuestions++; continue; }
                 if (existingIds[q.id]) {
                     for (var k = 0; k < QUESTION_BANK.length; k++) {
                         if (QUESTION_BANK[k].id === q.id) {
@@ -807,34 +876,44 @@ function importData(event) {
         }
         if (data.userData) {
             var existingData = DB.get();
-            if (data.userData.history) {
-                existingData.history = existingData.history.concat(data.userData.history);
+            if (!existingData.history) existingData.history = [];
+            if (!existingData.wrong) existingData.wrong = [];
+            if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
+            if (data.userData.history && Array.isArray(data.userData.history)) {
+                var validHistory = data.userData.history.filter(validateHistoryItem);
+                existingData.history = existingData.history.concat(validHistory);
             }
-            if (data.userData.wrong) {
+            if (data.userData.wrong && Array.isArray(data.userData.wrong)) {
                 var wrongMap = {};
                 for (var w = 0; w < existingData.wrong.length; w++) {
                     wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
                 }
                 for (var x = 0; x < data.userData.wrong.length; x++) {
                     var wrongItem = data.userData.wrong[x];
+                    if (!validateWrongItem(wrongItem)) continue;
                     if (wrongMap[wrongItem.qid]) {
-                        wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+                        wrongMap[wrongItem.qid].cnt = Number(wrongMap[wrongItem.qid].cnt) + Number(wrongItem.cnt);
                     } else {
-                        existingData.wrong.push(wrongItem);
+                        existingData.wrong.push({
+                            qid: String(wrongItem.qid),
+                            cnt: Number(wrongItem.cnt),
+                            time: wrongItem.time ? Number(wrongItem.time) : Date.now()
+                        });
                     }
                 }
             }
-            if (data.userData.stats) {
-                if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
-                existingData.stats.total += data.userData.stats.total || 0;
-                existingData.stats.correct += data.userData.stats.correct || 0;
-                if (data.userData.stats.cats) {
+            if (data.userData.stats && typeof data.userData.stats === 'object') {
+                existingData.stats.total += Number(data.userData.stats.total) || 0;
+                existingData.stats.correct += Number(data.userData.stats.correct) || 0;
+                if (data.userData.stats.cats && typeof data.userData.stats.cats === 'object') {
                     for (var catName in data.userData.stats.cats) {
+                        var catData = data.userData.stats.cats[catName];
+                        if (!catData || typeof catData !== 'object') continue;
                         if (!existingData.stats.cats[catName]) {
                             existingData.stats.cats[catName] = {t: 0, c: 0};
                         }
-                        existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
-                        existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                        existingData.stats.cats[catName].t += Number(catData.t) || 0;
+                        existingData.stats.cats[catName].c += Number(catData.c) || 0;
                     }
                 }
             }
@@ -843,6 +922,9 @@ function importData(event) {
         var msg = '数据导入成功！';
         if (addedCount > 0 || updatedCount > 0) {
             msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+        }
+        if (invalidQuestions > 0) {
+            msg += '\n（忽略 ' + invalidQuestions + ' 道格式不合法的题目）';
         }
         alert(msg);
         try { updateHome(); } catch (e) {}
