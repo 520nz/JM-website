@@ -826,15 +826,15 @@ function importData(event) {
             }
             if (data.userData.stats) {
                 if (!existingData.stats) existingData.stats = {total: 0, correct: 0, cats: {}};
-                existingData.stats.total += data.userData.stats.total || 0;
-                existingData.stats.correct += data.userData.stats.correct || 0;
+                existingData.stats.total = (parseInt(existingData.stats.total) || 0) + (parseInt(data.userData.stats.total) || 0);
+                existingData.stats.correct = (parseInt(existingData.stats.correct) || 0) + (parseInt(data.userData.stats.correct) || 0);
                 if (data.userData.stats.cats) {
                     for (var catName in data.userData.stats.cats) {
                         if (!existingData.stats.cats[catName]) {
                             existingData.stats.cats[catName] = {t: 0, c: 0};
                         }
-                        existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
-                        existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                        existingData.stats.cats[catName].t = (parseInt(existingData.stats.cats[catName].t) || 0) + (parseInt(data.userData.stats.cats[catName].t) || 0);
+                        existingData.stats.cats[catName].c = (parseInt(existingData.stats.cats[catName].c) || 0) + (parseInt(data.userData.stats.cats[catName].c) || 0);
                     }
                 }
             }
