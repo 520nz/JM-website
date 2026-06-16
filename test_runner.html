@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试运行器 - 林俊杰粉丝答题</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0F0A1A; color: #F5F5F5; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { font-size: 24px; margin-bottom: 8px; }
+        .header p { color: #A0A0A0; font-size: 14px; }
+        .test-section { background: #1A1225; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #2D2340; }
+        .test-section h2 { font-size: 16px; margin-bottom: 16px; color: #8B5CF6; }
+        .test-item { margin-bottom: 10px; padding: 10px; border-radius: 8px; background: rgba(0,0,0,0.2); }
+        .test-item.pass { border-left: 3px solid #10B981; }
+        .test-item.fail { border-left: 3px solid #EF4444; }
+        .test-name { font-size: 14px; font-weight: 500; }
+        .test-result { font-size: 12px; margin-top: 4px; }
+        .test-result.pass { color: #10B981; }
+        .test-result.fail { color: #EF4444; }
+        .summary { background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(167,139,250,0.05)); border-radius: 12px; padding: 20px; border: 1px solid rgba(139,92,246,0.3); }
+        .summary h3 { font-size: 16px; margin-bottom: 12px; }
+        .stat-row { display: flex; gap: 20px; margin-bottom: 8px; }
+        .stat-label { color: #A0A0A0; }
+        .stat-value { font-weight: 600; }
+        .stat-value.pass { color: #10B981; }
+        .stat-value.fail { color: #EF4444; }
+        .btn { padding: 10px 20px; background: linear-gradient(135deg, #8B5CF6, #9333ea); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; margin-bottom: 20px; }
+        .btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 测试运行器</h1>
+            <p>林俊杰粉丝答题应用 - 自动化测试套件</p>
+        </div>
+        <button class="btn" onclick="runAllTests()">运行所有测试</button>
+        <div id="testResults"></div>
+        <div class="summary" id="summary" style="display:none;">
+            <h3>测试结果汇总</h3>
+            <div class="stat-row">
+                <span class="stat-label">总测试数：</span><span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">通过：</span><span class="stat-value pass" id="passCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">失败：</span><span class="stat-value fail" id="failCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">通过率：</span><span class="stat-value" id="passRate">0%</span>
+            </div>
+        </div>
+    </div>
+
+<script>
+var TEST_RESULTS = [];
+var PASS_COUNT = 0;
+var FAIL_COUNT = 0;
+
+function assert(condition, message) {
+    var result = condition ? 'pass' : 'fail';
+    if (result === 'pass') PASS_COUNT++;
+    else FAIL_COUNT++;
+    TEST_RESULTS.push({ message: message, result: result });
+    return condition;
+}
+
+function assertEqual(actual, expected, message) {
+    var condition = actual === expected;
+    var result = condition ? 'pass' : 'fail';
+    if (result === 'pass') PASS_COUNT++;
+    else FAIL_COUNT++;
+    var detail = condition ? '' : ' (实际: ' + actual + ', 期望: ' + expected + ')';
+    TEST_RESULTS.push({ message: message + detail, result: result });
+    return condition;
+}
+
+function assertDeepEqual(actual, expected, message) {
+    var condition = JSON.stringify(actual) === JSON.stringify(expected);
+    var result = condition ? 'pass' : 'fail';
+    if (result === 'pass') PASS_COUNT++;
+    else FAIL_COUNT++;
+    var detail = condition ? '' : ' (实际: ' + JSON.stringify(actual) + ', 期望: ' + JSON.stringify(expected) + ')';
+    TEST_RESULTS.push({ message: message + detail, result: result });
+    return condition;
+}
+
+function assertNotEqual(actual, expected, message) {
+    var condition = actual !== expected;
+    var result = condition ? 'pass' : 'fail';
+    if (result === 'pass') PASS_COUNT++;
+    else FAIL_COUNT++;
+    TEST_RESULTS.push({ message: message, result: result });
+    return condition;
+}
+
+function assertThrows(fn, message) {
+    try {
+        fn();
+        FAIL_COUNT++;
+        TEST_RESULTS.push({ message: message + ' - 未抛出异常', result: 'fail' });
+        return false;
+    } catch (e) {
+        PASS_COUNT++;
+        TEST_RESULTS.push({ message: message + ' - 正确抛出异常', result: 'pass' });
+        return true;
+    }
+}
+
+function renderResults() {
+    var container = document.getElementById('testResults');
+    container.innerHTML = '';
+    
+    var sections = {};
+    TEST_RESULTS.forEach(function(r) {
+        var sectionName = r.message.split(':')[0].trim();
+        if (!sections[sectionName]) sections[sectionName] = [];
+        sections[sectionName].push(r);
+    });
+    
+    for (var section in sections) {
+        var html = '<div class="test-section"><h2>' + section + '</h2>';
+        sections[section].forEach(function(r) {
+            html += '<div class="test-item ' + r.result + '"><div class="test-name">' + r.message + '</div><div class="test-result ' + r.result + '">' + (r.result === 'pass' ? '✓ 通过' : '✗ 失败') + '</div></div>';
+        });
+        html += '</div>';
+        container.innerHTML += html;
+    }
+    
+    var summary = document.getElementById('summary');
+    summary.style.display = 'block';
+    document.getElementById('totalCount').textContent = PASS_COUNT + FAIL_COUNT;
+    document.getElementById('passCount').textContent = PASS_COUNT;
+    document.getElementById('failCount').textContent = FAIL_COUNT;
+    var rate = PASS_COUNT + FAIL_COUNT > 0 ? Math.round(PASS_COUNT / (PASS_COUNT + FAIL_COUNT) * 100) : 0;
+    document.getElementById('passRate').textContent = rate + '%';
+}
+
+function clearResults() {
+    TEST_RESULTS = [];
+    PASS_COUNT = 0;
+    FAIL_COUNT = 0;
+    document.getElementById('testResults').innerHTML = '';
+    document.getElementById('summary').style.display = 'none';
+}
+
+function runAllTests() {
+    clearResults();
+    
+    testDBModule();
+    testUtils();
+    testOptionParsing();
+    testImportData();
+    testEdgeCases();
+    
+    renderResults();
+}
+
+function testDBModule() {
+    localStorage.clear();
+    
+    var testDB = {
+        KEY: 'jj_quiz_test',
+        get: function() {
+            var d = localStorage.getItem(testDB.KEY);
+            return d ? JSON.parse(d) : testDB.defaults();
+        },
+        defaults: function() {
+            return { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } };
+        },
+        save: function(d) {
+            localStorage.setItem(testDB.KEY, JSON.stringify(d));
+        },
+        addRecord: function(rec) {
+            var d = testDB.get();
+            d.history.push(rec);
+            d.stats.total++;
+            if (rec.ok) d.stats.correct++;
+            var q = testDB.findQ(rec.qid);
+            if (q) {
+                if (!d.stats.cats[q.category]) d.stats.cats[q.category] = { t: 0, c: 0 };
+                d.stats.cats[q.category].t++;
+                if (rec.ok) d.stats.cats[q.category].c++;
+            }
+            testDB.save(d);
+        },
+        addWrong: function(qid) {
+            var d = testDB.get();
+            var f = null;
+            for (var i = 0; i < d.wrong.length; i++) {
+                if (d.wrong[i].qid === qid) { f = d.wrong[i]; break; }
+            }
+            if (f) { f.cnt++; f.time = Date.now(); }
+            else { d.wrong.push({ qid: qid, cnt: 1, time: Date.now() }); }
+            testDB.save(d);
+        },
+        removeWrong: function(qid) {
+            var d = testDB.get();
+            d.wrong = d.wrong.filter(function(w) { return w.qid !== qid; });
+            testDB.save(d);
+        },
+        getWrong: function() { return testDB.get().wrong; },
+        findQ: function(qid) {
+            for (var i = 0; i < TEST_QUESTIONS.length; i++) {
+                if (TEST_QUESTIONS[i].id === qid) return TEST_QUESTIONS[i];
+            }
+            return null;
+        }
+    };
+
+    var TEST_QUESTIONS = [
+        { id: 'q001', category: '专辑', question: '测试题1', options: [{ key: 'A', text: '选项A' }], answer: 'A', explanation: '解释' },
+        { id: 'q002', category: '歌曲', question: '测试题2', options: [{ key: 'B', text: '选项B' }], answer: 'B', explanation: '解释' }
+    ];
+
+    assertDeepEqual(testDB.get(), { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } }, 'DB模块: get() 返回默认值');
+    
+    var testData = { history: [{ qid: 'q001', ok: true }], wrong: [], stats: { total: 1, correct: 1, cats: {} } };
+    testDB.save(testData);
+    assertDeepEqual(testDB.get(), testData, 'DB模块: save() 保存数据');
+    
+    testDB.addRecord({ qid: 'q001', ans: 'A', ok: true, time: Date.now() });
+    var data = testDB.get();
+    assertEqual(data.history.length, 2, 'DB模块: addRecord() 添加正确记录');
+    assertEqual(data.stats.total, 2, 'DB模块: addRecord() 统计总答题数');
+    assertEqual(data.stats.correct, 2, 'DB模块: addRecord() 统计正确数');
+    
+    testDB.addRecord({ qid: 'q002', ans: 'A', ok: false, time: Date.now() });
+    data = testDB.get();
+    assertEqual(data.stats.total, 3, 'DB模块: addRecord() 统计错误答题');
+    assertEqual(data.stats.correct, 2, 'DB模块: addRecord() 错误记录不增加正确数');
+    
+    testDB.addWrong('q001');
+    data = testDB.get();
+    assertEqual(data.wrong.length, 1, 'DB模块: addWrong() 添加错题');
+    assertEqual(data.wrong[0].qid, 'q001', 'DB模块: addWrong() 错题ID正确');
+    assertEqual(data.wrong[0].cnt, 1, 'DB模块: addWrong() 初始计数为1');
+    
+    testDB.addWrong('q001');
+    data = testDB.get();
+    assertEqual(data.wrong.length, 1, 'DB模块: addWrong() 重复错题不新增');
+    assertEqual(data.wrong[0].cnt, 2, 'DB模块: addWrong() 重复错题计数增加');
+    
+    testDB.removeWrong('q001');
+    data = testDB.get();
+    assertEqual(data.wrong.length, 0, 'DB模块: removeWrong() 删除错题');
+    
+    assertDeepEqual(testDB.findQ('q001'), TEST_QUESTIONS[0], 'DB模块: findQ() 找到题目');
+    assertEqual(testDB.findQ('nonexistent'), null, 'DB模块: findQ() 未找到返回null');
+    
+    assertEqual(testDB.getWrong().length, 0, 'DB模块: getWrong() 返回错题列表');
+    
+    localStorage.removeItem('jj_quiz_test');
+}
+
+function testUtils() {
+    assertEqual(getCountMode('quick'), 10, '工具函数: getCount(quick) 返回10');
+    assertEqual(getCountMode('standard'), 20, '工具函数: getCount(standard) 返回20');
+    assertEqual(getCountMode('intensive'), 30, '工具函数: getCount(intensive) 返回30');
+    assertEqual(getCountMode('unknown'), 10, '工具函数: getCount(unknown) 默认返回10');
+    
+    assertEqual(fmtTimeMode(0), '0分0秒', '工具函数: fmtTime(0) 返回0分0秒');
+    assertEqual(fmtTimeMode(5000), '0分5秒', '工具函数: fmtTime(5000) 返回0分5秒');
+    assertEqual(fmtTimeMode(60000), '1分0秒', '工具函数: fmtTime(60000) 返回1分0秒');
+    assertEqual(fmtTimeMode(65000), '1分5秒', '工具函数: fmtTime(65000) 返回1分5秒');
+    assertEqual(fmtTimeMode(3665000), '61分5秒', '工具函数: fmtTime(3665000) 返回61分5秒');
+    
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffleArray(arr);
+    assertEqual(shuffled.length, 5, '工具函数: shuffle() 保持数组长度');
+    assertNotEqual(JSON.stringify(shuffled), JSON.stringify(arr), '工具函数: shuffle() 打乱顺序');
+    
+    var allElementsPresent = true;
+    for (var i = 0; i < arr.length; i++) {
+        if (shuffled.indexOf(arr[i]) === -1) allElementsPresent = false;
+    }
+    assert(allElementsPresent, '工具函数: shuffle() 保持所有元素');
+    
+    var sortedArr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    var shuffledSorted = shuffleArray(sortedArr);
+    assertEqual(shuffledSorted.length, 10, '工具函数: shuffle() 处理大数组');
+}
+
+function getCountMode(m) {
+    var modes = { quick: 10, standard: 20, intensive: 30 };
+    return modes[m] || 10;
+}
+
+function fmtTimeMode(ms) {
+    var sec = Math.floor(ms / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + '分' + s + '秒';
+}
+
+function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    return a;
+}
+
+function testOptionParsing() {
+    var validInput = 'A.选项1\nB.选项2\nC.选项3\nD.选项4';
+    var parsed = parseOptions(validInput);
+    assertEqual(parsed.length, 4, '选项解析: 标准格式解析4个选项');
+    assertEqual(parsed[0].key, 'A', '选项解析: 第一个选项key为A');
+    assertEqual(parsed[0].text, '选项1', '选项解析: 第一个选项text正确');
+    assertEqual(parsed[3].key, 'D', '选项解析: 最后一个选项key为D');
+    
+    var dotFormat = 'A．选项1\nB．选项2';
+    var parsedDot = parseOptions(dotFormat);
+    assertEqual(parsedDot.length, 2, '选项解析: 全角句号格式');
+    
+    var chineseDotFormat = 'A、选项1\nB、选项2';
+    var parsedChinese = parseOptions(chineseDotFormat);
+    assertEqual(parsedChinese.length, 2, '选项解析: 中文顿号格式');
+    
+    var withSpaces = 'A. 选项1\nB. 选项2';
+    var parsedSpaces = parseOptions(withSpaces);
+    assertEqual(parsedSpaces[0].text, '选项1', '选项解析: 处理空格');
+    
+    var emptyLines = 'A.选项1\n\nB.选项2\n\n\nC.选项3';
+    var parsedEmpty = parseOptions(emptyLines);
+    assertEqual(parsedEmpty.length, 3, '选项解析: 跳过空行');
+    
+    var invalidFormat = '选项1\n选项2';
+    var parsedInvalid = parseOptions(invalidFormat);
+    assertEqual(parsedInvalid.length, 0, '选项解析: 无效格式返回空数组');
+    
+    var incomplete = 'A.选项1\nB.';
+    var parsedIncomplete = parseOptions(incomplete);
+    assertEqual(parsedIncomplete.length, 1, '选项解析: 不完整选项忽略');
+    
+    var singleOption = 'A.选项1';
+    var parsedSingle = parseOptions(singleOption);
+    assertEqual(parsedSingle.length, 1, '选项解析: 单个选项');
+}
+
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+    return options;
+}
+
+function testImportData() {
+    var existingBank = [
+        { id: 'q001', category: '专辑', question: '原题1', options: [{ key: 'A', text: 'A' }], answer: 'A', explanation: '解释' },
+        { id: 'q002', category: '歌曲', question: '原题2', options: [{ key: 'B', text: 'B' }], answer: 'B', explanation: '解释' }
+    ];
+    
+    var importData = {
+        questionBank: [
+            { id: 'q001', category: '专辑', question: '更新题1', options: [{ key: 'A', text: '新A' }], answer: 'A', explanation: '新解释' },
+            { id: 'q003', category: '个人信息', question: '新题', options: [{ key: 'C', text: 'C' }], answer: 'C', explanation: '解释' }
+        ]
+    };
+    
+    var result = mergeQuestionBank(existingBank, importData);
+    assertEqual(result.length, 3, '数据导入: 合并后总数正确');
+    assertEqual(result[0].question, '更新题1', '数据导入: 已存在题目被更新');
+    assertEqual(result[0].options[0].text, '新A', '数据导入: 选项也被更新');
+    assertEqual(result[2].id, 'q003', '数据导入: 新题目被添加');
+    
+    var existingUserData = {
+        history: [{ qid: 'q001', ok: true }],
+        wrong: [{ qid: 'q001', cnt: 1, time: 1000 }],
+        stats: { total: 1, correct: 1, cats: { '专辑': { t: 1, c: 1 } } }
+    };
+    
+    var importUserData = {
+        history: [{ qid: 'q002', ok: false }],
+        wrong: [{ qid: 'q002', cnt: 2, time: 2000 }, { qid: 'q001', cnt: 1, time: 3000 }],
+        stats: { total: 2, correct: 0, cats: { '歌曲': { t: 2, c: 0 } } }
+    };
+    
+    var mergedUserData = mergeUserData(existingUserData, importUserData);
+    assertEqual(mergedUserData.history.length, 2, '数据导入: 历史记录合并');
+    assertEqual(mergedUserData.wrong.length, 2, '数据导入: 错题记录合并');
+    assertEqual(mergedUserData.wrong[0].cnt, 2, '数据导入: 重复错题计数累加');
+    assertEqual(mergedUserData.stats.total, 3, '数据导入: 统计总数累加');
+    assertEqual(mergedUserData.stats.correct, 1, '数据导入: 正确数累加');
+    assertEqual(mergedUserData.stats.cats['专辑'].t, 1, '数据导入: 分类统计保留');
+    assertEqual(mergedUserData.stats.cats['歌曲'].t, 2, '数据导入: 新分类添加');
+}
+
+function mergeQuestionBank(existing, importData) {
+    if (!importData.questionBank) return existing;
+    
+    var existingIds = {};
+    for (var i = 0; i < existing.length; i++) {
+        existingIds[existing[i].id] = true;
+    }
+    
+    var result = existing.slice();
+    
+    for (var j = 0; j < importData.questionBank.length; j++) {
+        var q = importData.questionBank[j];
+        if (existingIds[q.id]) {
+            for (var k = 0; k < result.length; k++) {
+                if (result[k].id === q.id) {
+                    result[k] = q;
+                    break;
+                }
+            }
+        } else {
+            result.push(q);
+        }
+    }
+    
+    return result;
+}
+
+function mergeUserData(existing, importData) {
+    if (!importData.userData) return existing;
+    
+    var result = JSON.parse(JSON.stringify(existing));
+    
+    if (importData.userData.history) {
+        result.history = result.history.concat(importData.userData.history);
+    }
+    
+    if (importData.userData.wrong) {
+        var wrongMap = {};
+        for (var w = 0; w < result.wrong.length; w++) {
+            wrongMap[result.wrong[w].qid] = result.wrong[w];
+        }
+        for (var x = 0; x < importData.userData.wrong.length; x++) {
+            var wrongItem = importData.userData.wrong[x];
+            if (wrongMap[wrongItem.qid]) {
+                wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+            } else {
+                result.wrong.push(wrongItem);
+            }
+        }
+    }
+    
+    if (importData.userData.stats) {
+        if (!result.stats) result.stats = { total: 0, correct: 0, cats: {} };
+        result.stats.total += importData.userData.stats.total || 0;
+        result.stats.correct += importData.userData.stats.correct || 0;
+        if (importData.userData.stats.cats) {
+            for (var catName in importData.userData.stats.cats) {
+                if (!result.stats.cats[catName]) {
+                    result.stats.cats[catName] = { t: 0, c: 0 };
+                }
+                result.stats.cats[catName].t += importData.userData.stats.cats[catName].t || 0;
+                result.stats.cats[catName].c += importData.userData.stats.cats[catName].c || 0;
+            }
+        }
+    }
+    
+    return result;
+}
+
+function testEdgeCases() {
+    var emptyOptions = '';
+    assertEqual(parseOptions(emptyOptions).length, 0, '边界条件: 空选项解析');
+    
+    var singleChar = 'A';
+    assertEqual(parseOptions(singleChar).length, 0, '边界条件: 单个字符无效');
+    
+    var onlyKey = 'A.';
+    assertEqual(parseOptions(onlyKey).length, 0, '边界条件: 只有key没有内容');
+    
+    var lowerCaseKey = 'a.选项';
+    assertEqual(parseOptions(lowerCaseKey).length, 0, '边界条件: 小写字母key无效');
+    
+    var invalidKey = 'E.选项';
+    assertEqual(parseOptions(invalidKey).length, 0, '边界条件: 无效key(E)被忽略');
+    
+    var existingBank = [];
+    var importData = { questionBank: [{ id: 'q001', category: '专辑', question: '题', options: [{ key: 'A', text: 'A' }], answer: 'A', explanation: '解释' }] };
+    var result = mergeQuestionBank(existingBank, importData);
+    assertEqual(result.length, 1, '边界条件: 空题库导入');
+    
+    var noData = {};
+    var resultNoData = mergeQuestionBank(existingBank, noData);
+    assertEqual(resultNoData.length, 0, '边界条件: 无questionBank的导入数据');
+    
+    var emptyWrong = [];
+    var importWrong = { userData: { wrong: [{ qid: 'q001', cnt: 1, time: 1000 }] } };
+    var mergedWrong = mergeUserData({ history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } }, importWrong);
+    assertEqual(mergedWrong.wrong.length, 1, '边界条件: 空错题导入');
+    
+    var shuffleEmpty = shuffleArray([]);
+    assertEqual(shuffleEmpty.length, 0, '边界条件: 空数组shuffle');
+    
+    var shuffleSingle = shuffleArray([1]);
+    assertEqual(shuffleSingle.length, 1, '边界条件: 单元素数组shuffle');
+}
+</script>
+</body>
+</html>
