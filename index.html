@@ -472,7 +472,7 @@ var state={quiz:[],idx:0,answered:false,mode:'quick',correctCount:0,startTime:0,
 
 var DB={
     KEY:'jj_quiz_v2',
-    get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+    get:function(){try{var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();}catch(e){return DB.defaults();}},
     defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
     save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
     addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;var q=DB.findQ(rec.qid);if(q){if(!d.stats.cats[q.category])d.stats.cats[q.category]={t:0,c:0};d.stats.cats[q.category].t++;if(rec.ok)d.stats.cats[q.category].c++;}DB.save(d);},
