@@ -1,0 +1,13 @@
+{
+  "name": "jj-quiz",
+  "version": "1.0.0",
+  "description": "林俊杰粉丝答题应用",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jsdom": "^23.0.1"
+  }
+}
