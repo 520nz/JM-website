@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试套件 - 林俊杰粉丝答题</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f5f5f5; }
+        .test-section { margin-bottom: 20px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .test-title { font-size: 18px; font-weight: 600; color: #333; margin-bottom: 12px; border-bottom: 2px solid #8B5CF6; padding-bottom: 8px; }
+        .test-case { margin: 8px 0; padding: 10px; border-radius: 6px; }
+        .test-case.pass { background: #d4edda; color: #155724; }
+        .test-case.fail { background: #f8d7da; color: #721c24; }
+        .test-name { font-weight: 500; }
+        .test-msg { font-size: 12px; margin-top: 4px; opacity: 0.8; }
+        .summary { margin-top: 20px; padding: 16px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .summary h3 { color: #333; margin-bottom: 10px; }
+        .stats { display: flex; gap: 20px; font-size: 14px; }
+        .stat-pass { color: #10B981; font-weight: 600; }
+        .stat-fail { color: #EF4444; font-weight: 600; }
+        .stat-total { color: #666; }
+    </style>
+</head>
+<body>
+    <h1 style="color:#8B5CF6;margin-bottom:20px;">🧪 测试套件 - 林俊杰粉丝答题</h1>
+    
+    <div id="testResults"></div>
+    
+    <div class="summary">
+        <h3>测试摘要</h3>
+        <div class="stats">
+            <span class="stat-total">总数: <span id="total">0</span></span>
+            <span class="stat-pass">通过: <span id="pass">0</span></span>
+            <span class="stat-fail">失败: <span id="fail">0</span></span>
+        </div>
+    </div>
+
+<script>
+var testResults = [];
+function test(name, fn) {
+    try {
+        fn();
+        testResults.push({ name: name, pass: true });
+    } catch (e) {
+        testResults.push({ name: name, pass: false, msg: e.message });
+    }
+}
+
+function assert(condition, msg) {
+    if (!condition) throw new Error(msg || 'Assertion failed');
+}
+
+function assertEqual(a, b, msg) {
+    if (a !== b) throw new Error(msg || 'Expected ' + b + ' but got ' + a);
+}
+
+function assertDeepEqual(a, b, msg) {
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+        throw new Error(msg || 'Expected ' + JSON.stringify(b) + ' but got ' + JSON.stringify(a));
+    }
+}
+
+function assertThrows(fn, msg) {
+    try {
+        fn();
+        throw new Error(msg || 'Expected function to throw');
+    } catch (e) {
+        if (!msg || e.message === msg) return;
+        throw e;
+    }
+}
+
+/* ===== 测试数据准备 ===== */
+var QUESTION_BANK = [
+    {id:"001",category:"专辑",question:"测试题1",options:[{key:"A",text:"选项1"},{key:"B",text:"选项2"}],answer:"A",explanation:"解析1"},
+    {id:"002",category:"歌曲",question:"测试题2",options:[{key:"A",text:"选项1"},{key:"B",text:"选项2"}],answer:"B",explanation:"解析2"}
+];
+var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+
+/* ===== DB 模块 ===== */
+var DB = {
+    KEY:'jj_quiz_v2',
+    get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+    defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
+    save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+    addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;var q=DB.findQ(rec.qid);if(q){if(!d.stats.cats[q.category])d.stats.cats[q.category]={t:0,c:0};d.stats.cats[q.category].t++;if(rec.ok)d.stats.cats[q.category].c++;}DB.save(d);},
+    addWrong:function(qid){var d=DB.get();var f=null;for(var i=0;i<d.wrong.length;i++){if(d.wrong[i].qid===qid){f=d.wrong[i];break;}}if(f){f.cnt++;f.time=Date.now();}else{d.wrong.push({qid:qid,cnt:1,time:Date.now()});}DB.save(d);},
+    removeWrong:function(qid){var d=DB.get();d.wrong=d.wrong.filter(function(w){return w.qid!==qid;});DB.save(d);},
+    getWrong:function(){return DB.get().wrong;},
+    findQ:function(qid){for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].id===qid)return QUESTION_BANK[i];}return null;}
+};
+
+/* ===== 工具函数 ===== */
+function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function getCount(mode){var m={quick:10,standard:20,intensive:30};return m[mode]||10;}
+
+/* ===== 数据导入导出工具 ===== */
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+    return options;
+}
+
+function checkResetInput(input) {
+    return input === '恢复默认';
+}
+
+/* ===== 测试套件 ===== */
+
+/* --- DB 数据层测试 --- */
+test('DB.defaults() 应返回正确的默认数据结构', function() {
+    var defaults = DB.defaults();
+    assert(Array.isArray(defaults.history), 'history应为数组');
+    assert(Array.isArray(defaults.wrong), 'wrong应为数组');
+    assert(typeof defaults.stats === 'object', 'stats应为对象');
+    assertEqual(defaults.stats.total, 0, 'total初始值应为0');
+    assertEqual(defaults.stats.correct, 0, 'correct初始值应为0');
+});
+
+test('DB.get() 在无数据时应返回默认值', function() {
+    localStorage.removeItem(DB.KEY);
+    var data = DB.get();
+    assertDeepEqual(data, DB.defaults());
+});
+
+test('DB.save() 和 DB.get() 应正确持久化数据', function() {
+    localStorage.removeItem(DB.KEY);
+    var testData = { history: [{qid:'001',ans:'A',ok:true}], wrong: [], stats: {total:1, correct:1, cats:{}} };
+    DB.save(testData);
+    var loaded = DB.get();
+    assertDeepEqual(loaded, testData);
+});
+
+test('DB.addRecord() 应正确添加答题记录', function() {
+    localStorage.removeItem(DB.KEY);
+    DB.addRecord({qid:'001',ans:'A',ok:true,time:Date.now()});
+    var data = DB.get();
+    assertEqual(data.history.length, 1, '应有1条历史记录');
+    assertEqual(data.stats.total, 1, '总答题数应为1');
+    assertEqual(data.stats.correct, 1, '正确数应为1');
+});
+
+test('DB.addRecord() 应正确更新分类统计', function() {
+    localStorage.removeItem(DB.KEY);
+    DB.addRecord({qid:'001',ans:'A',ok:true,time:Date.now()});
+    var data = DB.get();
+    assert(data.stats.cats['专辑'], '应有专辑分类统计');
+    assertEqual(data.stats.cats['专辑'].t, 1, '专辑分类总答题数应为1');
+    assertEqual(data.stats.cats['专辑'].c, 1, '专辑分类正确数应为1');
+});
+
+test('DB.addWrong() 应正确添加错题', function() {
+    localStorage.removeItem(DB.KEY);
+    DB.addWrong('001');
+    var data = DB.get();
+    assertEqual(data.wrong.length, 1, '应有1条错题');
+    assertEqual(data.wrong[0].qid, '001', '错题ID应为001');
+    assertEqual(data.wrong[0].cnt, 1, '错误次数应为1');
+});
+
+test('DB.addWrong() 重复添加同一题目应增加错误次数', function() {
+    localStorage.removeItem(DB.KEY);
+    DB.addWrong('001');
+    DB.addWrong('001');
+    var data = DB.get();
+    assertEqual(data.wrong.length, 1, '仍应有1条错题记录');
+    assertEqual(data.wrong[0].cnt, 2, '错误次数应为2');
+});
+
+test('DB.removeWrong() 应正确移除错题', function() {
+    localStorage.removeItem(DB.KEY);
+    DB.addWrong('001');
+    DB.removeWrong('001');
+    var data = DB.get();
+    assertEqual(data.wrong.length, 0, '错题列表应为空');
+});
+
+test('DB.findQ() 应正确查找题目', function() {
+    var q = DB.findQ('001');
+    assert(q, '应找到题目');
+    assertEqual(q.id, '001', '题目ID应为001');
+    assertEqual(q.category, '专辑', '题目分类应为专辑');
+});
+
+test('DB.findQ() 找不到题目时应返回null', function() {
+    var q = DB.findQ('nonexistent');
+    assertEqual(q, null);
+});
+
+/* --- 业务逻辑测试 --- */
+test('shuffle() 应返回相同长度的数组', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    assertEqual(shuffled.length, arr.length, '长度应保持不变');
+});
+
+test('shuffle() 应返回原数组的一个排列', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    var sorted = shuffled.slice().sort();
+    assertDeepEqual(sorted, arr, '排序后应与原数组相同');
+});
+
+test('shuffle() 不应修改原数组', function() {
+    var arr = [1, 2, 3];
+    var original = arr.slice();
+    shuffle(arr);
+    assertDeepEqual(arr, original, '原数组应保持不变');
+});
+
+test('getCount() 应返回正确的题目数量', function() {
+    assertEqual(getCount('quick'), 10);
+    assertEqual(getCount('standard'), 20);
+    assertEqual(getCount('intensive'), 30);
+});
+
+test('getCount() 对于未知模式应返回默认值10', function() {
+    assertEqual(getCount('unknown'), 10);
+});
+
+/* --- 数据导入导出测试 --- */
+test('parseOptions() 应正确解析标准格式选项', function() {
+    var opts = parseOptions('A.选项1\nB.选项2\nC.选项3\nD.选项4');
+    assertEqual(opts.length, 4, '应解析出4个选项');
+    assertEqual(opts[0].key, 'A', '第一个选项key应为A');
+    assertEqual(opts[0].text, '选项1', '第一个选项text应为选项1');
+});
+
+test('parseOptions() 应支持中文句号格式', function() {
+    var opts = parseOptions('A．选项1\nB．选项2');
+    assertEqual(opts.length, 2, '应解析出2个选项');
+});
+
+test('parseOptions() 应支持顿号格式', function() {
+    var opts = parseOptions('A、选项1\nB、选项2');
+    assertEqual(opts.length, 2, '应解析出2个选项');
+});
+
+test('parseOptions() 应忽略空行', function() {
+    var opts = parseOptions('A.选项1\n\nB.选项2');
+    assertEqual(opts.length, 2, '应解析出2个选项（跳过空行）');
+});
+
+test('parseOptions() 应忽略格式不正确的行', function() {
+    var opts = parseOptions('A.选项1\n无效行\nB.选项2');
+    assertEqual(opts.length, 2, '应解析出2个有效选项');
+});
+
+test('parseOptions() 应正确处理选项中的空格', function() {
+    var opts = parseOptions('A. 带空格的选项');
+    assertEqual(opts[0].text, '带空格的选项', '应正确处理选项中的空格');
+});
+
+/* --- 恢复默认题库测试 --- */
+test('checkResetInput() 正确输入应返回true', function() {
+    assertEqual(checkResetInput('恢复默认'), true);
+});
+
+test('checkResetInput() 错误输入应返回false', function() {
+    assertEqual(checkResetInput('恢复'), false);
+    assertEqual(checkResetInput('默认'), false);
+    assertEqual(checkResetInput('其他'), false);
+    assertEqual(checkResetInput(''), false);
+});
+
+test('checkResetInput() 大小写敏感', function() {
+    assertEqual(checkResetInput('恢复默认'), true);
+    assertEqual(checkResetInput('恢复默認'), false);
+    assertEqual(checkResetInput('HUIFUMOREN'), false);
+});
+
+/* --- 数据导入合并逻辑测试 --- */
+test('导入数据合并逻辑：应正确合并错题记录', function() {
+    var existing = { wrong: [{qid:'001', cnt:2, time:1000}] };
+    var incoming = { wrong: [{qid:'001', cnt:3, time:2000}, {qid:'002', cnt:1, time:3000}] };
+    
+    var wrongMap = {};
+    for (var w = 0; w < existing.wrong.length; w++) {
+        wrongMap[existing.wrong[w].qid] = existing.wrong[w];
+    }
+    for (var x = 0; x < incoming.wrong.length; x++) {
+        var wrongItem = incoming.wrong[x];
+        if (wrongMap[wrongItem.qid]) {
+            wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+        } else {
+            existing.wrong.push(wrongItem);
+        }
+    }
+    
+    assertEqual(existing.wrong.length, 2, '应有2条错题记录');
+    assertEqual(existing.wrong[0].cnt, 5, '001的错误次数应合并为5');
+    assertEqual(existing.wrong[1].qid, '002', '应新增002的错题记录');
+});
+
+test('导入数据合并逻辑：应正确合并分类统计', function() {
+    var existing = { stats: { cats: { '专辑': {t:10, c:5} } } };
+    var incoming = { stats: { cats: { '专辑': {t:5, c:3}, '歌曲': {t:8, c:4} } } };
+    
+    for (var catName in incoming.stats.cats) {
+        if (!existing.stats.cats[catName]) {
+            existing.stats.cats[catName] = {t: 0, c: 0};
+        }
+        existing.stats.cats[catName].t += incoming.stats.cats[catName].t || 0;
+        existing.stats.cats[catName].c += incoming.stats.cats[catName].c || 0;
+    }
+    
+    assertEqual(existing.stats.cats['专辑'].t, 15, '专辑分类总答题数应合并为15');
+    assertEqual(existing.stats.cats['专辑'].c, 8, '专辑分类正确数应合并为8');
+    assert(existing.stats.cats['歌曲'], '应新增歌曲分类');
+    assertEqual(existing.stats.cats['歌曲'].t, 8, '歌曲分类总答题数应为8');
+});
+
+test('导入数据验证：空文件应被拒绝', function() {
+    function validateImport(data) {
+        if (!data.questionBank && !data.userData) {
+            throw new Error('导入失败：文件中未找到有效数据');
+        }
+    }
+    
+    assertThrows(function() { validateImport({}); }, '导入失败：文件中未找到有效数据');
+});
+
+test('导入数据验证：只有questionBank应被接受', function() {
+    function validateImport(data) {
+        if (!data.questionBank && !data.userData) {
+            throw new Error('导入失败：文件中未找到有效数据');
+        }
+    }
+    
+    validateImport({ questionBank: [] });
+});
+
+test('导入数据验证：只有userData应被接受', function() {
+    function validateImport(data) {
+        if (!data.questionBank && !data.userData) {
+            throw new Error('导入失败：文件中未找到有效数据');
+        }
+    }
+    
+    validateImport({ userData: {} });
+});
+
+/* ===== 渲染测试结果 ===== */
+function renderResults() {
+    var container = document.getElementById('testResults');
+    var sections = {};
+    
+    testResults.forEach(function(result) {
+        var section = result.name.split('：')[0].split('(')[0];
+        if (!sections[section]) sections[section] = [];
+        sections[section].push(result);
+    });
+    
+    var html = '';
+    for (var section in sections) {
+        html += '<div class="test-section">';
+        html += '<div class="test-title">' + section + '</div>';
+        sections[section].forEach(function(result) {
+            html += '<div class="test-case ' + (result.pass ? 'pass' : 'fail') + '">';
+            html += '<div class="test-name">' + (result.pass ? '✓ ' : '✗ ') + result.name + '</div>';
+            if (!result.pass) html += '<div class="test-msg">' + result.msg + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    
+    container.innerHTML = html;
+    
+    var passCount = testResults.filter(function(r) { return r.pass; }).length;
+    var failCount = testResults.length - passCount;
+    
+    document.getElementById('total').textContent = testResults.length;
+    document.getElementById('pass').textContent = passCount;
+    document.getElementById('fail').textContent = failCount;
+}
+
+renderResults();
+</script>
+</body>
+</html>
