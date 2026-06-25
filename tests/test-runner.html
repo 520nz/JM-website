@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试运行器 - 林俊杰答题</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #8B5CF6; }
+        .pass { color: #10B981; }
+        .fail { color: #EF4444; }
+        #results {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .result-item {
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .result-item.pass { background: rgba(16, 185, 129, 0.2); }
+        .result-item.fail { background: rgba(239, 68, 68, 0.2); }
+        #summary {
+            font-size: 18px;
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        #summary.pass { background: rgba(16, 185, 129, 0.3); }
+        #summary.fail { background: rgba(239, 68, 68, 0.3); }
+    </style>
+</head>
+<body>
+    <h1>林俊杰答题 - 核心逻辑测试</h1>
+    <div id="results"></div>
+    <div id="summary"></div>
+
+    <!-- 引入题库 -->
+    <script>
+    var QUESTION_BANK=[
+    {id:"001",category:"专辑",question:"林俊杰首张专辑《乐行者》发行于哪一天？",options:[{key:"A",text:"2003年4月1日"},{key:"B",text:"2003年4月10日"},{key:"C",text:"2003年5月1日"},{key:"D",text:"2003年5月10日"}],answer:"B",explanation:"《乐行者》于2003年4月10日正式发行，这也是林俊杰的出道专辑。"},
+    {id:"005",category:"专辑",question:"《第二天堂》（俗称《江南》专辑）发行于哪一年？",options:[{key:"A",text:"2003年"},{key:"B",text:"2004年"},{key:"C",text:"2005年"},{key:"D",text:"2006年"}],answer:"B",explanation:"《第二天堂》于2004年6月4日发行，包含热门歌曲《江南》。"}
+    ];
+    var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+    var DB={
+        KEY:'jj_quiz_v2',
+        get:function(){var d=localStorage.getItem(DB.KEY);return d?JSON.parse(d):DB.defaults();},
+        defaults:function(){return{history:[],wrong:[],stats:{total:0,correct:0,cats:{}}};},
+        save:function(d){localStorage.setItem(DB.KEY,JSON.stringify(d));},
+        addRecord:function(rec){var d=DB.get();d.history.push(rec);d.stats.total++;if(rec.ok)d.stats.correct++;var q=DB.findQ(rec.qid);if(q){if(!d.stats.cats[q.category])d.stats.cats[q.category]={t:0,c:0};d.stats.cats[q.category].t++;if(rec.ok)d.stats.cats[q.category].c++;}DB.save(d);},
+        addWrong:function(qid){var d=DB.get();var f=null;for(var i=0;i<d.wrong.length;i++){if(d.wrong[i].qid===qid){f=d.wrong[i];break;}}if(f){f.cnt++;f.time=Date.now();}else{d.wrong.push({qid:qid,cnt:1,time:Date.now()});}DB.save(d);},
+        removeWrong:function(qid){var d=DB.get();d.wrong=d.wrong.filter(function(w){return w.qid!==qid;});DB.save(d);},
+        getWrong:function(){return DB.get().wrong;},
+        findQ:function(qid){for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].id===qid)return QUESTION_BANK[i];}return null;}
+    };
+    function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+    </script>
+
+    <!-- 引入测试 -->
+    <script src="core.test.js"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var results = document.getElementById('results');
+        var summary = document.getElementById('summary');
+
+        // 捕获控制台输出
+        var originalError = console.error;
+        var originalLog = console.log;
+
+        console.log = function() {
+            originalLog.apply(console, arguments);
+        };
+
+        console.error = function() {
+            originalError.apply(console, arguments);
+        };
+
+        var report = runAllTests();
+
+        // 渲染结果
+        var html = '';
+        report.results.forEach(function(r) {
+            var cls = r.pass ? 'pass' : 'fail';
+            html += '<div class="result-item ' + cls + '">' +
+                (r.pass ? '✓' : '✗') + ' ' + r.msg +
+                '</div>';
+        });
+        results.innerHTML = html;
+
+        // 渲染总结
+        if (report.failed === 0) {
+            summary.className = 'pass';
+            summary.innerHTML = '✓ 全部通过 (' + report.passed + '/' + report.results.length + ')';
+        } else {
+            summary.className = 'fail';
+            summary.innerHTML = '✗ ' + report.failed + ' 项失败，共 ' + report.results.length + ' 项测试';
+        }
+    });
+    </script>
+</body>
+</html>
