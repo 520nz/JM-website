@@ -1,0 +1,22 @@
+{
+  "name": "jj-quiz-app",
+  "version": "1.0.0",
+  "description": "林俊杰粉丝答题应用测试",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.4.1"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/tests/setup.js"
+    ],
+    "verbose": true
+  }
+}
