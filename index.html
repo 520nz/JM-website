@@ -514,15 +514,23 @@ function fmtTime(ms){var sec=Math.floor(ms/1000);var m=Math.floor(sec/60);var s=
 function startRandomQuiz(){state.quiz=shuffle(QUESTION_BANK).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
 function showCategoryView(){var cats={};for(var i=0;i<QUESTION_BANK.length;i++){var c=QUESTION_BANK[i].category;cats[c]=(cats[c]||0)+1;}var html='';for(var name in cats){html+='<div class="category-item" onclick="startCatQuiz(\''+name+'\')"><span class="category-name">'+name+'</span><span class="category-count">'+cats[name]+'题</span></div>';}document.getElementById('categoryList').innerHTML=html;switchView('category');}
 function startCatQuiz(cat){var f=[];for(var i=0;i<QUESTION_BANK.length;i++){if(QUESTION_BANK[i].category===cat)f.push(QUESTION_BANK[i]);}state.quiz=shuffle(f).slice(0,getCount());state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
-function startWrongBookQuiz(){var wl=DB.getWrong();var qs=[];for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(q)qs.push(q);}if(qs.length===0)return;state.quiz=shuffle(qs);state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
+function startWrongBookQuiz(){var wl=DB.getWrong();var qs=[];for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(q)qs.push(q);}if(qs.length===0){alert('错题本中没有可用题目，可能题目已被删除');return;}state.quiz=shuffle(qs);state.idx=0;state.correctCount=0;switchView('practice');startTimer();renderQ();}
 
 function renderQ(){
     if(state.idx>=state.quiz.length){finishQuiz();return;}
-    var q=state.quiz[state.idx];var pct=Math.round(state.idx/state.quiz.length*100);
+    var q=state.quiz[state.idx];
+    /* 防止已删除题目导致崩溃 */
+    if(!q || !q.question || !Array.isArray(q.options)){
+        console.error('题目数据无效，跳过该题');
+        state.idx++;
+        renderQ();
+        return;
+    }
+    var pct=Math.round(state.idx/state.quiz.length*100);
     var sec=Math.floor((Date.now()-state.startTime)/1000);var tm=Math.floor(sec/60);var ts=sec%60;
     var html='<div class="progress-wrap"><div class="progress-header"><span class="progress-text">'+(state.idx+1)+' / '+state.quiz.length+'</span><span class="timer-badge">⏱ <span id="timerVal">'+tm+':'+(ts<10?'0':'')+ts+'</span></span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:'+pct+'%"></div></div></div>';
-    html+='<div class="question-card"><div class="question-text">'+q.question+'</div>';
-    for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><span>'+o.text+'</span></div>';}
+    html+='<div class="question-card"><div class="question-text">'+escapeHtml(q.question)+'</div>';
+    for(var i=0;i<q.options.length;i++){var o=q.options[i];html+='<div class="option-item" onclick="pickOption(\''+o.key+'\')" id="opt-'+o.key+'"><span class="option-key">'+o.key+'</span><span>'+escapeHtml(o.text)+'</span></div>';}
     html+='<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
     html+='<div class="bottom-bar"><button class="btn" id="nextBtn" onclick="nextQ()" style="display:none;">下一题</button><button class="btn btn-outline" onclick="quitQuiz()">返回首页</button></div>';
     document.getElementById('quizArea').innerHTML=html;state.answered=false;
@@ -553,7 +561,7 @@ function updateHome(){var d=DB.get();var today=new Date().setHours(0,0,0,0);var 
 function renderWrongBook(){
     var wl=DB.getWrong();var el=document.getElementById('wrongBookList');var btn=document.getElementById('wrongBookBtn');
     if(wl.length===0){el.innerHTML='<div class="empty"><p>暂无错题记录</p><p style="font-size:13px;margin-top:8px;">答错的题目会自动加入这里</p></div>';btn.style.display='none';return;}
-    var html='<div class="error-list">';for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(!q)continue;html+='<div class="error-item"><div class="q">'+q.question+'</div><div class="info"><span>错误'+wl[i].cnt+'次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\''+q.id+'\')">移除</button></div></div>';}html+='</div>';
+    var html='<div class="error-list">';for(var i=0;i<wl.length;i++){var q=DB.findQ(wl[i].qid);if(!q)continue;html+='<div class="error-item"><div class="q">'+escapeHtml(q.question)+'</div><div class="info"><span>错误'+wl[i].cnt+'次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\''+q.id+'\')">移除</button></div></div>';}html+='</div>';
     el.innerHTML=html;btn.style.display='block';btn.textContent='开始复习 ('+wl.length+'题)';
 }
 
@@ -569,6 +577,14 @@ function renderStats(){
 }
 
 function shuffle(arr){var a=arr.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* 安全函数：防止XSS攻击 */
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 /* ===== 管理功能 ===== */
 function renderAdmin() {
@@ -616,12 +632,12 @@ function renderQuestionList() {
         if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
         html += '<div class="q-item">';
         html += '<div class="q-item-header">';
-        html += '<span class="q-item-cat">' + q.category + '</span>';
+        html += '<span class="q-item-cat">' + escapeHtml(q.category) + '</span>';
         html += '<div class="q-item-actions">';
         html += '<button class="btn btn-outline btn-sm" onclick="showEditForm(\'' + q.id + '\')">编辑</button>';
         html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
         html += '</div></div>';
-        html += '<div class="q-item-text">' + q.question + '</div>';
+        html += '<div class="q-item-text">' + escapeHtml(q.question) + '</div>';
         html += '<div class="q-item-answer">答案: ' + q.answer + '</div>';
         html += '</div>';
     }
@@ -790,6 +806,18 @@ function importData(event) {
             }
             for (var j = 0; j < data.questionBank.length; j++) {
                 var q = data.questionBank[j];
+                /* 数据完整性验证：确保题目结构正确 */
+                if (!q || !q.id || !q.question || !Array.isArray(q.options) || !q.answer) {
+                    console.warn('跳过无效题目数据：', q);
+                    continue;
+                }
+                /* 验证options数组结构 */
+                for (var k = 0; k < q.options.length; k++) {
+                    if (!q.options[k] || !q.options[k].key || !q.options[k].text) {
+                        console.warn('题目选项格式错误，跳过：', q.id);
+                        continue;
+                    }
+                }
                 if (existingIds[q.id]) {
                     for (var k = 0; k < QUESTION_BANK.length; k++) {
                         if (QUESTION_BANK[k].id === q.id) {
