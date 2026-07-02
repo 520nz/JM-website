@@ -1,0 +1,9 @@
+{
+  "name": "jj-quiz",
+  "version": "1.0.0",
+  "description": "林俊杰粉丝答题应用",
+  "scripts": {
+    "test": "node --test"
+  },
+  "type": "module"
+}
