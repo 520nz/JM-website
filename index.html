@@ -784,6 +784,21 @@ function importData(event) {
         var addedCount = 0;
         var updatedCount = 0;
         if (data.questionBank) {
+            if (!Array.isArray(data.questionBank)) {
+                alert('导入失败：questionBank 必须是数组格式');
+                return;
+            }
+            for (var v = 0; v < data.questionBank.length; v++) {
+                var qItem = data.questionBank[v];
+                if (!qItem.id || !qItem.question || !qItem.options || !qItem.answer) {
+                    alert('导入失败：题目数据格式不正确，缺少必要字段（id, question, options, answer）');
+                    return;
+                }
+                if (!Array.isArray(qItem.options) || qItem.options.length < 2) {
+                    alert('导入失败：题目选项必须是至少包含2个元素的数组');
+                    return;
+                }
+            }
             var existingIds = {};
             for (var i = 0; i < QUESTION_BANK.length; i++) {
                 existingIds[QUESTION_BANK[i].id] = true;
@@ -881,10 +896,21 @@ function checkResetInput() {
 function resetQuestionBank() {
     QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
     localStorage.removeItem('jj_question_bank');
+    var existingData = DB.get();
+    var validQids = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        validQids[QUESTION_BANK[i].id] = true;
+    }
+    existingData.wrong = existingData.wrong.filter(function(w) {
+        return validQids[w.qid];
+    });
+    DB.save(existingData);
     closeResetModal();
     alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
     try { renderQuestionList(); } catch (e) {}
     try { updateCategoryFilter(); } catch (e) {}
+    try { updateHome(); } catch (e) {}
+    try { renderWrongBook(); } catch (e) {}
 }
 
 window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
