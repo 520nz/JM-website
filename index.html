@@ -731,6 +731,7 @@ function deleteQuestion(qid) {
     if (!confirm('确定删除此题目？')) return;
     QUESTION_BANK = QUESTION_BANK.filter(function(q) { return q.id !== qid; });
     saveQuestionBank();
+    DB.removeWrong(qid);
     renderQuestionList();
 }
 
@@ -844,6 +845,18 @@ function importData(event) {
         if (addedCount > 0 || updatedCount > 0) {
             msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
         }
+        var qidMap = {};
+        for (var m = 0; m < QUESTION_BANK.length; m++) {
+            qidMap[QUESTION_BANK[m].id] = true;
+        }
+        var d = DB.get();
+        var beforeWrong = d.wrong.length;
+        d.wrong = d.wrong.filter(function(w) { return qidMap[w.qid]; });
+        var cleanedWrong = beforeWrong - d.wrong.length;
+        if (cleanedWrong > 0) {
+            DB.save(d);
+            msg += '\n清理无效错题记录 ' + cleanedWrong + ' 条';
+        }
         alert(msg);
         try { updateHome(); } catch (e) {}
         try { renderQuestionList(); } catch (e) {}
@@ -881,6 +894,13 @@ function checkResetInput() {
 function resetQuestionBank() {
     QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
     localStorage.removeItem('jj_question_bank');
+    var d = DB.get();
+    var validIds = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        validIds[QUESTION_BANK[i].id] = true;
+    }
+    d.wrong = d.wrong.filter(function(w) { return validIds[w.qid]; });
+    DB.save(d);
     closeResetModal();
     alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
     try { renderQuestionList(); } catch (e) {}
