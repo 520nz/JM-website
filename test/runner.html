@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试运行器</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; background: #f5f5f5; }
+        .test-container { background: white; border-radius: 8px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #eee; }
+        .test-title { font-size: 18px; font-weight: 600; }
+        .test-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .test-status.pass { background: #dcfce7; color: #16a34a; }
+        .test-status.fail { background: #fee2e2; color: #dc2626; }
+        .test-status.running { background: #e0e7ff; color: #4338ca; }
+        .test-list { display: flex; flex-direction: column; gap: 8px; }
+        .test-item { padding: 12px; border-radius: 6px; font-size: 14px; }
+        .test-item.pass { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .test-item.fail { background: #fef2f2; border: 1px solid #fecaca; }
+        .test-item.running { background: #f0f4ff; border: 1px solid #c7d2fe; }
+        .test-item .test-name { font-weight: 500; }
+        .test-item .test-error { color: #dc2626; font-size: 12px; margin-top: 4px; }
+        .summary { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .summary h2 { font-size: 16px; margin-bottom: 12px; }
+        .summary-stats { display: flex; gap: 20px; }
+        .summary-stat { padding: 12px 20px; border-radius: 8px; }
+        .summary-stat.total { background: #f3f4f6; }
+        .summary-stat.pass { background: #dcfce7; }
+        .summary-stat.fail { background: #fee2e2; }
+        .summary-stat .label { font-size: 12px; color: #6b7280; }
+        .summary-stat .value { font-size: 24px; font-weight: 700; }
+        .summary-stat.pass .value { color: #16a34a; }
+        .summary-stat.fail .value { color: #dc2626; }
+        .btn { padding: 10px 24px; background: #6366f1; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: all 0.2s; }
+        .btn:hover { background: #4f46e5; }
+        .btn:active { transform: scale(0.98); }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;margin-bottom:24px;">✅ 核心逻辑测试套件</h1>
+    
+    <div style="text-align:center;margin-bottom:24px;">
+        <button class="btn" onclick="runAllTests()">运行所有测试</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <div class="summary">
+        <h2>测试摘要</h2>
+        <div class="summary-stats">
+            <div class="summary-stat total">
+                <div class="label">总测试数</div>
+                <div class="value" id="totalCount">0</div>
+            </div>
+            <div class="summary-stat pass">
+                <div class="label">通过</div>
+                <div class="value" id="passCount">0</div>
+            </div>
+            <div class="summary-stat fail">
+                <div class="label">失败</div>
+                <div class="value" id="failCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const QUESTION_BANK = [
+  {id:"001",category:"专辑",question:"测试题目1",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"},{key:"C",text:"选项C"},{key:"D",text:"选项D"}],answer:"B",explanation:"解析1"},
+  {id:"002",category:"歌曲",question:"测试题目2",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"}],answer:"A",explanation:"解析2"},
+  {id:"003",category:"个人信息",question:"测试题目3",options:[{key:"A",text:"选项A"},{key:"B",text:"选项B"},{key:"C",text:"选项C"}],answer:"C",explanation:"解析3"},
+];
+
+const DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+
+const DB = {
+    KEY: 'jj_quiz_v2',
+    get: function(){ var d = localStorage.getItem(DB.KEY); return d ? JSON.parse(d) : DB.defaults(); },
+    defaults: function(){ return {history:[], wrong:[], stats:{total:0, correct:0, cats:{}}}; },
+    save: function(d){ localStorage.setItem(DB.KEY, JSON.stringify(d)); },
+    addRecord: function(rec){
+        var d = DB.get();
+        d.history.push(rec);
+        d.stats.total++;
+        if(rec.ok) d.stats.correct++;
+        var q = DB.findQ(rec.qid);
+        if(q){
+            if(!d.stats.cats[q.category]) d.stats.cats[q.category] = {t:0, c:0};
+            d.stats.cats[q.category].t++;
+            if(rec.ok) d.stats.cats[q.category].c++;
+        }
+        DB.save(d);
+    },
+    addWrong: function(qid){
+        var d = DB.get();
+        var f = null;
+        for(var i=0; i<d.wrong.length; i++){
+            if(d.wrong[i].qid === qid){ f = d.wrong[i]; break; }
+        }
+        if(f){ f.cnt++; f.time = Date.now(); }
+        else{ d.wrong.push({qid: qid, cnt:1, time: Date.now()}); }
+        DB.save(d);
+    },
+    removeWrong: function(qid){
+        var d = DB.get();
+        d.wrong = d.wrong.filter(function(w){ return w.qid !== qid; });
+        DB.save(d);
+    },
+    getWrong: function(){ return DB.get().wrong; },
+    findQ: function(qid){
+        for(var i=0; i<QUESTION_BANK.length; i++){
+            if(QUESTION_BANK[i].id === qid) return QUESTION_BANK[i];
+        }
+        return null;
+    }
+};
+
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for(var i=0; i<lines.length; i++){
+        var line = lines[i].trim();
+        if(!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if(match){
+            options.push({key: match[1], text: match[2]});
+        }
+    }
+    return options;
+}
+
+function shuffle(arr){
+    var a = arr.slice();
+    for(var i=a.length-1; i>0; i--){
+        var j = Math.floor(Math.random()*(i+1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+}
+
+function calculateAccuracy(total, correct) {
+    return total > 0 ? Math.round(correct / total * 100) : 0;
+}
+
+function mergeUserData(existing, incoming) {
+    if (!incoming) return existing;
+    
+    if (incoming.history) {
+        existing.history = existing.history.concat(incoming.history);
+    }
+    
+    if (incoming.wrong) {
+        var wrongMap = {};
+        for(var w=0; w<existing.wrong.length; w++){
+            wrongMap[existing.wrong[w].qid] = existing.wrong[w];
+        }
+        for(var x=0; x<incoming.wrong.length; x++){
+            var wrongItem = incoming.wrong[x];
+            if(wrongMap[wrongItem.qid]){
+                wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+            } else {
+                existing.wrong.push(wrongItem);
+            }
+        }
+    }
+    
+    if (incoming.stats) {
+        if(!existing.stats) existing.stats = {total:0, correct:0, cats:{}};
+        existing.stats.total += incoming.stats.total || 0;
+        existing.stats.correct += incoming.stats.correct || 0;
+        if(incoming.stats.cats){
+            for(var catName in incoming.stats.cats){
+                if(!existing.stats.cats[catName]){
+                    existing.stats.cats[catName] = {t:0, c:0};
+                }
+                existing.stats.cats[catName].t += incoming.stats.cats[catName].t || 0;
+                existing.stats.cats[catName].c += incoming.stats.cats[catName].c || 0;
+            }
+        }
+    }
+    
+    return existing;
+}
+
+function mergeQuestionBank(existing, incoming) {
+    if (!incoming || !incoming.length) return {added: 0, updated: 0};
+    
+    var existingIds = {};
+    for(var i=0; i<existing.length; i++){
+        existingIds[existing[i].id] = true;
+    }
+    
+    var addedCount = 0;
+    var updatedCount = 0;
+    
+    for(var j=0; j<incoming.length; j++){
+        var q = incoming[j];
+        if(existingIds[q.id]){
+            for(var k=0; k<existing.length; k++){
+                if(existing[k].id === q.id){
+                    existing[k] = q;
+                    updatedCount++;
+                    break;
+                }
+            }
+        } else {
+            existing.push(q);
+            addedCount++;
+        }
+    }
+    
+    return {added: addedCount, updated: updatedCount};
+}
+
+function resetLocalStorage() {
+    localStorage.removeItem('jj_quiz_v2');
+    localStorage.removeItem('jj_question_bank');
+}
+
+function assertEqual(actual, expected, message) {
+    if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(message || `Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+    }
+}
+
+function assertNotEqual(actual, expected, message) {
+    if (JSON.stringify(actual) === JSON.stringify(expected)) {
+        throw new Error(message || `Expected not equal to ${JSON.stringify(expected)}`);
+    }
+}
+
+function assertTrue(condition, message) {
+    if (!condition) {
+        throw new Error(message || 'Expected true but got false');
+    }
+}
+
+function assertFalse(condition, message) {
+    if (condition) {
+        throw new Error(message || 'Expected false but got true');
+    }
+}
+
+function assertNull(value, message) {
+    if (value !== null) {
+        throw new Error(message || `Expected null but got ${JSON.stringify(value)}`);
+    }
+}
+
+function assertNotNull(value, message) {
+    if (value === null) {
+        throw new Error(message || 'Expected not null but got null');
+    }
+}
+
+const tests = [
+    {
+        suite: 'DB存储模块',
+        tests: [
+            {
+                name: 'get() 初始化返回默认值',
+                run: function() {
+                    resetLocalStorage();
+                    const data = DB.get();
+                    assertEqual(data, {history: [], wrong: [], stats: {total: 0, correct: 0, cats: {}}});
+                }
+            },
+            {
+                name: 'save() 和 get() 能够正确持久化数据',
+                run: function() {
+                    resetLocalStorage();
+                    const testData = {history: [], wrong: [], stats: {total: 10, correct: 8, cats: {}}};
+                    DB.save(testData);
+                    const retrieved = DB.get();
+                    assertEqual(retrieved, testData);
+                }
+            },
+            {
+                name: 'findQ() 能正确查找题目',
+                run: function() {
+                    const q = DB.findQ('001');
+                    assertNotNull(q);
+                    assertEqual(q.id, '001');
+                    assertEqual(q.category, '专辑');
+                }
+            },
+            {
+                name: 'findQ() 返回不存在的题目的null',
+                run: function() {
+                    const q = DB.findQ('999');
+                    assertNull(q);
+                }
+            },
+            {
+                name: 'addRecord() 增加正确答题记录',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addRecord({qid: '001', ans: 'B', ok: true, time: Date.now()});
+                    const data = DB.get();
+                    assertEqual(data.history.length, 1);
+                    assertEqual(data.stats.total, 1);
+                    assertEqual(data.stats.correct, 1);
+                    assertEqual(data.stats.cats['专辑'], {t: 1, c: 1});
+                }
+            },
+            {
+                name: 'addRecord() 增加错误答题记录',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addRecord({qid: '001', ans: 'A', ok: false, time: Date.now()});
+                    const data = DB.get();
+                    assertEqual(data.history.length, 1);
+                    assertEqual(data.stats.total, 1);
+                    assertEqual(data.stats.correct, 0);
+                    assertEqual(data.stats.cats['专辑'], {t: 1, c: 0});
+                }
+            },
+            {
+                name: 'addWrong() 添加新错题',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addWrong('001');
+                    const data = DB.get();
+                    assertEqual(data.wrong.length, 1);
+                    assertEqual(data.wrong[0].qid, '001');
+                    assertEqual(data.wrong[0].cnt, 1);
+                }
+            },
+            {
+                name: 'addWrong() 增加已有错题计数',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addWrong('001');
+                    DB.addWrong('001');
+                    const data = DB.get();
+                    assertEqual(data.wrong.length, 1);
+                    assertEqual(data.wrong[0].cnt, 2);
+                }
+            },
+            {
+                name: 'removeWrong() 移除错题',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addWrong('001');
+                    DB.removeWrong('001');
+                    const data = DB.get();
+                    assertEqual(data.wrong.length, 0);
+                }
+            },
+            {
+                name: 'getWrong() 返回错题列表',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addWrong('001');
+                    DB.addWrong('002');
+                    const wrong = DB.getWrong();
+                    assertEqual(wrong.length, 2);
+                    assertEqual(wrong[0].qid, '001');
+                    assertEqual(wrong[1].qid, '002');
+                }
+            }
+        ]
+    },
+    {
+        suite: '选项解析逻辑',
+        tests: [
+            {
+                name: '正确解析标准格式选项',
+                run: function() {
+                    const optsText = 'A.选项1\nB.选项2\nC.选项3\nD.选项4';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 4);
+                    assertEqual(options[0], {key: 'A', text: '选项1'});
+                    assertEqual(options[1], {key: 'B', text: '选项2'});
+                    assertEqual(options[2], {key: 'C', text: '选项3'});
+                    assertEqual(options[3], {key: 'D', text: '选项4'});
+                }
+            },
+            {
+                name: '解析中文句号格式选项',
+                run: function() {
+                    const optsText = 'A．选项1\nB．选项2\nC．选项3';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 3);
+                    assertEqual(options[0].key, 'A');
+                    assertEqual(options[1].key, 'B');
+                    assertEqual(options[2].key, 'C');
+                }
+            },
+            {
+                name: '解析全角顿号格式选项',
+                run: function() {
+                    const optsText = 'A、选项1\nB、选项2';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 2);
+                    assertEqual(options[0].key, 'A');
+                    assertEqual(options[1].key, 'B');
+                }
+            },
+            {
+                name: '跳过空行',
+                run: function() {
+                    const optsText = 'A.选项1\n\nB.选项2\n\n\nC.选项3';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 3);
+                }
+            },
+            {
+                name: '忽略无效格式行',
+                run: function() {
+                    const optsText = 'A.选项1\n无效行\nB.选项2\nE.选项5';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 2);
+                    assertEqual(options[0].key, 'A');
+                    assertEqual(options[1].key, 'B');
+                }
+            },
+            {
+                name: '处理选项前空格',
+                run: function() {
+                    const optsText = 'A. 选项1\nB.  选项2\nC.   选项3';
+                    const options = parseOptions(optsText);
+                    assertEqual(options.length, 3);
+                    assertEqual(options[0].text, '选项1');
+                    assertEqual(options[1].text, '选项2');
+                    assertEqual(options[2].text, '选项3');
+                }
+            }
+        ]
+    },
+    {
+        suite: '统计计算功能',
+        tests: [
+            {
+                name: 'calculateAccuracy() 计算正确率',
+                run: function() {
+                    assertEqual(calculateAccuracy(10, 5), 50);
+                    assertEqual(calculateAccuracy(20, 15), 75);
+                    assertEqual(calculateAccuracy(0, 0), 0);
+                    assertEqual(calculateAccuracy(100, 100), 100);
+                    assertEqual(calculateAccuracy(7, 4), 57);
+                }
+            },
+            {
+                name: 'addRecord() 更新分类统计',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addRecord({qid: '001', ans: 'B', ok: true, time: Date.now()});
+                    DB.addRecord({qid: '001', ans: 'A', ok: false, time: Date.now()});
+                    DB.addRecord({qid: '002', ans: 'A', ok: true, time: Date.now()});
+                    
+                    const data = DB.get();
+                    assertEqual(data.stats.cats['专辑'], {t: 2, c: 1});
+                    assertEqual(data.stats.cats['歌曲'], {t: 1, c: 1});
+                    assertEqual(data.stats.total, 3);
+                    assertEqual(data.stats.correct, 2);
+                }
+            }
+        ]
+    },
+    {
+        suite: '数据导入导出逻辑',
+        tests: [
+            {
+                name: 'mergeQuestionBank() 新增题目',
+                run: function() {
+                    const existing = QUESTION_BANK.slice();
+                    const incoming = [{id: 'new001', category: '测试', question: '新题', options: [{key:'A',text:'A'}], answer: 'A', explanation: '解析'}];
+                    
+                    const result = mergeQuestionBank(existing, incoming);
+                    assertEqual(result.added, 1);
+                    assertEqual(result.updated, 0);
+                    assertEqual(existing.length, 4);
+                    assertEqual(existing[3].id, 'new001');
+                }
+            },
+            {
+                name: 'mergeQuestionBank() 更新已有题目',
+                run: function() {
+                    const existing = QUESTION_BANK.slice();
+                    const originalQuestion = existing[0].question;
+                    const incoming = [{id: '001', category: '专辑', question: '更新后的题目', options: [{key:'A',text:'A'}], answer: 'A', explanation: '解析'}];
+                    
+                    const result = mergeQuestionBank(existing, incoming);
+                    assertEqual(result.added, 0);
+                    assertEqual(result.updated, 1);
+                    assertEqual(existing.length, 3);
+                    assertEqual(existing[0].question, '更新后的题目');
+                    assertNotEqual(existing[0].question, originalQuestion);
+                }
+            },
+            {
+                name: 'mergeQuestionBank() 同时新增和更新',
+                run: function() {
+                    const existing = QUESTION_BANK.slice();
+                    const incoming = [
+                        {id: '001', category: '专辑', question: '更新', options: [{key:'A',text:'A'}], answer: 'A', explanation: '解析'},
+                        {id: 'new001', category: '测试', question: '新题', options: [{key:'A',text:'A'}], answer: 'A', explanation: '解析'}
+                    ];
+                    
+                    const result = mergeQuestionBank(existing, incoming);
+                    assertEqual(result.added, 1);
+                    assertEqual(result.updated, 1);
+                }
+            },
+            {
+                name: 'mergeUserData() 合并历史记录',
+                run: function() {
+                    const existing = {history: [], wrong: [], stats: {total: 0, correct: 0, cats: {}}};
+                    const incoming = {
+                        history: [{qid: '001', ans: 'B', ok: true, time: 123}],
+                        wrong: [{qid: '002', cnt: 2, time: 456}],
+                        stats: {total: 5, correct: 3, cats: {'专辑': {t: 3, c: 2}}}
+                    };
+                    
+                    const result = mergeUserData(existing, incoming);
+                    assertEqual(result.history.length, 1);
+                    assertEqual(result.wrong.length, 1);
+                    assertEqual(result.stats.total, 5);
+                    assertEqual(result.stats.correct, 3);
+                    assertEqual(result.stats.cats['专辑'], {t: 3, c: 2});
+                }
+            },
+            {
+                name: 'mergeUserData() 合并错题计数',
+                run: function() {
+                    const existing = {history: [], wrong: [{qid: '001', cnt: 1, time: 100}], stats: {total: 0, correct: 0, cats: {}}};
+                    const incoming = {wrong: [{qid: '001', cnt: 2, time: 200}, {qid: '002', cnt: 1, time: 300}]};
+                    
+                    const result = mergeUserData(existing, incoming);
+                    assertEqual(result.wrong.length, 2);
+                    assertEqual(result.wrong[0].cnt, 3);
+                    assertEqual(result.wrong[1].qid, '002');
+                    assertEqual(result.wrong[1].cnt, 1);
+                }
+            },
+            {
+                name: 'mergeUserData() 合并分类统计',
+                run: function() {
+                    const existing = {history: [], wrong: [], stats: {total: 10, correct: 6, cats: {'专辑': {t: 5, c: 3}}}};
+                    const incoming = {stats: {total: 5, correct: 4, cats: {'专辑': {t: 3, c: 3}, '歌曲': {t: 2, c: 1}}}};
+                    
+                    const result = mergeUserData(existing, incoming);
+                    assertEqual(result.stats.total, 15);
+                    assertEqual(result.stats.correct, 10);
+                    assertEqual(result.stats.cats['专辑'], {t: 8, c: 6});
+                    assertEqual(result.stats.cats['歌曲'], {t: 2, c: 1});
+                }
+            }
+        ]
+    },
+    {
+        suite: '题库操作',
+        tests: [
+            {
+                name: 'resetQuestionBank() 恢复默认题库',
+                run: function() {
+                    const modifiedBank = [...QUESTION_BANK, {id: 'extra', category: '测试', question: '额外题目', options: [{key:'A',text:'A'}], answer: 'A', explanation: ''}];
+                    assertEqual(modifiedBank.length, 4);
+                    
+                    const resetBank = DEFAULT_QUESTION_BANK.slice();
+                    assertEqual(resetBank.length, 3);
+                    assertEqual(resetBank[0].id, '001');
+                }
+            }
+        ]
+    },
+    {
+        suite: '随机打乱函数',
+        tests: [
+            {
+                name: 'shuffle() 返回相同长度的数组',
+                run: function() {
+                    const arr = [1, 2, 3, 4, 5];
+                    const shuffled = shuffle(arr);
+                    assertEqual(shuffled.length, 5);
+                }
+            },
+            {
+                name: 'shuffle() 不修改原数组',
+                run: function() {
+                    const arr = [1, 2, 3];
+                    const original = arr.slice();
+                    shuffle(arr);
+                    assertEqual(arr, original);
+                }
+            },
+            {
+                name: 'shuffle() 返回包含所有原元素的数组',
+                run: function() {
+                    const arr = [1, 2, 3, 4, 5];
+                    const shuffled = shuffle(arr);
+                    assertEqual(shuffled.sort(), [1, 2, 3, 4, 5]);
+                }
+            }
+        ]
+    },
+    {
+        suite: '边界条件测试',
+        tests: [
+            {
+                name: '空题库时 findQ 返回 null',
+                run: function() {
+                    const emptyBank = [];
+                    const findQEmpty = (qid) => {
+                        for(var i=0; i<emptyBank.length; i++){
+                            if(emptyBank[i].id === qid) return emptyBank[i];
+                        }
+                        return null;
+                    };
+                    assertNull(findQEmpty('001'));
+                }
+            },
+            {
+                name: '空错题列表时 getWrong 返回空数组',
+                run: function() {
+                    resetLocalStorage();
+                    assertEqual(DB.getWrong(), []);
+                }
+            },
+            {
+                name: '解析空选项文本返回空数组',
+                run: function() {
+                    const options = parseOptions('');
+                    assertEqual(options.length, 0);
+                }
+            },
+            {
+                name: '解析仅空格的选项文本返回空数组',
+                run: function() {
+                    const options = parseOptions('   \n  \n');
+                    assertEqual(options.length, 0);
+                }
+            },
+            {
+                name: '无效题目ID的 addRecord 不更新分类统计',
+                run: function() {
+                    resetLocalStorage();
+                    DB.addRecord({qid: 'nonexistent', ans: 'A', ok: true, time: Date.now()});
+                    const data = DB.get();
+                    assertEqual(data.stats.total, 1);
+                    assertEqual(data.stats.correct, 1);
+                    assertEqual(Object.keys(data.stats.cats).length, 0);
+                }
+            }
+        ]
+    }
+];
+
+function runAllTests() {
+    const resultsContainer = document.getElementById('testResults');
+    resultsContainer.innerHTML = '';
+    
+    let totalPass = 0;
+    let totalFail = 0;
+    
+    tests.forEach(function(suite) {
+        const suiteEl = document.createElement('div');
+        suiteEl.className = 'test-container';
+        
+        const headerEl = document.createElement('div');
+        headerEl.className = 'test-header';
+        
+        const titleEl = document.createElement('div');
+        titleEl.className = 'test-title';
+        titleEl.textContent = suite.suite;
+        
+        const statusEl = document.createElement('div');
+        statusEl.className = 'test-status running';
+        statusEl.textContent = '运行中...';
+        
+        headerEl.appendChild(titleEl);
+        headerEl.appendChild(statusEl);
+        suiteEl.appendChild(headerEl);
+        
+        const listEl = document.createElement('div');
+        listEl.className = 'test-list';
+        
+        let suitePass = 0;
+        let suiteFail = 0;
+        
+        suite.tests.forEach(function(test) {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'test-item running';
+            
+            const nameEl = document.createElement('div');
+            nameEl.className = 'test-name';
+            nameEl.textContent = test.name;
+            
+            itemEl.appendChild(nameEl);
+            listEl.appendChild(itemEl);
+            
+            try {
+                test.run();
+                itemEl.className = 'test-item pass';
+                suitePass++;
+                totalPass++;
+            } catch (err) {
+                itemEl.className = 'test-item fail';
+                const errorEl = document.createElement('div');
+                errorEl.className = 'test-error';
+                errorEl.textContent = err.message;
+                itemEl.appendChild(errorEl);
+                suiteFail++;
+                totalFail++;
+            }
+        });
+        
+        suiteEl.appendChild(listEl);
+        
+        statusEl.className = 'test-status ' + (suiteFail === 0 ? 'pass' : 'fail');
+        statusEl.textContent = suiteFail === 0 ? '全部通过 (' + suitePass + ')' : '失败 ' + suiteFail + '/' + suite.tests.length;
+        
+        resultsContainer.appendChild(suiteEl);
+    });
+    
+    document.getElementById('totalCount').textContent = totalPass + totalFail;
+    document.getElementById('passCount').textContent = totalPass;
+    document.getElementById('failCount').textContent = totalFail;
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    runAllTests();
+});
+    </script>
+</body>
+</html>
