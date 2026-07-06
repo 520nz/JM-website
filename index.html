@@ -530,13 +530,14 @@ function renderQ(){
 
 function pickOption(key){
     if(state.answered)return;state.answered=true;
-    var q=state.quiz[state.idx];var ok=(key===q.answer);if(ok)state.correctCount++;
+    var q=state.quiz[state.idx];if(!q)return;
+    var ok=(key===q.answer);if(ok)state.correctCount++;
     DB.addRecord({qid:q.id,ans:key,ok:ok,time:Date.now()});if(!ok)DB.addWrong(q.id);
-    for(var i=0;i<q.options.length;i++){var el=document.getElementById('opt-'+q.options[i].key);el.classList.add('disabled');if(q.options[i].key===q.answer)el.classList.add('correct');else if(q.options[i].key===key&&!ok)el.classList.add('wrong');}
-    var fb=document.getElementById('fb');fb.className='feedback show '+(ok?'correct':'wrong');
-    document.getElementById('fbTitle').textContent=ok?'✓ 回答正确！':'✗ 回答错误';
-    document.getElementById('fbDesc').textContent=q.explanation;
-    document.getElementById('nextBtn').style.display='inline-block';
+    for(var i=0;i<q.options.length;i++){var el=document.getElementById('opt-'+q.options[i].key);if(el){el.classList.add('disabled');if(q.options[i].key===q.answer)el.classList.add('correct');else if(q.options[i].key===key&&!ok)el.classList.add('wrong');}}
+    var fb=document.getElementById('fb');if(fb){fb.className='feedback show '+(ok?'correct':'wrong');}
+    var fbTitle=document.getElementById('fbTitle');if(fbTitle){fbTitle.textContent=ok?'✓ 回答正确！':'✗ 回答错误';}
+    var fbDesc=document.getElementById('fbDesc');if(fbDesc){fbDesc.textContent=q.explanation;}
+    var nextBtn=document.getElementById('nextBtn');if(nextBtn){nextBtn.style.display='inline-block';}
 }
 
 function nextQ(){state.idx++;renderQ();}
@@ -761,7 +762,7 @@ function exportData() {
     a.href = url;
     a.download = 'jj_quiz_backup_' + new Date().toISOString().slice(0, 10) + '.json';
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
     alert('数据已导出！');
 }
 
@@ -788,8 +789,24 @@ function importData(event) {
             for (var i = 0; i < QUESTION_BANK.length; i++) {
                 existingIds[QUESTION_BANK[i].id] = true;
             }
+            var skippedCount = 0;
             for (var j = 0; j < data.questionBank.length; j++) {
                 var q = data.questionBank[j];
+                if (!q.id || !q.question || !q.options || !Array.isArray(q.options) || q.options.length < 2 || !q.answer) {
+                    skippedCount++;
+                    continue;
+                }
+                var validAnswer = false;
+                for (var o = 0; o < q.options.length; o++) {
+                    if (q.options[o].key === q.answer) {
+                        validAnswer = true;
+                        break;
+                    }
+                }
+                if (!validAnswer) {
+                    skippedCount++;
+                    continue;
+                }
                 if (existingIds[q.id]) {
                     for (var k = 0; k < QUESTION_BANK.length; k++) {
                         if (QUESTION_BANK[k].id === q.id) {
@@ -804,6 +821,9 @@ function importData(event) {
                 }
             }
             saveQuestionBank();
+            if (skippedCount > 0) {
+                alert('警告：跳过了 ' + skippedCount + ' 道无效题目（缺少必需字段或答案无效）');
+            }
         }
         if (data.userData) {
             var existingData = DB.get();
@@ -881,10 +901,15 @@ function checkResetInput() {
 function resetQuestionBank() {
     QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
     localStorage.removeItem('jj_question_bank');
+    var d = DB.get();
+    d.wrong = [];
+    DB.save(d);
     closeResetModal();
-    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目\n错题记录已清空');
     try { renderQuestionList(); } catch (e) {}
     try { updateCategoryFilter(); } catch (e) {}
+    try { renderWrongBook(); } catch (e) {}
+    try { renderStats(); } catch (e) {}
 }
 
 window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
