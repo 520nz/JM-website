@@ -1,0 +1,694 @@
+var QUESTION_BANK = [
+    {id:"001",category:"专辑",question:"林俊杰首张专辑《乐行者》发行于哪一天？",options:[{key:"A",text:"2003年4月1日"},{key:"B",text:"2003年4月10日"},{key:"C",text:"2003年5月1日"},{key:"D",text:"2003年5月10日"}],answer:"B",explanation:"《乐行者》于2003年4月10日正式发行，这也是林俊杰的出道专辑。"},
+    {id:"005",category:"专辑",question:"《第二天堂》（俗称《江南》专辑）发行于哪一年？",options:[{key:"A",text:"2003年"},{key:"B",text:"2004年"},{key:"C",text:"2005年"},{key:"D",text:"2006年"}],answer:"B",explanation:"《第二天堂》于2004年6月4日发行，包含热门歌曲《江南》。"},
+    {id:"009",category:"专辑",question:"《编号89757》专辑的灵感来源于？",options:[{key:"A",text:"电话号码"},{key:"B",text:"机器人编号"},{key:"C",text:"房间号"},{key:"D",text:"日期"}],answer:"B",explanation:"89757是机器人编号，专辑以此概念为主题，讲述机器人爱上人类的故事。"},
+    {id:"013",category:"专辑",question:"林俊杰2006年发行的专辑名称是？",options:[{key:"A",text:"第二天堂"},{key:"B",text:"编号89757"},{key:"C",text:"曹操"},{key:"D",text:"西界"}],answer:"C",explanation:"《曹操》于2006年2月17日发行，是林俊杰的第四张专辑。"},
+    {id:"017",category:"专辑",question:"《西界》专辑发行于哪一年？",options:[{key:"A",text:"2005年"},{key:"B",text:"2006年"},{key:"C",text:"2007年"},{key:"D",text:"2008年"}],answer:"C",explanation:"《西界》于2007年6月29日发行，是林俊杰的第五张专辑。"},
+    {id:"021",category:"专辑",question:"《JJ陆》的英文名是？",options:[{key:"A",text:"One Shot"},{key:"B",text:"Sixology"},{key:"C",text:"Born to Dream"},{key:"D",text:"The One"}],answer:"B",explanation:"Sixology代表第六张专辑，是林俊杰的第六张专辑。"},
+    {id:"025",category:"专辑",question:"《100天》专辑发行于哪一年？",options:[{key:"A",text:"2008年"},{key:"B",text:"2009年"},{key:"C",text:"2010年"},{key:"D",text:"2011年"}],answer:"B",explanation:"《100天》于2009年12月18日发行。"},
+    {id:"029",category:"专辑",question:"《她说》专辑的发行年份是？",options:[{key:"A",text:"2009年"},{key:"B",text:"2010年"},{key:"C",text:"2011年"},{key:"D",text:"2012年"}],answer:"B",explanation:"《她说》于2010年12月8日发行。"},
+    {id:"033",category:"专辑",question:"《学不会》专辑发行于？",options:[{key:"A",text:"2010年"},{key:"B",text:"2011年"},{key:"C",text:"2012年"},{key:"D",text:"2013年"}],answer:"B",explanation:"《学不会》于2011年12月31日发行，是林俊杰的第九张专辑。"},
+    {id:"037",category:"专辑",question:"《因你而在》专辑发行于哪一年？",options:[{key:"A",text:"2012年"},{key:"B",text:"2013年"},{key:"C",text:"2014年"},{key:"D",text:"2015年"}],answer:"B",explanation:"《因你而在》于2013年3月13日发行。"},
+    {id:"041",category:"专辑",question:"《新地球》专辑发行于哪一年？",options:[{key:"A",text:"2013年"},{key:"B",text:"2014年"},{key:"C",text:"2015年"},{key:"D",text:"2016年"}],answer:"B",explanation:"《新地球》于2014年12月27日发行。"},
+    {id:"045",category:"专辑",question:"《和自己对话》专辑发行于？",options:[{key:"A",text:"2014年"},{key:"B",text:"2015年"},{key:"C",text:"2016年"},{key:"D",text:"2017年"}],answer:"B",explanation:"《和自己对话》于2015年12月25日发行，是林俊杰的首张实验专辑。"},
+    {id:"049",category:"专辑",question:"《伟大的渺小》专辑发行于哪一年？",options:[{key:"A",text:"2016年"},{key:"B",text:"2017年"},{key:"C",text:"2018年"},{key:"D",text:"2019年"}],answer:"B",explanation:"《伟大的渺小》于2017年12月28日发行。"},
+    {id:"053",category:"专辑",question:"《幸存者·如你》专辑发行于？",options:[{key:"A",text:"2017年"},{key:"B",text:"2018年"},{key:"C",text:"2019年"},{key:"D",text:"2020年"}],answer:"B",explanation:"《幸存者·如你》于2018年10月5日发行。"},
+    {id:"057",category:"专辑",question:"《重拾_快乐》专辑发行于？",options:[{key:"A",text:"2022年"},{key:"B",text:"2023年"},{key:"C",text:"2024年"},{key:"D",text:"2025年"}],answer:"B",explanation:"《重拾_快乐》于2023年4月21日发行，是林俊杰的最新专辑。"},
+    {id:"002",category:"歌曲",question:"《乐行者》专辑中由林俊杰本人作词的歌曲是？",options:[{key:"A",text:"就是我"},{key:"B",text:"会读书"},{key:"C",text:"不懂"},{key:"D",text:"翅膀"}],answer:"A",explanation:"《就是我》由林俊杰作词，这是他第一首完全由自己作词的作品。"},
+    {id:"003",category:"歌曲",question:"《第二天堂》中《江南》的作词人是谁？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"张思尔"},{key:"C",text:"李瑞洵"},{key:"D",text:"方文山"}],answer:"C",explanation:"《江南》由李瑞洵作词，是林俊杰的代表作之一。"},
+    {id:"004",category:"歌曲",question:"《乐行者》专辑中哪首歌的作词人包含林秋离？",options:[{key:"A",text:"星空下的吻"},{key:"B",text:"会有那么一天"},{key:"C",text:"女儿家"},{key:"D",text:"让我心动的人"}],answer:"A",explanation:"《星空下的吻》由张思尔/林秋离作词。"},
+    {id:"006",category:"歌曲",question:"《第二天堂》专辑中《江南》的作曲人是谁？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"张思尔"},{key:"C",text:"蔡政勋"},{key:"D",text:"吴庆隆"}],answer:"A",explanation:"《江南》由林俊杰作曲，是他的成名作。"},
+    {id:"007",category:"歌曲",question:"《第二天堂》专辑中《子弹列车》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"方文山"},{key:"C",text:"张思尔"},{key:"D",text:"林秋离"}],answer:"B",explanation:"《子弹列车》由方文山作词，林俊杰作曲并编曲。"},
+    {id:"008",category:"歌曲",question:"《第二天堂》专辑中不包含以下哪首音乐？",options:[{key:"A",text:"《江南》"},{key:"B",text:"《森林浴》"},{key:"C",text:"《美人鱼》"},{key:"D",text:"《会有那么一天》"}],answer:"D",explanation:"《第二天堂》专辑包含《一开始》Demo、《起床了》、《森林浴》、《未完成》等纯音乐；《会有那么一天》是《乐行者》专辑里的歌。"},
+    {id:"010",category:"歌曲",question:"《编号89757》专辑中林俊杰作词的歌曲是？",options:[{key:"A",text:"一千年以前"},{key:"B",text:"莎士比亚的天份"},{key:"C",text:"木乃伊"},{key:"D",text:"一千年以后"}],answer:"B",explanation:"《莎士比亚的天份》由林俊杰作词，这是他早期展示创作才华的作品。"},
+    {id:"011",category:"歌曲",question:"《一千年以后》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"李瑞洵"},{key:"C",text:"方文山"},{key:"D",text:"林秋离"}],answer:"B",explanation:"《一千年以后》由李瑞洵作词，是《一千年以前》的后续歌曲。"},
+    {id:"012",category:"歌曲",question:"《编号89757》专辑中《明天》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"李瑞洵"},{key:"C",text:"张思尔"},{key:"D",text:"林秋离"}],answer:"B",explanation:"《明天》由李瑞洵作词，林俊杰作曲。"},
+    {id:"014",category:"歌曲",question:"《曹操》专辑中《只对你说》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林秋离"},{key:"C",text:"张思尔"},{key:"D",text:"林怡凤"}],answer:"A",explanation:"《只对你说》由林俊杰作词作曲，是专辑中林俊杰参与作词的歌曲。"},
+    {id:"015",category:"歌曲",question:"《曹操》同名主打歌的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林秋离"},{key:"C",text:"方文山"},{key:"D",text:"张思尔"}],answer:"B",explanation:"《曹操》由林秋离作词，林俊杰作曲。"},
+    {id:"016",category:"歌曲",question:"《曹操》专辑中《流行教主》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林宇中"},{key:"C",text:"林秋离"},{key:"D",text:"张思尔"}],answer:"B",explanation:"《流行教主》由林宇中作词，林俊杰作曲。"},
+    {id:"018",category:"歌曲",question:"《西界》专辑中林俊杰作词的歌曲是？",options:[{key:"A",text:"杀手"},{key:"B",text:"西界"},{key:"C",text:"大男人·小女孩"},{key:"D",text:"L-O-V-E"}],answer:"C",explanation:"《大男人·小女孩》由林俊杰作词。"},
+    {id:"019",category:"歌曲",question:"《西界》专辑中《不流泪的机场》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"陈嘉文"},{key:"C",text:"林秋离"},{key:"D",text:"林怡凤"}],answer:"B",explanation:"《不流泪的机场》由陈嘉文作词。"},
+    {id:"020",category:"歌曲",question:"《西界》专辑中《杀手》的制作人是？",options:[{key:"A",text:"许环良"},{key:"B",text:"林俊杰"},{key:"C",text:"吴剑泓"},{key:"D",text:"Kenn C"}],answer:"B",explanation:"《杀手》由林俊杰作曲并担任制作人。"},
+    {id:"022",category:"歌曲",question:"《不潮不用花钱》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林怡凤"},{key:"C",text:"方文山"},{key:"D",text:"王雅君"}],answer:"B",explanation:"《不潮不用花钱》由林怡凤作词，Rap部分由林俊杰创作。"},
+    {id:"023",category:"歌曲",question:"《小酒窝》是与哪位歌手合唱的？",options:[{key:"A",text:"蔡卓妍"},{key:"B",text:"邓紫棋"},{key:"C",text:"张韶涵"},{key:"D",text:"梁静茹"}],answer:"A",explanation:"《小酒窝》是林俊杰与蔡卓妍（阿Sa）合唱的歌曲。"},
+    {id:"024",category:"歌曲",question:"《醉赤壁》是为什么创作的主题曲？",options:[{key:"A",text:"电影"},{key:"B",text:"电视剧"},{key:"C",text:"游戏"},{key:"D",text:"广告"}],answer:"C",explanation:"《醉赤壁》是网络游戏《赤壁》的主题曲，由方文山作词。"},
+    {id:"026",category:"歌曲",question:"《背对背拥抱》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林怡凤"},{key:"C",text:"姚若龙"},{key:"D",text:"方文山"}],answer:"B",explanation:"《背对背拥抱》由林怡凤作词，是专辑中的抒情主打。"},
+    {id:"027",category:"歌曲",question:"《爱与希望》是为什么创作的公益歌曲？",options:[{key:"A",text:"汶川地震"},{key:"B",text:"台湾莫拉克风灾"},{key:"C",text:"菲律宾台风"},{key:"D",text:"日本地震"}],answer:"A",explanation:"《爱与希望》是2008年为汶川地震创作的公益歌曲。"},
+    {id:"028",category:"歌曲",question:"《转动》是为哪位艺人创作的歌曲？",options:[{key:"A",text:"成龙"},{key:"B",text:"迈克尔·杰克逊"},{key:"C",text:"结石姐"},{key:"D",text:"张惠妹"}],answer:"B",explanation:"《转动》是林俊杰为了致敬迈克尔·杰克逊而创作的歌曲，收录于《100天》专辑。"},
+    {id:"030",category:"歌曲",question:"《她说》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"孙燕姿"},{key:"C",text:"林夕"},{key:"D",text:"方文山"}],answer:"B",explanation:"《她说》由孙燕姿作词，林俊杰作曲，是专辑名称的由来。"},
+    {id:"031",category:"歌曲",question:"《爱笑的眼睛》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"洪瑞业"},{key:"C",text:"林怡凤"},{key:"D",text:"方文山"}],answer:"B",explanation:"《爱笑的眼睛》由洪瑞业作词。"},
+    {id:"032",category:"歌曲",question:"《当你》是林俊杰写给谁的歌曲？",options:[{key:"A",text:"颜人中"},{key:"B",text:"孙燕姿"},{key:"C",text:"王心凌"},{key:"D",text:"张惠妹"}],answer:"C",explanation:"《当你》是林俊杰作曲，原唱是王心凌，后林俊杰于 2010 年重新编曲并翻唱，收录在专辑《她说》中。"},
+    {id:"034",category:"歌曲",question:"《学不会》的作词人是？",options:[{key:"A",text:"方文山"},{key:"B",text:"姚若龙"},{key:"C",text:"林夕"},{key:"D",text:"林怡凤"}],answer:"B",explanation:"《学不会》由姚若龙作词，是专辑的同名主打歌。"},
+    {id:"035",category:"歌曲",question:"《那些你很冒险的梦》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"王雅君"},{key:"C",text:"方文山"},{key:"D",text:"吴青峰"}],answer:"B",explanation:"《那些你很冒险的梦》由王雅君作词。"},
+    {id:"036",category:"歌曲",question:"《故事细腻》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"方文山"},{key:"C",text:"林秋离"},{key:"D",text:"吴青峰"}],answer:"B",explanation:"《故事细腻》由方文山作词，林俊杰作曲。"},
+    {id:"038",category:"歌曲",question:"《修炼爱情》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"易家扬"},{key:"C",text:"方文山"},{key:"D",text:"吴青峰"}],answer:"B",explanation:"《修炼爱情》由易家扬作词，是专辑热门歌曲。"},
+    {id:"039",category:"歌曲",question:"《黑暗骑士》是与哪位艺人合唱的？",options:[{key:"A",text:"周杰伦"},{key:"B",text:"阿信"},{key:"C",text:"周杰伦"},{key:"D",text:"怪兽"}],answer:"B",explanation:"《黑暗骑士》由林俊杰与五月天阿信合唱。"},
+    {id:"040",category:"歌曲",question:"《裂缝中的阳光》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"吴青峰"},{key:"C",text:"方文山"},{key:"D",text:"林怡凤"}],answer:"B",explanation:"《裂缝中的阳光》由吴青峰作词，是专辑中的抒情佳作。"},
+    {id:"042",category:"歌曲",question:"《可惜没如果》的作词人是？",options:[{key:"A",text:"林夕"},{key:"B",text:"方文山"},{key:"C",text:"林怡凤"},{key:"D",text:"吴青峰"}],answer:"A",explanation:"《可惜没如果》由林夕作词，是新专辑的抒情主打。"},
+    {id:"043",category:"歌曲",question:"《手心的蔷薇》作词人是？",options:[{key:"A",text:"方文山"},{key:"B",text:"林怡凤"},{key:"C",text:"易家扬"},{key:"D",text:"小寒"}],answer:"B",explanation:"《手心的蔷薇》由林怡凤作词，林俊杰与林怡凤合唱。"},
+    {id:"044",category:"歌曲",question:"《浪漫血液》作词人是？",options:[{key:"A",text:"小寒"},{key:"B",text:"易家扬"},{key:"C",text:"方文山"},{key:"D",text:"林秋离"}],answer:"B",explanation:"《浪漫血液》由易家扬作词，是专辑中的代表作之一。"},
+    {id:"046",category:"歌曲",question:"《不为谁而作的歌》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林秋离"},{key:"C",text:"方文山"},{key:"D",text:"吴青峰"}],answer:"B",explanation:"《不为谁而作的歌》由林秋离作词，是专辑的主打歌。"},
+    {id:"047",category:"歌曲",question:"《关键词》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林怡凤"},{key:"C",text:"林夕"},{key:"D",text:"小寒"}],answer:"B",explanation:"《关键词》由林怡凤作词，收录于《和自己对话》专辑。"},
+    {id:"048",category:"歌曲",question:"《弹唱》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"张思尔"},{key:"C",text:"方文山"},{key:"D",text:"吴青峰"}],answer:"B",explanation:"《弹唱》由张思尔作词，是专辑中的温馨抒情曲。"},
+    {id:"050",category:"歌曲",question:"《圣所》是哪场演唱会的名称？",options:[{key:"A",text:"时线演唱会"},{key:"B",text:"圣所世界巡回演唱会"},{key:"C",text:"伟大的渺小演唱会"},{key:"D",text:"JJ20演唱会"}],answer:"B",explanation:"《圣所》是林俊杰2018年开始的世界巡回演唱会名称。"},
+    {id:"051",category:"歌曲",question:"《黑夜问白天》作词人是？",options:[{key:"A",text:"小寒"},{key:"B",text:"易家扬"},{key:"C",text:"方文山"},{key:"D",text:"林雨果"}],answer:"B",explanation:"《黑夜问白天》由易家扬作词，是专辑中的代表作。"},
+    {id:"052",category:"歌曲",question:"《小瓶子》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"易家扬"},{key:"C",text:"方文山"},{key:"D",text:"小寒"}],answer:"A",explanation:"《小瓶子》由林俊杰作词，是专辑中的温馨歌曲。"},
+    {id:"054",category:"歌曲",question:"《交换余生》的作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"易家扬"},{key:"C",text:"方文山"},{key:"D",text:"小寒"}],answer:"B",explanation:"《交换余生》由易家扬作词，是专辑的主打歌曲。"},
+    {id:"055",category:"歌曲",question:"《最向往的地方》作词人是？",options:[{key:"A",text:"杨彤"},{key:"B",text:"林俊杰"},{key:"C",text:"方文山"},{key:"D",text:"易家扬"}],answer:"A",explanation:"《最向往的地方》由杨彤作词。"},
+    {id:"056",category:"歌曲",question:"《离开的那一些》作词人是？",options:[{key:"A",text:"方文山"},{key:"B",text:"林俊杰"},{key:"C",text:"小寒"},{key:"D",text:"葛大为"}],answer:"A",explanation:"《离开的那一些》由方文山作词。"},
+    {id:"058",category:"歌曲",question:"《愿与愁》作词人是？",options:[{key:"A",text:"方文山"},{key:"B",text:"易家扬"},{key:"C",text:"小寒"},{key:"D",text:"林怡凤"}],answer:"C",explanation:"《愿与愁》由小寒作词，是专辑的主打歌曲。"},
+    {id:"059",category:"歌曲",question:"《孤独娱乐》作词人是？",options:[{key:"A",text:"易家扬"},{key:"B",text:"方文山"},{key:"C",text:"小寒"},{key:"D",text:"林雨果"}],answer:"A",explanation:"《孤独娱乐》由易家扬作词。"},
+    {id:"060",category:"歌曲",question:"《自画像》作词人是？",options:[{key:"A",text:"林俊杰"},{key:"B",text:"林怡凤"},{key:"C",text:"方文山"},{key:"D",text:"小寒"}],answer:"B",explanation:"《自画像》由林怡凤作词。"},
+    {id:"061",category:"个人信息",question:"林俊杰的本名（非艺名）是什么？",options:[{key:"A",text:"JJ Lin"},{key:"B",text:"Wayne"},{key:"C",text:"Lim Junjie"},{key:"D",text:"林俊峰"}],answer:"B",explanation:"林俊杰本名Wayne，JJ Lin为艺名，Lim Junjie为外文名拼音。"},
+    {id:"062",category:"个人信息",question:"林俊杰的出生日期是？",options:[{key:"A",text:"1981年3月27日"},{key:"B",text:"1982年3月27日"},{key:"C",text:"1981年5月27日"},{key:"D",text:"1980年3月27日"}],answer:"A",explanation:"林俊杰于1981年3月27日出生于新加坡。"},
+    {id:"063",category:"个人信息",question:"林俊杰的祖籍是哪里？",options:[{key:"A",text:"中国福建省福州市"},{key:"B",text:"中国福建省泉州市"},{key:"C",text:"中国福建省厦门市"},{key:"D",text:"中国广东省潮州市"}],answer:"C",explanation:"林俊杰祖籍中国福建省厦门市同安区。"},
+    {id:"064",category:"个人信息",question:"林俊杰的星座和血型分别是？",options:[{key:"A",text:"双鱼座、A型"},{key:"B",text:"白羊座、O型"},{key:"C",text:"金牛座、B型"},{key:"D",text:"白羊座、AB型"}],answer:"B",explanation:"林俊杰星座为白羊座，血型为O型。"},
+    {id:"065",category:"个人信息",question:"林俊杰的应援色是？",options:[{key:"A",text:"蓝色"},{key:"B",text:"红色"},{key:"C",text:"紫色"},{key:"D",text:"绿色"}],answer:"C",explanation:"林俊杰的应援色为紫色。"},
+    {id:"066",category:"个人信息",question:"林俊杰于哪一年成立了个人音乐制作公司JFJ Productions？",options:[{key:"A",text:"2005年"},{key:"B",text:"2006年"},{key:"C",text:"2007年"},{key:"D",text:"2008年"}],answer:"C",explanation:"林俊杰于2007年3月27日成立了JFJ Productions，正式自立门户。"},
+    {id:"067",category:"个人信息",question:"林俊杰的哥哥林俊峰的职业是？",options:[{key:"A",text:"新加坡电信公司董事"},{key:"B",text:"瑞士银行亚太区副总裁"},{key:"C",text:"佳能公司CEO"},{key:"D",text:"石油公司负责人"}],answer:"B",explanation:"林俊杰的哥哥林俊峰是瑞士银行亚太区副总裁。"},
+    {id:"068",category:"个人信息",question:"林俊杰于哪一年考取了国际汽车联盟（FIA）的职业赛车驾照？",options:[{key:"A",text:"2014年"},{key:"B",text:"2015年"},{key:"C",text:"2016年"},{key:"D",text:"2017年"}],answer:"C",explanation:"林俊杰于2016年6月顺利考取FIA职业证照，成为职业赛车手。"},
+    {id:"069",category:"获奖记录",question:"林俊杰凭借首张专辑《乐行者》获得了第几届台湾金曲奖的最佳新人奖？",options:[{key:"A",text:"第13届"},{key:"B",text:"第14届"},{key:"C",text:"第15届"},{key:"D",text:"第16届"}],answer:"C",explanation:"林俊杰凭借《乐行者》获得第15届台湾金曲奖最佳新人奖。"},
+    {id:"070",category:"获奖记录",question:"林俊杰首次获得台湾金曲奖最佳国语男歌手奖是凭借哪张专辑？",options:[{key:"A",text:"《她说》"},{key:"B",text:"《学不会》"},{key:"C",text:"《因你而在》"},{key:"D",text:"《新地球》"}],answer:"C",explanation:"林俊杰凭借《因你而在》获得第25届台湾金曲奖最佳国语男歌手奖。"},
+    {id:"071",category:"获奖记录",question:"林俊杰第二次获得台湾金曲奖最佳国语男歌手奖是凭借哪张专辑？",options:[{key:"A",text:"《新地球》"},{key:"B",text:"《和自己对话》"},{key:"C",text:"《伟大的渺小》"},{key:"D",text:"《学不会》"}],answer:"B",explanation:"林俊杰凭借《和自己对话》获得第27届台湾金曲奖最佳国语男歌手奖。"},
+    {id:"072",category:"获奖记录",question:"截至目前，林俊杰共计获得过几座台湾金曲奖？",options:[{key:"A",text:"2座"},{key:"B",text:"3座"},{key:"C",text:"4座"},{key:"D",text:"5座"}],answer:"C",explanation:"林俊杰自出道以来共计获得过4座台湾金曲奖。"},
+    {id:"073",category:"获奖记录",question:"林俊杰凭借哪首为他人创作的歌曲入围了第26届台湾金曲奖最佳作曲人奖？",options:[{key:"A",text:"《记得》"},{key:"B",text:"《一眼万年》"},{key:"C",text:"《你给我听好》"},{key:"D",text:"《身后》"}],answer:"C",explanation:"林俊杰凭借为陈奕迅创作的《你给我听好》入围第26届金曲奖最佳作曲人奖和最佳单曲制作人奖。"},
+    {id:"074",category:"获奖记录",question:"林俊杰凭借专辑《100天》入围了第几届台湾金曲奖最佳国语男歌手奖？",options:[{key:"A",text:"第20届"},{key:"B",text:"第21届"},{key:"C",text:"第22届"},{key:"D",text:"第23届"}],answer:"B",explanation:"林俊杰凭借《100天》入围第21届台湾金曲奖最佳国语男歌手奖。"},
+    {id:"075",category:"获奖记录",question:"林俊杰凭借《伟大的渺小》入围了第29届台湾金曲奖多个奖项，以下哪个不是入围奖项？",options:[{key:"A",text:"最佳国语男歌手奖"},{key:"B",text:"最佳国语专辑奖"},{key:"C",text:"最佳年度歌曲奖"},{key:"D",text:"最佳新人奖"}],answer:"D",explanation:"第29届金曲奖林俊杰入围了最佳国语男歌手奖、最佳国语专辑奖、最佳年度专辑奖、最佳专辑制作人奖、最佳年度歌曲奖、最佳作曲人奖，未入围最佳新人奖。"},
+    {id:"076",category:"获奖记录",question:"林俊杰凭借专辑《重拾_快乐》和歌曲《愿与愁》入围了第35届台湾金曲奖哪两个奖项？",options:[{key:"A",text:"最佳华语男歌手奖、最佳作曲人奖"},{key:"B",text:"最佳华语专辑奖、最佳作词人奖"},{key:"C",text:"最佳年度歌曲奖、最佳作曲人奖"},{key:"D",text:"最佳华语男歌手奖、最佳专辑制作人奖"}],answer:"A",explanation:"林俊杰凭借《重拾_快乐》入围最佳华语男歌手奖，凭借《愿与愁》入围最佳作曲人奖。"},
+    {id:"077",category:"获奖记录",question:"林俊杰在第21届台湾金曲奖颁奖典礼上的表演被媒体称为什么？",options:[{key:"A",text:"金曲之王"},{key:"B",text:"无冕之王"},{key:"C",text:"最佳表演"},{key:"D",text:"华语之光"}],answer:"B",explanation:"中国内地媒体将林俊杰称为当届金曲奖的无冕之王，台湾媒体则认为他拯救了金曲奖。"},
+    {id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"}
+];
+
+var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+
+var state = { quiz: [], idx: 0, answered: false, mode: 'quick', correctCount: 0, startTime: 0, timer: null };
+
+var DB = {
+    KEY: 'jj_quiz_v2',
+    get: function() { try { var d = localStorage.getItem(DB.KEY); return d ? JSON.parse(d) : DB.defaults(); } catch (e) { return DB.defaults(); } },
+    defaults: function() { return { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } }; },
+    save: function(d) { localStorage.setItem(DB.KEY, JSON.stringify(d)); },
+    addRecord: function(rec) {
+        var d = DB.get();
+        d.history.push(rec);
+        d.stats.total++;
+        if (rec.ok) d.stats.correct++;
+        var q = DB.findQ(rec.qid);
+        if (q) {
+            if (!d.stats.cats[q.category]) d.stats.cats[q.category] = { t: 0, c: 0 };
+            d.stats.cats[q.category].t++;
+            if (rec.ok) d.stats.cats[q.category].c++;
+        }
+        DB.save(d);
+    },
+    addWrong: function(qid) {
+        var d = DB.get();
+        var f = null;
+        for (var i = 0; i < d.wrong.length; i++) {
+            if (d.wrong[i].qid === qid) { f = d.wrong[i]; break; }
+        }
+        if (f) { f.cnt++; f.time = Date.now(); }
+        else { d.wrong.push({ qid: qid, cnt: 1, time: Date.now() }); }
+        DB.save(d);
+    },
+    removeWrong: function(qid) {
+        var d = DB.get();
+        d.wrong = d.wrong.filter(function(w) { return w.qid !== qid; });
+        DB.save(d);
+    },
+    getWrong: function() { return DB.get().wrong; },
+    findQ: function(qid) {
+        for (var i = 0; i < QUESTION_BANK.length; i++) {
+            if (QUESTION_BANK[i].id === qid) return QUESTION_BANK[i];
+        }
+        return null;
+    }
+};
+
+var VIEW_NAMES = { home: '首页', practice: '练习', wrongbook: '错题本', stats: '统计', admin: '管理' };
+
+function switchView(v) {
+    var views = document.querySelectorAll('.view');
+    for (var i = 0; i < views.length; i++) views[i].classList.remove('active');
+    var el = document.getElementById('view-' + v);
+    if (el) el.classList.add('active');
+    var navs = document.querySelectorAll('.nav-item');
+    for (var j = 0; j < navs.length; j++) {
+        navs[j].classList.remove('active');
+        if (navs[j].textContent === VIEW_NAMES[v]) navs[j].classList.add('active');
+    }
+    if (v === 'home') updateHome();
+    if (v === 'wrongbook') renderWrongBook();
+    if (v === 'stats') renderStats();
+    if (v === 'admin') renderAdmin();
+    if (v === 'practice') {
+        if (state.quiz.length === 0 || state.idx >= state.quiz.length) {
+            state.quiz = [];
+            state.idx = 0;
+            stopTimer();
+            document.getElementById('quizArea').innerHTML = '<div class="card" style="text-align:center;padding:60px 20px;"><div style="font-size:48px;margin-bottom:16px;">📝</div><h3 style="margin-bottom:12px;">请先开始答题</h3><p style="color:var(--text2);margin-bottom:20px;">点击下方按钮开始练习</p><button class="btn" style="max-width:200px;margin:0 auto;" onclick="switchView(\'home\')">去首页开始</button></div>';
+        }
+    }
+}
+
+function selectMode(m) {
+    state.mode = m;
+    var btns = document.querySelectorAll('.mode-btn');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+    var t = document.querySelector('.mode-btn[data-mode="' + m + '"]');
+    if (t) t.classList.add('active');
+}
+
+function getCount() {
+    var m = { quick: 10, standard: 20, intensive: 30 };
+    return m[state.mode] || 10;
+}
+
+function startTimer() {
+    state.startTime = Date.now();
+    if (state.timer) clearInterval(state.timer);
+    state.timer = setInterval(tickTimer, 1000);
+}
+
+function stopTimer() {
+    if (state.timer) { clearInterval(state.timer); state.timer = null; }
+}
+
+function tickTimer() {
+    var sec = Math.floor((Date.now() - state.startTime) / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    var el = document.getElementById('timerVal');
+    if (el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function fmtTime(ms) {
+    var sec = Math.floor(ms / 1000);
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + '分' + s + '秒';
+}
+
+function startRandomQuiz() {
+    state.quiz = shuffle(QUESTION_BANK).slice(0, getCount());
+    state.idx = 0;
+    state.correctCount = 0;
+    switchView('practice');
+    startTimer();
+    renderQ();
+}
+
+function showCategoryView() {
+    var cats = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        var c = QUESTION_BANK[i].category;
+        cats[c] = (cats[c] || 0) + 1;
+    }
+    var html = '';
+    for (var name in cats) {
+        html += '<div class="category-item" onclick="startCatQuiz(\'' + name + '\')"><span class="category-name">' + name + '</span><span class="category-count">' + cats[name] + '题</span></div>';
+    }
+    document.getElementById('categoryList').innerHTML = html;
+    switchView('category');
+}
+
+function startCatQuiz(cat) {
+    var f = [];
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        if (QUESTION_BANK[i].category === cat) f.push(QUESTION_BANK[i]);
+    }
+    state.quiz = shuffle(f).slice(0, getCount());
+    state.idx = 0;
+    state.correctCount = 0;
+    switchView('practice');
+    startTimer();
+    renderQ();
+}
+
+function startWrongBookQuiz() {
+    var wl = DB.getWrong();
+    var qs = [];
+    for (var i = 0; i < wl.length; i++) {
+        var q = DB.findQ(wl[i].qid);
+        if (q) qs.push(q);
+    }
+    if (qs.length === 0) return;
+    state.quiz = shuffle(qs);
+    state.idx = 0;
+    state.correctCount = 0;
+    switchView('practice');
+    startTimer();
+    renderQ();
+}
+
+function renderQ() {
+    if (state.idx >= state.quiz.length) { finishQuiz(); return; }
+    var q = state.quiz[state.idx];
+    var pct = Math.round(state.idx / state.quiz.length * 100);
+    var sec = Math.floor((Date.now() - state.startTime) / 1000);
+    var tm = Math.floor(sec / 60);
+    var ts = sec % 60;
+    var html = '<div class="progress-wrap"><div class="progress-header"><span class="progress-text">' + (state.idx + 1) + ' / ' + state.quiz.length + '</span><span class="timer-badge">⏱ <span id="timerVal">' + tm + ':' + (ts < 10 ? '0' : '') + ts + '</span></span></div><div class="progress-bar-bg"><div class="progress-bar" style="width:' + pct + '%"></div></div></div>';
+    html += '<div class="question-card"><div class="question-text">' + q.question + '</div>';
+    for (var i = 0; i < q.options.length; i++) {
+        var o = q.options[i];
+        html += '<div class="option-item" onclick="pickOption(\'' + o.key + '\')" id="opt-' + o.key + '"><span class="option-key">' + o.key + '</span><span>' + o.text + '</span></div>';
+    }
+    html += '<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
+    html += '<div class="bottom-bar"><button class="btn" id="nextBtn" onclick="nextQ()" style="display:none;">下一题</button><button class="btn btn-outline" onclick="quitQuiz()">返回首页</button></div>';
+    document.getElementById('quizArea').innerHTML = html;
+    state.answered = false;
+}
+
+function pickOption(key) {
+    if (state.answered) return;
+    state.answered = true;
+    var q = state.quiz[state.idx];
+    var ok = (key === q.answer);
+    if (ok) state.correctCount++;
+    DB.addRecord({ qid: q.id, ans: key, ok: ok, time: Date.now() });
+    if (!ok) DB.addWrong(q.id);
+    for (var i = 0; i < q.options.length; i++) {
+        var el = document.getElementById('opt-' + q.options[i].key);
+        el.classList.add('disabled');
+        if (q.options[i].key === q.answer) el.classList.add('correct');
+        else if (q.options[i].key === key && !ok) el.classList.add('wrong');
+    }
+    var fb = document.getElementById('fb');
+    fb.className = 'feedback show ' + (ok ? 'correct' : 'wrong');
+    document.getElementById('fbTitle').textContent = ok ? '✓ 回答正确！' : '✗ 回答错误';
+    document.getElementById('fbDesc').textContent = q.explanation;
+    document.getElementById('nextBtn').style.display = 'inline-block';
+}
+
+function nextQ() { state.idx++; renderQ(); }
+
+function quitQuiz() { stopTimer(); switchView('home'); }
+
+function finishQuiz() {
+    stopTimer();
+    var elapsed = Date.now() - state.startTime;
+    var total = state.quiz.length;
+    var correct = state.correctCount;
+    var wrong = total - correct;
+    var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+    var html = '<div class="card finish-card"><div class="finish-icon">🎉</div><h2>答题完成！</h2><div class="finish-stats"><div class="finish-stat"><div class="val green">' + correct + '</div><div class="lbl">正确</div></div><div class="finish-stat"><div class="val red">' + wrong + '</div><div class="lbl">错误</div></div><div class="finish-stat"><div class="val">' + pct + '%</div><div class="lbl">正确率</div></div><div class="finish-stat"><div class="val">' + fmtTime(elapsed) + '</div><div class="lbl">用时</div></div></div><button class="btn" onclick="switchView(\'home\')">返回首页</button></div>';
+    document.getElementById('quizArea').innerHTML = html;
+}
+
+function updateHome() {
+    var d = DB.get();
+    var today = new Date().setHours(0, 0, 0, 0);
+    var th = d.history.filter(function(h) { return h.time >= today; });
+    document.getElementById('todayCount').textContent = th.length;
+    var acc = th.length > 0 ? Math.round(th.filter(function(h) { return h.ok; }).length / th.length * 100) : 0;
+    document.getElementById('todayAcc').textContent = acc + '%';
+}
+
+function renderWrongBook() {
+    var wl = DB.getWrong();
+    var el = document.getElementById('wrongBookList');
+    var btn = document.getElementById('wrongBookBtn');
+    if (wl.length === 0) {
+        el.innerHTML = '<div class="empty"><p>暂无错题记录</p><p style="font-size:13px;margin-top:8px;">答错的题目会自动加入这里</p></div>';
+        btn.style.display = 'none';
+        return;
+    }
+    var html = '<div class="error-list">';
+    for (var i = 0; i < wl.length; i++) {
+        var q = DB.findQ(wl[i].qid);
+        if (!q) continue;
+        html += '<div class="error-item"><div class="q">' + q.question + '</div><div class="info"><span>错误' + wl[i].cnt + '次</span><button class="btn btn-sm btn-error btn-outline" onclick="removeWrong(\'' + q.id + '\')">移除</button></div></div>';
+    }
+    html += '</div>';
+    el.innerHTML = html;
+    btn.style.display = 'block';
+    btn.textContent = '开始复习 (' + wl.length + '题)';
+}
+
+function removeWrong(qid) { DB.removeWrong(qid); renderWrongBook(); }
+
+function renderStats() {
+    var d = DB.get();
+    document.getElementById('sTotal').textContent = d.stats.total;
+    document.getElementById('sCorrect').textContent = d.stats.correct;
+    var acc = d.stats.total > 0 ? Math.round(d.stats.correct / d.stats.total * 100) : 0;
+    document.getElementById('sAcc').textContent = acc + '%';
+    document.getElementById('sWrong').textContent = d.wrong.length;
+    var catEl = document.getElementById('catStats');
+    var cats = d.stats.cats;
+    var keys = Object.keys(cats);
+    if (keys.length === 0) {
+        catEl.innerHTML = '<div class="empty"><p>暂无数据</p></div>';
+        return;
+    }
+    var html = '';
+    for (var i = 0; i < keys.length; i++) {
+        var name = keys[i];
+        var s = cats[name];
+        var pct = s.t > 0 ? Math.round(s.c / s.t * 100) : 0;
+        html += '<div class="cat-stat-row"><span class="cat-stat-name">' + name + '</span><div class="cat-stat-bar-wrap"><div class="cat-stat-bar-bg"><div class="cat-stat-bar" style="width:' + pct + '%"></div></div></div><span class="cat-stat-pct">' + pct + '%</span></div>';
+    }
+    catEl.innerHTML = html;
+}
+
+function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    return a;
+}
+
+function renderAdmin() {
+    updateCategoryFilter();
+    updateEditCategoryOptions();
+    renderQuestionList();
+}
+
+function updateCategoryFilter() {
+    var cats = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        cats[QUESTION_BANK[i].category] = true;
+    }
+    var sel = document.getElementById('categoryFilter');
+    var cur = sel.value;
+    var opts = '<option value="">全部类别</option>';
+    var keys = Object.keys(cats).sort();
+    for (var j = 0; j < keys.length; j++) {
+        opts += '<option value="' + keys[j] + '"' + (keys[j] === cur ? ' selected' : '') + '>' + keys[j] + '</option>';
+    }
+    sel.innerHTML = opts;
+}
+
+function updateEditCategoryOptions() {
+    var cats = {};
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        cats[QUESTION_BANK[i].category] = true;
+    }
+    var sel = document.getElementById('editCategory');
+    var keys = Object.keys(cats).sort();
+    var opts = '';
+    for (var j = 0; j < keys.length; j++) {
+        opts += '<option value="' + keys[j] + '">' + keys[j] + '</option>';
+    }
+    sel.innerHTML = opts;
+}
+
+function renderQuestionList() {
+    var search = document.getElementById('searchInput').value.toLowerCase();
+    var catFilter = document.getElementById('categoryFilter').value;
+    var html = '';
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        var q = QUESTION_BANK[i];
+        if (catFilter && q.category !== catFilter) continue;
+        if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
+        html += '<div class="q-item">';
+        html += '<div class="q-item-header">';
+        html += '<span class="q-item-cat">' + q.category + '</span>';
+        html += '<div class="q-item-actions">';
+        html += '<button class="btn btn-outline btn-sm" onclick="showEditForm(\'' + q.id + '\')">编辑</button>';
+        html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="deleteQuestion(\'' + q.id + '\')">删除</button>';
+        html += '</div></div>';
+        html += '<div class="q-item-text">' + q.question + '</div>';
+        html += '<div class="q-item-answer">答案: ' + q.answer + '</div>';
+        html += '</div>';
+    }
+    document.getElementById('questionList').innerHTML = html || '<div class="empty"><p>暂无题目</p></div>';
+}
+
+function filterQuestions() { renderQuestionList(); }
+
+function showAddForm() {
+    document.getElementById('modalTitle').textContent = '新增题目';
+    document.getElementById('editId').value = '';
+    document.getElementById('editCategory').value = '专辑';
+    document.getElementById('editQuestion').value = '';
+    document.getElementById('editOptions').value = 'A.\nB.\nC.\nD.';
+    document.getElementById('editAnswer').value = 'A';
+    document.getElementById('editExplanation').value = '';
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function showEditForm(qid) {
+    var q = null;
+    for (var i = 0; i < QUESTION_BANK.length; i++) {
+        if (QUESTION_BANK[i].id === qid) { q = QUESTION_BANK[i]; break; }
+    }
+    if (!q) return;
+    document.getElementById('modalTitle').textContent = '编辑题目';
+    document.getElementById('editId').value = q.id;
+    document.getElementById('editCategory').value = q.category;
+    document.getElementById('editQuestion').value = q.question;
+    var opts = '';
+    for (var j = 0; j < q.options.length; j++) {
+        opts += q.options[j].key + '.' + q.options[j].text + '\n';
+    }
+    document.getElementById('editOptions').value = opts.trim();
+    document.getElementById('editAnswer').value = q.answer;
+    document.getElementById('editExplanation').value = q.explanation;
+    document.getElementById('editModal').style.display = 'block';
+}
+
+function closeModal() {
+    document.getElementById('editModal').style.display = 'none';
+}
+
+function saveQuestion() {
+    var id = document.getElementById('editId').value;
+    var category = document.getElementById('editCategory').value;
+    var question = document.getElementById('editQuestion').value.trim();
+    var optsText = document.getElementById('editOptions').value.trim();
+    var answer = document.getElementById('editAnswer').value;
+    var explanation = document.getElementById('editExplanation').value.trim();
+
+    if (!question || !optsText) {
+        alert('请填写题目和选项');
+        return;
+    }
+
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+
+    if (options.length < 2) {
+        alert('请至少输入两个选项，格式：A.选项内容');
+        return;
+    }
+
+    if (!id) {
+        var newId = 'q' + Date.now();
+        QUESTION_BANK.push({
+            id: newId,
+            category: category,
+            question: question,
+            options: options,
+            answer: answer,
+            explanation: explanation
+        });
+    } else {
+        for (var j = 0; j < QUESTION_BANK.length; j++) {
+            if (QUESTION_BANK[j].id === id) {
+                QUESTION_BANK[j].category = category;
+                QUESTION_BANK[j].question = question;
+                QUESTION_BANK[j].options = options;
+                QUESTION_BANK[j].answer = answer;
+                QUESTION_BANK[j].explanation = explanation;
+                break;
+            }
+        }
+    }
+
+    saveQuestionBank();
+    closeModal();
+    renderQuestionList();
+}
+
+function deleteQuestion(qid) {
+    if (!confirm('确定删除此题目？')) return;
+    QUESTION_BANK = QUESTION_BANK.filter(function(q) { return q.id !== qid; });
+    saveQuestionBank();
+    renderQuestionList();
+}
+
+function saveQuestionBank() {
+    localStorage.setItem('jj_question_bank', JSON.stringify(QUESTION_BANK));
+}
+
+function loadQuestionBank() {
+    var saved = localStorage.getItem('jj_question_bank');
+    if (saved) {
+        try {
+            QUESTION_BANK = JSON.parse(saved);
+        } catch (e) {}
+    }
+}
+
+function exportData() {
+    var data = {
+        questionBank: QUESTION_BANK,
+        userData: DB.get(),
+        exportTime: new Date().toISOString()
+    };
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'jj_quiz_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    alert('数据已导出！');
+}
+
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+    return options;
+}
+
+function validateQuestionData(question, optsText) {
+    if (!question || !optsText) return false;
+    var options = parseOptions(optsText);
+    return options.length >= 2;
+}
+
+function importDataInternal(data) {
+    if (!data.questionBank && !data.userData) {
+        return { success: false, message: '文件中未找到有效数据' };
+    }
+    var addedCount = 0;
+    var updatedCount = 0;
+    if (data.questionBank) {
+        var existingIds = {};
+        for (var i = 0; i < QUESTION_BANK.length; i++) {
+            existingIds[QUESTION_BANK[i].id] = true;
+        }
+        for (var j = 0; j < data.questionBank.length; j++) {
+            var q = data.questionBank[j];
+            if (existingIds[q.id]) {
+                for (var k = 0; k < QUESTION_BANK.length; k++) {
+                    if (QUESTION_BANK[k].id === q.id) {
+                        QUESTION_BANK[k] = q;
+                        updatedCount++;
+                        break;
+                    }
+                }
+            } else {
+                QUESTION_BANK.push(q);
+                addedCount++;
+            }
+        }
+        saveQuestionBank();
+    }
+    if (data.userData) {
+        var existingData = DB.get();
+        if (data.userData.history) {
+            existingData.history = existingData.history.concat(data.userData.history);
+        }
+        if (data.userData.wrong) {
+            var wrongMap = {};
+            for (var w = 0; w < existingData.wrong.length; w++) {
+                wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
+            }
+            for (var x = 0; x < data.userData.wrong.length; x++) {
+                var wrongItem = data.userData.wrong[x];
+                if (wrongMap[wrongItem.qid]) {
+                    wrongMap[wrongItem.qid].cnt += wrongItem.cnt;
+                } else {
+                    existingData.wrong.push(wrongItem);
+                }
+            }
+        }
+        if (data.userData.stats) {
+            if (!existingData.stats) existingData.stats = { total: 0, correct: 0, cats: {} };
+            existingData.stats.total += data.userData.stats.total || 0;
+            existingData.stats.correct += data.userData.stats.correct || 0;
+            if (data.userData.stats.cats) {
+                for (var catName in data.userData.stats.cats) {
+                    if (!existingData.stats.cats[catName]) {
+                        existingData.stats.cats[catName] = { t: 0, c: 0 };
+                    }
+                    existingData.stats.cats[catName].t += data.userData.stats.cats[catName].t || 0;
+                    existingData.stats.cats[catName].c += data.userData.stats.cats[catName].c || 0;
+                }
+            }
+        }
+        DB.save(existingData);
+    }
+    return {
+        success: true,
+        addedCount: addedCount,
+        updatedCount: updatedCount,
+        message: '数据导入成功！' + (addedCount > 0 || updatedCount > 0 ? '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道' : '')
+    };
+}
+
+function showResetConfirm() {
+    var modal = document.getElementById('resetModal');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    document.getElementById('resetConfirmInput').value = '';
+    checkResetInput();
+}
+
+function closeResetModal() {
+    document.getElementById('resetModal').style.display = 'none';
+}
+
+function checkResetInput() {
+    var input = document.getElementById('resetConfirmInput').value;
+    var btn = document.getElementById('resetConfirmBtn');
+    if (input === '恢复默认') {
+        btn.style.opacity = '1';
+        btn.style.pointerEvents = 'auto';
+    } else {
+        btn.style.opacity = '0.5';
+        btn.style.pointerEvents = 'none';
+    }
+}
+
+function resetQuestionBank() {
+    QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+    localStorage.removeItem('jj_question_bank');
+    closeResetModal();
+    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+    try { renderQuestionList(); } catch (e) {}
+    try { updateCategoryFilter(); } catch (e) {}
+}
+
+window.addEventListener('DOMContentLoaded', function() { loadQuestionBank(); updateHome(); });
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        DB: DB,
+        state: state,
+        QUESTION_BANK: QUESTION_BANK,
+        DEFAULT_QUESTION_BANK: DEFAULT_QUESTION_BANK,
+        getCount: getCount,
+        shuffle: shuffle,
+        parseOptions: parseOptions,
+        validateQuestionData: validateQuestionData,
+        importDataInternal: importDataInternal,
+        fmtTime: fmtTime
+    };
+}
