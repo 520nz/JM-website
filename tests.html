@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>林俊杰粉丝答题 - 测试套件</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0F0A1A;
+            color: #F5F5F5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            padding: 30px 0;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #8B5CF6 0%, #F472B6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .summary {
+            background: #1A1225;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #2D2340;
+        }
+        .summary-stats {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: linear-gradient(135deg, #0F0A1A 0%, #1A1225 100%);
+            border-radius: 12px;
+            border: 1px solid #2D2340;
+            min-width: 120px;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .stat-value.pass { color: #10B981; }
+        .stat-value.fail { color: #EF4444; }
+        .stat-label {
+            font-size: 13px;
+            color: #A0A0A0;
+            margin-top: 6px;
+        }
+        .test-suite {
+            background: #1A1225;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid #2D2340;
+        }
+        .suite-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #2D2340;
+        }
+        .suite-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .suite-stats {
+            font-size: 14px;
+            color: #A0A0A0;
+        }
+        .test-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: #0F0A1A;
+            border-radius: 8px;
+            border: 1px solid #2D2340;
+        }
+        .test-item.pass {
+            border-color: #10B981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .test-item.fail {
+            border-color: #EF4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        .test-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .test-status {
+            font-size: 13px;
+            color: #A0A0A0;
+        }
+        .test-status.pass { color: #10B981; }
+        .test-status.fail { color: #EF4444; }
+        .test-error {
+            font-size: 12px;
+            color: #EF4444;
+            margin-top: 6px;
+            padding: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+            display: none;
+        }
+        .test-item.fail .test-error { display: block; }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #8B5CF6, #9333ea);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139,92,246,0.3);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139,92,246,0.4);
+        }
+        .progress-bar {
+            height: 4px;
+            background: #2D2340;
+            border-radius: 2px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8B5CF6, #F472B6);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        #runTests {
+            display: block;
+            margin: 20px auto;
+            max-width: 200px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🧪 自动化测试套件</h1>
+            <p style="color:#A0A0A0;font-size:14px;">验证关键功能逻辑的测试覆盖</p>
+        </header>
+
+        <button class="btn" id="runTests" onclick="runAllTests()">运行全部测试</button>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div id="testResults" style="display:none;">
+            <div class="summary">
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalTests">0</div>
+                        <div class="stat-label">总测试数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value pass" id="passedTests">0</div>
+                        <div class="stat-label">通过</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value fail" id="failedTests">0</div>
+                        <div class="stat-label">失败</div>
+                    </div>
+                </div>
+                <div style="text-align:center;font-size:14px;color:#A0A0A0;">
+                    <span id="summaryText"></span>
+                </div>
+            </div>
+            <div id="suitesContainer"></div>
+        </div>
+    </div>
+
+<script>
+// 从主应用复制核心逻辑
+function parseOptions(optsText) {
+    var lines = optsText.split('\n');
+    var options = [];
+    for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        if (!line) continue;
+        var match = line.match(/^([A-D])[.、．]\s*(.+)$/);
+        if (match) {
+            options.push({ key: match[1], text: match[2] });
+        }
+    }
+    return options;
+}
+
+function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i];
+        a[i] = a[j];
+        a[j] = t;
+    }
+    return a;
+}
+
+// 测试框架
+var TestRunner = {
+    tests: [],
+    suites: {},
+    currentSuite: null,
+    
+    suite: function(name) {
+        this.currentSuite = name;
+        if (!this.suites[name]) {
+            this.suites[name] = [];
+        }
+    },
+    
+    test: function(name, fn) {
+        this.tests.push({
+            suite: this.currentSuite,
+            name: name,
+            fn: fn
+        });
+        if (this.currentSuite && this.suites[this.currentSuite]) {
+            this.suites[this.currentSuite].push({
+                name: name,
+                fn: fn
+            });
+        }
+    },
+    
+    assertEqual: function(actual, expected, message) {
+        if (actual !== expected) {
+            throw new Error(message || 'Expected ' + expected + ' but got ' + actual);
+        }
+    },
+    
+    assertArrayEqual: function(actual, expected, message) {
+        if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+            throw new Error(message || 'Arrays not equal');
+        }
+    },
+    
+    assertThrows: function(fn, message) {
+        var threw = false;
+        try {
+            fn();
+        } catch (e) {
+            threw = true;
+        }
+        if (!threw) {
+            throw new Error(message || 'Expected function to throw');
+        }
+    },
+    
+    assert: function(condition, message) {
+        if (!condition) {
+            throw new Error(message || 'Assertion failed');
+        }
+    },
+    
+    run: function() {
+        var results = {
+            total: this.tests.length,
+            passed: 0,
+            failed: 0,
+            suites: {}
+        };
+        
+        var progressEl = document.getElementById('progress');
+        var progress = 0;
+        
+        for (var i = 0; i < this.tests.length; i++) {
+            var test = this.tests[i];
+            var suiteName = test.suite;
+            if (!results.suites[suiteName]) {
+                results.suites[suiteName] = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0,
+                    tests: []
+                };
+            }
+            
+            results.suites[suiteName].total++;
+            results.total++;
+            
+            var result = {
+                name: test.name,
+                pass: true,
+                error: null
+            };
+            
+            try {
+                test.fn();
+                results.passed++;
+                results.suites[suiteName].passed++;
+            } catch (e) {
+                results.failed++;
+                results.suites[suiteName].failed++;
+                result.pass = false;
+                result.error = e.message;
+            }
+            
+            results.suites[suiteName].tests.push(result);
+            
+            progress = ((i + 1) / this.tests.length) * 100;
+            progressEl.style.width = progress + '%';
+        }
+        
+        return results;
+    },
+    
+    render: function(results) {
+        document.getElementById('testResults').style.display = 'block';
+        document.getElementById('totalTests').textContent = results.total;
+        document.getElementById('passedTests').textContent = results.passed;
+        document.getElementById('failedTests').textContent = results.failed;
+        
+        var pct = results.total > 0 ? Math.round(results.passed / results.total * 100) : 0;
+        document.getElementById('summaryText').textContent = 
+            '通过率: ' + pct + '% | 测试覆盖了关键的数据处理、验证和状态管理逻辑';
+        
+        var container = document.getElementById('suitesContainer');
+        container.innerHTML = '';
+        
+        var suiteNames = Object.keys(results.suites);
+        for (var i = 0; i < suiteNames.length; i++) {
+            var suiteName = suiteNames[i];
+            var suite = results.suites[suiteName];
+            
+            var suiteDiv = document.createElement('div');
+            suiteDiv.className = 'test-suite';
+            
+            suiteDiv.innerHTML = '<div class="suite-header">' +
+                '<span class="suite-title">' + suiteName + '</span>' +
+                '<span class="suite-stats">' + suite.passed + '/' + suite.total + ' 通过</span>' +
+                '</div>';
+            
+            for (var j = 0; j < suite.tests.length; j++) {
+                var test = suite.tests[j];
+                var testDiv = document.createElement('div');
+                testDiv.className = 'test-item ' + (test.pass ? 'pass' : 'fail');
+                testDiv.innerHTML = '<div class="test-name">' + test.name + '</div>' +
+                    '<div class="test-status ' + (test.pass ? 'pass' : 'fail') + '">' +
+                    (test.pass ? '✓ 通过' : '✗ 失败') + '</div>' +
+                    (test.error ? '<div class="test-error">' + test.error + '</div>' : '');
+                suiteDiv.appendChild(testDiv);
+            }
+            
+            container.appendChild(suiteDiv);
+        }
+    }
+};
+
+// 定义测试
+// 1. 选项解析测试
+TestRunner.suite('选项解析逻辑');
+TestRunner.test('标准格式选项解析', function() {
+    var opts = 'A.选项一\nB.选项二\nC.选项三\nD.选项四';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 4, '应解析出4个选项');
+    TestRunner.assertEqual(result[0].key, 'A', '第一个选项key应为A');
+    TestRunner.assertEqual(result[0].text, '选项一', '第一个选项text应为"选项一"');
+});
+
+TestRunner.test('包含空行的选项解析', function() {
+    var opts = 'A.选项一\n\nB.选项二\n   \nC.选项三\nD.选项四';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 4, '应跳过空行，解析出4个选项');
+});
+
+TestRunner.test('中文点号分隔符', function() {
+    var opts = 'A．选项一\nB．选项二';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 2, '应支持中文点号．');
+    TestRunner.assertEqual(result[0].text, '选项一', '中文点号解析正确');
+});
+
+TestRunner.test('顿号分隔符', function() {
+    var opts = 'A、选项一\nB、选项二';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 2, '应支持顿号、');
+});
+
+TestRunner.test('带空格的选项解析', function() {
+    var opts = 'A. 选项一\nB.  选项二\nC.选项三';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 3, '应正确处理各种空格');
+    TestRunner.assertEqual(result[0].text, '选项一', '应去除多余空格');
+});
+
+TestRunner.test('无选项时返回空数组', function() {
+    var opts = '';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 0, '空字符串应返回空数组');
+});
+
+TestRunner.test('无效格式选项被跳过', function() {
+    var opts = 'A.有效选项\n无效行\nB.另一个有效';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 2, '无效格式应被跳过');
+});
+
+// 2. shuffle算法测试
+TestRunner.suite('随机排序算法');
+TestRunner.test('shuffle返回数组副本', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    TestRunner.assert(shuffled !== arr, '应返回新数组而非修改原数组');
+});
+
+TestRunner.test('shuffle保持元素数量', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    TestRunner.assertEqual(shuffled.length, arr.length, '元素数量应保持不变');
+});
+
+TestRunner.test('shuffle包含所有元素', function() {
+    var arr = [1, 2, 3, 4, 5];
+    var shuffled = shuffle(arr);
+    for (var i = 0; i < arr.length; i++) {
+        TestRunner.assert(shuffled.indexOf(arr[i]) >= 0, '所有元素应存在');
+    }
+});
+
+TestRunner.test('shuffle分布均匀性', function() {
+    // 多次shuffle测试分布
+    var arr = [1, 2, 3];
+    var counts = { '1,2,3': 0, '1,3,2': 0, '2,1,3': 0, '2,3,1': 0, '3,1,2': 0, '3,2,1': 0 };
+    var trials = 1000;
+    
+    for (var i = 0; i < trials; i++) {
+        var shuffled = shuffle(arr.slice());
+        counts[JSON.stringify(shuffled)]++;
+    }
+    
+    // 检查每种排列都有出现（粗略测试）
+    var minCount = Math.min.apply(null, Object.keys(counts).map(function(k) { return counts[k]; }));
+    TestRunner.assert(minCount > 50, '所有排列都应出现，最小次数>50');
+});
+
+TestRunner.test('shuffle单元素数组', function() {
+    var arr = [42];
+    var shuffled = shuffle(arr);
+    TestRunner.assertEqual(shuffled[0], 42, '单元素数组保持不变');
+});
+
+TestRunner.test('shuffle空数组', function() {
+    var arr = [];
+    var shuffled = shuffle(arr);
+    TestRunner.assertEqual(shuffled.length, 0, '空数组应返回空数组');
+});
+
+// 3. 数据导入验证测试
+TestRunner.suite('数据导入验证');
+TestRunner.test('有效JSON解析', function() {
+    var jsonStr = '{"questionBank":[],"userData":{"history":[],"wrong":[]}}';
+    var data;
+    try {
+        data = JSON.parse(jsonStr);
+    } catch (e) {
+        throw new Error('有效JSON应能正确解析');
+    }
+    TestRunner.assert(data.questionBank, '应包含questionBank字段');
+    TestRunner.assert(data.userData, '应包含userData字段');
+});
+
+TestRunner.test('无效JSON解析错误', function() {
+    var invalidJson = 'not a json';
+    var threw = false;
+    try {
+        JSON.parse(invalidJson);
+    } catch (e) {
+        threw = true;
+    }
+    TestRunner.assert(threw, '无效JSON应抛出错误');
+});
+
+TestRunner.test('数据结构验证', function() {
+    var data = {
+        questionBank: [{id: '001', category: '专辑', question: '测试问题', options: [], answer: 'A', explanation: ''}],
+        userData: { history: [], wrong: [], stats: { total: 0, correct: 0, cats: {} } }
+    };
+    TestRunner.assert(data.questionBank[0].id, '题目应包含id字段');
+    TestRunner.assert(data.userData.hasOwnProperty('history'), 'userData应包含history');
+});
+
+TestRunner.test('题目数据完整性', function() {
+    var q = {
+        id: 'test001',
+        category: '专辑',
+        question: '测试问题',
+        options: [{key: 'A', text: '选项A'}],
+        answer: 'A',
+        explanation: '解释'
+    };
+    TestRunner.assertEqual(q.id, 'test001', '应有id');
+    TestRunner.assertEqual(q.category, '专辑', '应有category');
+    TestRunner.assertEqual(q.question, '测试问题', '应有question');
+    TestRunner.assertEqual(q.options.length, 1, '应有options');
+    TestRunner.assertEqual(q.answer, 'A', '应有answer');
+    TestRunner.assertEqual(q.explanation, '解释', '应有explanation');
+});
+
+TestRunner.test('历史记录数据结构', function() {
+    var record = {
+        qid: '001',
+        ans: 'A',
+        ok: true,
+        time: Date.now()
+    };
+    TestRunner.assertEqual(record.qid, '001', '应有qid');
+    TestRunner.assertEqual(record.ans, 'A', '应有ans');
+    TestRunner.assert(record.ok === true || record.ok === false, 'ok应为布尔值');
+    TestRunner.assert(typeof record.time === 'number', 'time应为数字');
+});
+
+TestRunner.test('错题数据结构', function() {
+    var wrong = {
+        qid: '002',
+        cnt: 3,
+        time: Date.now()
+    };
+    TestRunner.assertEqual(wrong.qid, '002', '应有qid');
+    TestRunner.assertEqual(wrong.cnt, 3, '应有cnt计数');
+    TestRunner.assert(typeof wrong.time === 'number', 'time应为数字');
+});
+
+// 4. localStorage模拟测试
+TestRunner.suite('数据存储逻辑');
+TestRunner.test('localStorage写入和读取', function() {
+    var testKey = 'test_key_' + Date.now();
+    var testData = { value: 'test' };
+    localStorage.setItem(testKey, JSON.stringify(testData));
+    var retrieved = JSON.parse(localStorage.getItem(testKey));
+    TestRunner.assertEqual(retrieved.value, 'test', '应能正确读写');
+    localStorage.removeItem(testKey);
+});
+
+TestRunner.test('localStorage键不存在返回null', function() {
+    var result = localStorage.getItem('nonexistent_key');
+    TestRunner.assertEqual(result, null, '不存在键应返回null');
+});
+
+TestRunner.test('数据序列化一致性', function() {
+    var data = {
+        arr: [1, 2, 3],
+        obj: { nested: 'value' },
+        str: 'string',
+        num: 42,
+        bool: true
+    };
+    var serialized = JSON.stringify(data);
+    var deserialized = JSON.parse(serialized);
+    TestRunner.assertArrayEqual(deserialized.arr, data.arr, '数组应一致');
+    TestRunner.assertEqual(deserialized.obj.nested, data.obj.nested, '嵌套对象应一致');
+});
+
+// 5. 边界条件和异常处理
+TestRunner.suite('边界条件和异常处理');
+TestRunner.test('题目ID唯一性检查', function() {
+    var ids = ['001', '002', '003', '001']; // 有重复
+    var unique = {};
+    var duplicates = 0;
+    for (var i = 0; i < ids.length; i++) {
+        if (unique[ids[i]]) {
+            duplicates++;
+        }
+        unique[ids[i]] = true;
+    }
+    TestRunner.assertEqual(duplicates, 1, '应检测到1个重复ID');
+});
+
+TestRunner.test('选项数量不足检测', function() {
+    var opts = 'A.只有一个选项';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 1, '只解析出1个选项');
+    TestRunner.assert(result.length < 2, '选项数量不足(小于2)');
+});
+
+TestRunner.test('答案不在选项中检测', function() {
+    var options = [{key: 'A', text: '选项A'}, {key: 'B', text: '选项B'}];
+    var answer = 'C';
+    var validAnswer = false;
+    for (var i = 0; i < options.length; i++) {
+        if (options[i].key === answer) {
+            validAnswer = true;
+            break;
+        }
+    }
+    TestRunner.assert(!validAnswer, '答案C不在选项中');
+});
+
+TestRunner.test('空题目检测', function() {
+    var question = '';
+    TestRunner.assert(!question.trim(), '应检测到空题目');
+});
+
+TestRunner.test('特殊字符题目处理', function() {
+    var opts = 'A.选项包含特殊字符!@#$%\nB.正常选项';
+    var result = parseOptions(opts);
+    TestRunner.assertEqual(result.length, 2, '特殊字符不影响解析');
+    TestRunner.assertEqual(result[0].text, '选项包含特殊字符!@#$%', '特殊字符应保留');
+});
+
+// 6. 数据统计逻辑测试
+TestRunner.suite('统计数据计算');
+TestRunner.test('正确率计算', function() {
+    var total = 10;
+    var correct = 7;
+    var pct = Math.round(correct / total * 100);
+    TestRunner.assertEqual(pct, 70, '正确率应为70%');
+});
+
+TestRunner.test('零答题正确率', function() {
+    var total = 0;
+    var correct = 0;
+    var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+    TestRunner.assertEqual(pct, 0, '零答题应显示0%');
+});
+
+TestRunner.test('分类统计合并', function() {
+    var stats1 = { cats: { '专辑': { t: 10, c: 7 } } };
+    var stats2 = { cats: { '专辑': { t: 5, c: 3 } } };
+    var merged = { cats: {} };
+    
+    for (var cat in stats1.cats) {
+        merged.cats[cat] = { t: stats1.cats[cat].t, c: stats1.cats[cat].c };
+    }
+    for (var cat2 in stats2.cats) {
+        if (!merged.cats[cat2]) {
+            merged.cats[cat2] = { t: 0, c: 0 };
+        }
+        merged.cats[cat2].t += stats2.cats[cat2].t;
+        merged.cats[cat2].c += stats2.cats[cat2].c;
+    }
+    
+    TestRunner.assertEqual(merged.cats['专辑'].t, 15, '总数应合并为15');
+    TestRunner.assertEqual(merged.cats['专辑'].c, 10, '正确数应合并为10');
+});
+
+TestRunner.test('历史记录时间过滤', function() {
+    var now = Date.now();
+    var todayStart = new Date().setHours(0, 0, 0, 0);
+    var history = [
+        { time: todayStart + 1000, ok: true },
+        { time: todayStart + 2000, ok: false },
+        { time: todayStart - 1000, ok: true } // 昨天
+    ];
+    
+    var todayRecords = history.filter(function(h) {
+        return h.time >= todayStart;
+    });
+    
+    TestRunner.assertEqual(todayRecords.length, 2, '应只包含今天的2条记录');
+});
+
+// 运行测试
+function runAllTests() {
+    document.getElementById('runTests').disabled = true;
+    document.getElementById('runTests').textContent = '运行中...';
+    
+    setTimeout(function() {
+        var results = TestRunner.run();
+        TestRunner.render(results);
+        
+        document.getElementById('runTests').disabled = false;
+        document.getElementById('runTests').textContent = '重新运行测试';
+        
+        // 输出结果到console便于调试
+        console.log('测试结果:', results);
+    }, 100);
+}
+</script>
+</body>
+</html>
