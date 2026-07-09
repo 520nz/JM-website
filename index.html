@@ -881,10 +881,15 @@ function checkResetInput() {
 function resetQuestionBank() {
     QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
     localStorage.removeItem('jj_question_bank');
+    var userData = DB.defaults();
+    DB.save(userData);
     closeResetModal();
-    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目');
+    alert('已恢复为默认题库，共 ' + QUESTION_BANK.length + ' 道题目\n用户数据已同步重置');
     try { renderQuestionList(); } catch (e) {}
     try { updateCategoryFilter(); } catch (e) {}
+    try { updateHome(); } catch (e) {}
+    try { renderStats(); } catch (e) {}
+    try { renderWrongBook(); } catch (e) {}
 }
 
 window.addEventListener('DOMContentLoaded',function(){loadQuestionBank();updateHome();});
