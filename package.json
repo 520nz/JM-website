@@ -1,0 +1,13 @@
+{
+  "name": "jj-quiz",
+  "version": "1.0.0",
+  "description": "林俊杰题库答题系统",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
