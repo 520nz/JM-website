@@ -8,7 +8,7 @@ function esc(s) {
     if (s == null) return '';
     var d = document.createElement('div');
     d.textContent = String(s);
-    return d.innerHTML;
+    return d.innerHTML.replace(/'/g, '&#39;');
 }
 
 // --- 间隔重复：间隔时间表（毫秒） ---
@@ -237,11 +237,10 @@ var QuestionStore = (function() {
     }
 
     function reset() {
-        // 恢复默认：需要重新加载原始数据
+        // 恢复默认：从不可变的原始快照恢复
         localStorage.removeItem(QKEY);
-        // 重新从 data.js 获取原始数据
-        // 注意：DEFAULT_QUESTION_BANK 在 data.js 中已定义
-        QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+        QUESTION_BANK = ORIGINAL_QUESTION_BANK.slice();
+        DEFAULT_QUESTION_BANK = ORIGINAL_QUESTION_BANK.slice();
     }
 
     return {

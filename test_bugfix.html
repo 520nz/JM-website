@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>缺陷修复测试</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0e0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        h2 { margin-top: 24px; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        pre { background: #16213e; padding: 12px; border-radius: 6px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+<h1>缺陷修复测试</h1>
+<div id="results"></div>
+
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script>
+(function() {
+    var results = [];
+    function assert(condition, desc) {
+        var ok = !!condition;
+        results.push({
+            desc: desc,
+            pass: ok,
+            detail: ok ? '' : '  => 实际值: ' + JSON.stringify(condition)
+        });
+    }
+
+    // ==========================================
+    // Bug #1: QuestionStore.reset() 恢复默认失效
+    // ==========================================
+    results.push({ section: 'Bug #1: QuestionStore.reset() 恢复默认失效' });
+
+    // 记录原始题目数
+    var originalCount = ORIGINAL_QUESTION_BANK.length;
+    assert(originalCount === 78, 'ORIGINAL_QUESTION_BANK 应包含 78 道原始题目，实际: ' + originalCount);
+
+    // 模拟导入自定义题库
+    var customQ = { id: 'CUSTOM_001', category: '测试', question: '测试题', options: [{ key: 'A', text: 'A' }, { key: 'B', text: 'B' }], answer: 'A', explanation: '' };
+    QUESTION_BANK.push(customQ);
+    QuestionStore.save();
+    assert(QUESTION_BANK.length === 79, '导入自定义题目后 QUESTION_BANK 应为 79 道');
+
+    // 模拟页面刷新后 load() 覆盖 DEFAULT_QUESTION_BANK
+    QuestionStore.load();
+    assert(DEFAULT_QUESTION_BANK.length === 79, 'load() 后 DEFAULT_QUESTION_BANK 被覆盖为 79 道');
+
+    // 执行 reset()
+    QuestionStore.reset();
+    assert(QUESTION_BANK.length === 78, 'reset() 后 QUESTION_BANK 应恢复为 78 道原始题目，实际: ' + QUESTION_BANK.length);
+
+    // 验证恢复的确实是原始题目，不是自定义的
+    var hasCustom = QUESTION_BANK.some(function(q) { return q.id === 'CUSTOM_001'; });
+    assert(!hasCustom, 'reset() 后不应包含自定义题目 CUSTOM_001');
+
+    // 清理 localStorage
+    localStorage.removeItem('jj_question_bank');
+    QUESTION_BANK = ORIGINAL_QUESTION_BANK.slice();
+    DEFAULT_QUESTION_BANK = ORIGINAL_QUESTION_BANK.slice();
+
+    // ==========================================
+    // Bug #2: esc() 不转义单引号导致 XSS
+    // ==========================================
+    results.push({ section: 'Bug #2: esc() 不转义单引号导致 XSS' });
+
+    // 测试普通文本
+    assert(esc('hello') === 'hello', 'esc("hello") 应返回 "hello"');
+
+    // 测试 HTML 特殊字符
+    assert(esc('<b>test</b>') === '&lt;b&gt;test&lt;/b&gt;', 'esc 应转义 <> 为 HTML 实体');
+
+    // 测试单引号转义
+    var escaped = esc("test'value");
+    assert(escaped.indexOf("&#39;") !== -1, 'esc 应将单引号转义为 &#39;，实际: ' + escaped);
+    assert(escaped.indexOf("'") === -1, 'esc 转义后不应包含原始单引号');
+
+    // 测试在 onclick 属性上下文中的安全性
+    var maliciousId = "x' onclick='alert(1)";
+    var safeAttr = esc(maliciousId);
+    var onclickStr = "onclick=\"removeWrong('" + safeAttr + "')\"";
+    // 模拟浏览器解析：如果单引号未被转义，属性值会提前闭合
+    assert(safeAttr.indexOf("'") === -1, '恶意 id 中的单引号应被转义');
+    assert(onclickStr.indexOf("&#39;") !== -1, 'onclick 属性中应包含 &#39; 而非原始单引号');
+
+    // 测试双引号
+    var escapedDQ = esc('test"value');
+    assert(escapedDQ.indexOf('"') === -1 || escapedDQ.indexOf('&quot;') !== -1 || escapedDQ.indexOf('&amp;quot;') !== -1, '双引号应被转义');
+
+    // 测试 null/undefined
+    assert(esc(null) === '', 'esc(null) 应返回空字符串');
+    assert(esc(undefined) === '', 'esc(undefined) 应返回空字符串');
+
+    // ==========================================
+    // 输出结果
+    // ==========================================
+    var html = '';
+    var passCount = 0, failCount = 0;
+    for (var i = 0; i < results.length; i++) {
+        var r = results[i];
+        if (r.section) {
+            html += '<h2>' + r.desc + '</h2>';
+            continue;
+        }
+        if (r.pass) passCount++; else failCount++;
+        html += '<div class="' + (r.pass ? 'pass' : 'fail') + '">' +
+                (r.pass ? 'PASS' : 'FAIL') + ': ' + r.desc + (r.detail || '') + '</div>';
+    }
+    html += '<h2>总计: ' + passCount + ' 通过, ' + failCount + ' 失败</h2>';
+    document.getElementById('results').innerHTML = html;
+    document.title = failCount > 0 ? '(' + failCount + ' 失败) 缺陷修复测试' : '全部通过 - 缺陷修复测试';
+})();
+</script>
+</body>
+</html>

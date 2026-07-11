@@ -85,3 +85,4 @@ var QUESTION_BANK = [
 ];
 
 var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+var ORIGINAL_QUESTION_BANK = QUESTION_BANK.slice(); // 不可变的原始题库快照，用于恢复默认
