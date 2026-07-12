@@ -306,24 +306,25 @@ function discardSession() {
 
 // --- 键盘快捷键 ---
 function handleQuizKeydown(e) {
-    // 只在答题视图且未回答时响应
     var practiceView = document.getElementById('view-practice');
     if (!practiceView || !practiceView.classList.contains('active')) return;
 
+    if (!state.quiz || state.quiz.length === 0) return;
+
     if (state.answered) {
-        // 已回答，按空格/回车进入下一题
         if (e.key === ' ' || e.key === 'Enter') {
             e.preventDefault();
-            if (state.idx < state.quiz.length) nextQ();
+            if (state.idx < state.quiz.length - 1) nextQ();
         }
         return;
     }
 
-    // 未回答，按 A/B/C/D 选择
+    if (state.idx >= state.quiz.length) return;
+
     var key = e.key.toUpperCase();
     if (key >= 'A' && key <= 'D') {
         var q = state.quiz[state.idx];
-        if (q) {
+        if (q && q.options) {
             for (var i = 0; i < q.options.length; i++) {
                 if (q.options[i].key === key) {
                     pickOption(key);

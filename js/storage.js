@@ -239,9 +239,8 @@ var QuestionStore = (function() {
     function reset() {
         // 恢复默认：需要重新加载原始数据
         localStorage.removeItem(QKEY);
-        // 重新从 data.js 获取原始数据
-        // 注意：DEFAULT_QUESTION_BANK 在 data.js 中已定义
         QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+        save();
     }
 
     return {

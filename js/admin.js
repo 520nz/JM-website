@@ -131,6 +131,12 @@ function saveQuestion() {
         return;
     }
 
+    var validKeys = options.map(function(o) { return o.key; });
+    if (validKeys.indexOf(answer) === -1) {
+        alert('答案必须是选项中的一个（如A、B、C、D）');
+        return;
+    }
+
     if (!id) {
         // 新增
         var newId = 'q' + Date.now();
@@ -268,6 +274,7 @@ function importData(event) {
 
             // 关键修复：不直接累加 stats，而是从 history 重新计算
             DB.recalcStats();
+            DB.save();
         }
 
         var msg = '数据导入成功！';
