@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试运行器</title>
+    <style>
+        body { font-family: monospace; max-width: 800px; margin: 0 auto; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .header { padding: 10px; background: #2d2d2d; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 18px; }
+        .test-section { margin-bottom: 20px; padding: 10px; background: #2d2d2d; }
+        .test-section h2 { margin: 0 0 10px 0; font-size: 14px; color: #4ec9b0; }
+        .result { margin: 5px 0; padding: 5px; font-size: 12px; }
+        .result.pass { color: #6a9955; background: rgba(106, 153, 85, 0.1); }
+        .result.fail { color: #f14c4c; background: rgba(241, 76, 76, 0.1); }
+        .summary { padding: 15px; background: #2d2d2d; margin-top: 20px; border-top: 2px solid #4ec9b0; }
+        .summary .stats { font-size: 14px; margin-bottom: 10px; }
+        .summary .total { font-size: 18px; font-weight: bold; }
+        .summary .pass { color: #6a9955; }
+        .summary .fail { color: #f14c4c; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 测试运行器</h1>
+    </div>
+
+    <div id="storageTests" class="test-section">
+        <h2>storage.js 测试</h2>
+    </div>
+
+    <div id="quizTests" class="test-section">
+        <h2>quiz.js 测试</h2>
+    </div>
+
+    <div id="adminTests" class="test-section">
+        <h2>admin.js 测试</h2>
+    </div>
+
+    <div class="summary">
+        <div class="stats">
+            <span class="total">总测试数: <span id="totalCount">0</span></span>
+            <span class="pass"> | 通过: <span id="passCount">0</span></span>
+            <span class="fail"> | 失败: <span id="failCount">0</span></span>
+        </div>
+        <div id="summaryText"></div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/tests/storage.test.js"></script>
+    <script src="js/tests/quiz.test.js"></script>
+    <script src="js/tests/admin.test.js"></script>
+    <script>
+        document.getElementById('totalCount').textContent = '请查看控制台输出';
+        document.getElementById('passCount').textContent = '请查看控制台输出';
+        document.getElementById('failCount').textContent = '请查看控制台输出';
+        document.getElementById('summaryText').textContent = '测试结果已输出到浏览器控制台，请按 F12 查看';
+        document.getElementById('summaryText').style.color = '#4ec9b0';
+    </script>
+</body>
+</html>
