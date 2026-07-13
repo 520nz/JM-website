@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试套件 - JJ Quiz App</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 { color: #333; margin-bottom: 10px; }
+        .summary {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .summary .passed { color: #22c55e; font-weight: bold; }
+        .summary .failed { color: #ef4444; font-weight: bold; }
+        .summary .skipped { color: #f59e0b; font-weight: bold; }
+        .test-group {
+            background: #fff;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-group-header {
+            padding: 12px 15px;
+            background: #f8f8f8;
+            border-bottom: 1px solid #eee;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+        .test-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .test-item:last-child { border-bottom: none; }
+        .test-item.pass { background: #f0fdf4; }
+        .test-item.fail { background: #fef2f2; }
+        .test-item.skip { background: #fffbeb; }
+        .test-name { font-weight: 500; }
+        .test-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .test-status.pass { background: #22c55e; color: white; }
+        .test-status.fail { background: #ef4444; color: white; }
+        .test-status.skip { background: #f59e0b; color: white; }
+        .test-error {
+            margin-top: 8px;
+            color: #dc2626;
+            font-size: 13px;
+            white-space: pre-wrap;
+            background: #fee2e2;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .run-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .run-btn:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>🧪 JJ Quiz App 测试套件</h1>
+    <div class="summary">
+        <button class="run-btn" onclick="TestRunner.runAll()">运行全部测试</button>
+        <div id="summaryContent" style="margin-top: 15px;"></div>
+    </div>
+    <div id="testResults"></div>
+
+    <!-- 加载生产代码 -->
+    <script src="../js/data.js"></script>
+    <script src="../js/storage.js"></script>
+
+    <!-- 模拟 quiz.js 和 admin.js 的依赖 -->
+    <script>
+        // 确保 DEFAULT_QUESTION_BANK 存在（data.js 中定义）
+        if (typeof DEFAULT_QUESTION_BANK === 'undefined') {
+            DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+        }
+        
+        // 模拟 QuestionStore（admin.js 中定义）
+        var QuestionStore = (function() {
+            var QKEY = 'jj_question_bank';
+            return {
+                save: function() { localStorage.setItem(QKEY, JSON.stringify(QUESTION_BANK)); },
+                load: function() {
+                    var saved = localStorage.getItem(QKEY);
+                    if (saved) {
+                        try { QUESTION_BANK = JSON.parse(saved); } catch(e) {}
+                    }
+                },
+                reset: function() {
+                    localStorage.removeItem(QKEY);
+                    QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+                }
+            };
+        })();
+    </script>
+
+    <!-- 加载测试文件 -->
+    <script src="test-storage.js"></script>
+    <script src="test-quiz.js"></script>
+    <script src="test-admin.js"></script>
+
+    <!-- 测试运行器 -->
+    <script>
+        var TestRunner = {
+            results: [],
+            
+            // 注册测试组
+            groups: {},
+            
+            register: function(name, tests) {
+                this.groups[name] = tests;
+            },
+            
+            // 运行单个测试
+            runTest: function(testName, testFn) {
+                try {
+                    testFn();
+                    return { name: testName, status: 'pass', error: null };
+                } catch (e) {
+                    return { name: testName, status: 'fail', error: e.message || String(e) };
+                }
+            },
+            
+            // 运行所有测试
+            runAll: function() {
+                this.results = [];
+                var passed = 0, failed = 0, skipped = 0;
+                
+                // 清除存储数据
+                try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    if (DB.clearCache) DB.clearCache();
+                } catch(e) {}
+                
+                for (var groupName in this.groups) {
+                    var tests = this.groups[groupName];
+                    var groupResults = { name: groupName, tests: [] };
+                    var groupPassed = 0, groupFailed = 0;
+                    
+                    for (var testName in tests) {
+                        if (tests[testName] === null) {
+                            groupResults.tests.push({ name: testName, status: 'skip', error: '跳过' });
+                            skipped++;
+                        } else {
+                            var result = this.runTest(testName, tests[testName]);
+                            groupResults.tests.push(result);
+                            if (result.status === 'pass') { passed++; groupPassed++; }
+                            else { failed++; groupFailed++; }
+                        }
+                    }
+                    groupResults.passed = groupPassed;
+                    groupResults.failed = groupFailed;
+                    this.results.push(groupResults);
+                }
+                
+                this.render(passed, failed, skipped);
+            },
+            
+            // 渲染结果
+            render: function(passed, failed, skipped) {
+                var summaryHtml = '<strong>总计: </strong>' +
+                    '<span class="passed">' + passed + ' 通过</span>, ' +
+                    '<span class="failed">' + failed + ' 失败</span>, ' +
+                    '<span class="skipped">' + skipped + ' 跳过</span>';
+                document.getElementById('summaryContent').innerHTML = summaryHtml;
+                
+                var resultsHtml = '';
+                for (var i = 0; i < this.results.length; i++) {
+                    var group = this.results[i];
+                    resultsHtml += '<div class="test-group">' +
+                        '<div class="test-group-header">' +
+                        '<span>' + group.name + '</span>' +
+                        '<span>' + group.passed + '/' + (group.passed + group.failed) + '</span>' +
+                        '</div>';
+                    
+                    for (var j = 0; j < group.tests.length; j++) {
+                        var test = group.tests[j];
+                        resultsHtml += '<div class="test-item ' + test.status + '">' +
+                            '<span class="test-name">' + test.name + '</span>' +
+                            '<span class="test-status ' + test.status + '">' +
+                            (test.status === 'pass' ? '✓ 通过' : test.status === 'fail' ? '✗ 失败' : '⊘ 跳过') +
+                            '</span>';
+                        if (test.error) {
+                            resultsHtml += '<div class="test-error">' + test.error + '</div>';
+                        }
+                        resultsHtml += '</div>';
+                    }
+                    resultsHtml += '</div>';
+                }
+                document.getElementById('testResults').innerHTML = resultsHtml;
+            }
+        };
+        
+        // 断言工具
+        function assertEqual(actual, expected, msg) {
+            if (actual !== expected) {
+                throw new Error((msg || '') + ' 期望: ' + JSON.stringify(expected) + ', 实际: ' + JSON.stringify(actual));
+            }
+        }
+        
+        function assertDeepEqual(actual, expected, msg) {
+            var actualStr = JSON.stringify(actual);
+            var expectedStr = JSON.stringify(expected);
+            if (actualStr !== expectedStr) {
+                throw new Error((msg || '') + ' 期望: ' + expectedStr + ', 实际: ' + actualStr);
+            }
+        }
+        
+        function assertTrue(value, msg) {
+            if (!value) throw new Error(msg || '期望 true，实际 false');
+        }
+        
+        function assertFalse(value, msg) {
+            if (value) throw new Error(msg || '期望 false，实际 true');
+        }
+        
+        function assertThrows(fn, msg) {
+            try {
+                fn();
+                throw new Error(msg || '期望抛出异常，但未抛出');
+            } catch (e) {
+                // 成功捕获异常
+            }
+        }
+        
+        function assertNoThrow(fn, msg) {
+            try {
+                fn();
+            } catch (e) {
+                throw new Error(msg || '期望不抛出异常，但抛出了: ' + e.message);
+            }
+        }
+        
+        // 自动运行测试
+        window.onload = function() {
+            TestRunner.runAll();
+        };
+    </script>
+</body>
+</html>
