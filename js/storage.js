@@ -231,7 +231,6 @@ var QuestionStore = (function() {
         if (saved) {
             try {
                 QUESTION_BANK = JSON.parse(saved);
-                DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
             } catch (e) {}
         }
     }
