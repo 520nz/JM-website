@@ -235,9 +235,24 @@ function importData(event) {
         if (data.userData) {
             var existingData = DB.get();
 
-            // 合并答题历史
+            // 合并答题历史（去重，基于 qid + time 作为唯一标识）
             if (data.userData.history) {
-                existingData.history = existingData.history.concat(data.userData.history);
+                var historyMap = {};
+                // 先建立现有记录的索引
+                for (var h = 0; h < existingData.history.length; h++) {
+                    var rec = existingData.history[h];
+                    var key = rec.qid + '_' + rec.time;
+                    historyMap[key] = rec;
+                }
+                // 合并导入的记录
+                for (var i = 0; i < data.userData.history.length; i++) {
+                    var importedRec = data.userData.history[i];
+                    var key = importedRec.qid + '_' + importedRec.time;
+                    if (!historyMap[key]) {
+                        existingData.history.push(importedRec);
+                        historyMap[key] = importedRec;
+                    }
+                }
             }
 
             // 合并错题本（含间隔重复数据）

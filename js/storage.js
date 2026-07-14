@@ -221,6 +221,18 @@ var DB = (function() {
 // --- 题库存储（管理页面用） ---
 var QuestionStore = (function() {
     var QKEY = 'jj_question_bank';
+    // 保存原始默认题库的深拷贝，防止被污染
+    var ORIGINAL_DEFAULT = [];
+    
+    // 初始化时立即保存原始默认题库
+    function initOriginal() {
+        if (ORIGINAL_DEFAULT.length === 0 && typeof DEFAULT_QUESTION_BANK !== 'undefined') {
+            ORIGINAL_DEFAULT = DEFAULT_QUESTION_BANK.slice();
+        }
+    }
+    
+    // 模块加载时立即调用
+    initOriginal();
 
     function save() {
         localStorage.setItem(QKEY, JSON.stringify(QUESTION_BANK));
@@ -231,17 +243,21 @@ var QuestionStore = (function() {
         if (saved) {
             try {
                 QUESTION_BANK = JSON.parse(saved);
-                DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+                // 注意：不再污染 DEFAULT_QUESTION_BANK
             } catch (e) {}
         }
     }
 
     function reset() {
-        // 恢复默认：需要重新加载原始数据
+        // 恢复默认：删除自定义题库
         localStorage.removeItem(QKEY);
-        // 重新从 data.js 获取原始数据
-        // 注意：DEFAULT_QUESTION_BANK 在 data.js 中已定义
-        QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+        // 使用保存的原始默认题库
+        if (ORIGINAL_DEFAULT.length > 0) {
+            QUESTION_BANK = ORIGINAL_DEFAULT.slice();
+        } else if (typeof DEFAULT_QUESTION_BANK !== 'undefined') {
+            // 兜底：如果原始副本未初始化，使用当前的 DEFAULT_QUESTION_BANK
+            QUESTION_BANK = DEFAULT_QUESTION_BANK.slice();
+        }
     }
 
     return {

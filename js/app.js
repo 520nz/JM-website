@@ -46,12 +46,16 @@ function switchView(v) {
 
 // --- 首页数据更新 ---
 function updateHome() {
+    var todayCountEl = document.getElementById('todayCount');
+    var todayAccEl = document.getElementById('todayAcc');
+    if (!todayCountEl || !todayAccEl) return;
+    
     var d = DB.get();
     var today = new Date().setHours(0, 0, 0, 0);
     var th = d.history.filter(function(h) { return h.time >= today; });
-    document.getElementById('todayCount').textContent = th.length;
+    todayCountEl.textContent = th.length;
     var acc = th.length > 0 ? Math.round(th.filter(function(h) { return h.ok; }).length / th.length * 100) : 0;
-    document.getElementById('todayAcc').textContent = acc + '%';
+    todayAccEl.textContent = acc + '%';
 }
 
 // --- 错题本渲染（含间隔重复信息） ---
@@ -59,6 +63,8 @@ function renderWrongBook() {
     var wl = DB.getWrong();
     var el = document.getElementById('wrongBookList');
     var btn = document.getElementById('wrongBookBtn');
+    
+    if (!el || !btn) return;
 
     if (wl.length === 0) {
         el.innerHTML = '<div class="empty"><p>暂无错题记录</p><p style="font-size:13px;margin-top:8px;">答错的题目会自动加入这里</p></div>';
@@ -112,14 +118,21 @@ function removeWrong(qid) {
 
 // --- 统计页渲染 ---
 function renderStats() {
-    var d = DB.get();
-    document.getElementById('sTotal').textContent = d.stats.total;
-    document.getElementById('sCorrect').textContent = d.stats.correct;
-    var acc = d.stats.total > 0 ? Math.round(d.stats.correct / d.stats.total * 100) : 0;
-    document.getElementById('sAcc').textContent = acc + '%';
-    document.getElementById('sWrong').textContent = d.wrong.length;
-
+    var sTotalEl = document.getElementById('sTotal');
+    var sCorrectEl = document.getElementById('sCorrect');
+    var sAccEl = document.getElementById('sAcc');
+    var sWrongEl = document.getElementById('sWrong');
     var catEl = document.getElementById('catStats');
+    
+    if (!sTotalEl || !sCorrectEl || !sAccEl || !sWrongEl || !catEl) return;
+    
+    var d = DB.get();
+    sTotalEl.textContent = d.stats.total;
+    sCorrectEl.textContent = d.stats.correct;
+    var acc = d.stats.total > 0 ? Math.round(d.stats.correct / d.stats.total * 100) : 0;
+    sAccEl.textContent = acc + '%';
+    sWrongEl.textContent = d.wrong.length;
+
     var cats = d.stats.cats;
     var keys = Object.keys(cats);
     if (keys.length === 0) {

@@ -199,17 +199,23 @@ function pickOption(key) {
     // 更新选项样式
     for (var i = 0; i < q.options.length; i++) {
         var el = document.getElementById('opt-' + q.options[i].key);
-        el.classList.add('disabled');
-        if (q.options[i].key === q.answer) el.classList.add('correct');
-        else if (q.options[i].key === key && !ok) el.classList.add('wrong');
+        if (el) {
+            el.classList.add('disabled');
+            if (q.options[i].key === q.answer) el.classList.add('correct');
+            else if (q.options[i].key === key && !ok) el.classList.add('wrong');
+        }
     }
 
     // 显示反馈
     var fb = document.getElementById('fb');
-    fb.className = 'feedback show ' + (ok ? 'correct' : 'wrong');
-    document.getElementById('fbTitle').textContent = ok ? '✓ 回答正确！' : '✗ 回答错误';
-    document.getElementById('fbDesc').textContent = q.explanation;
-    document.getElementById('nextBtn').style.display = 'inline-block';
+    var fbTitle = document.getElementById('fbTitle');
+    var fbDesc = document.getElementById('fbDesc');
+    var nextBtn = document.getElementById('nextBtn');
+    
+    if (fb) fb.className = 'feedback show ' + (ok ? 'correct' : 'wrong');
+    if (fbTitle) fbTitle.textContent = ok ? '✓ 回答正确！' : '✗ 回答错误';
+    if (fbDesc) fbDesc.textContent = q.explanation;
+    if (nextBtn) nextBtn.style.display = 'inline-block';
 }
 
 // --- 下一题 / 退出 / 完成 ---

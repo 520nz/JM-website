@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>测试重置功能修复</title>
+</head>
+<body>
+    <h1>测试: DEFAULT_QUESTION_BANK 重置功能</h1>
+    <div id="results"></div>
+
+    <script src="js/data.js"></script>
+    <script>
+        // 测试1：验证 DEFAULT_QUESTION_BANK 独立性
+        function test1() {
+            var originalLength = QUESTION_BANK.length;
+            var defaultLength = DEFAULT_QUESTION_BANK.length;
+            
+            // 修改 QUESTION_BANK
+            QUESTION_BANK.push({id: 'test1', category: '测试', question: '测试题', options: [], answer: 'A', explanation: ''});
+            
+            var result = (QUESTION_BANK.length === originalLength + 1) && 
+                         (DEFAULT_QUESTION_BANK.length === defaultLength);
+            
+            return {
+                name: '测试1: QUESTION_BANK 和 DEFAULT_QUESTION_BANK 独立性',
+                passed: result,
+                details: result ? '通过 - 修改 QUESTION_BANK 不影响 DEFAULT_QUESTION_BANK' : '失败'
+            };
+        }
+        
+        // 测试2：验证 slice() 创建的是浅拷贝，但基础数据独立
+        function test2() {
+            var arr1 = DEFAULT_QUESTION_BANK.slice();
+            var arr2 = DEFAULT_QUESTION_BANK.slice();
+            
+            arr1.push({id: 'test2'});
+            
+            var result = arr1.length !== arr2.length;
+            
+            return {
+                name: '测试2: slice() 创建独立数组',
+                passed: result,
+                details: result ? '通过 - slice() 创建了独立副本' : '失败'
+            };
+        }
+        
+        // 运行测试
+        window.onload = function() {
+            var results = [];
+            
+            results.push(test1());
+            results.push(test2());
+            
+            var html = '<ul>';
+            results.forEach(function(r) {
+                html += '<li style="color: ' + (r.passed ? 'green' : 'red') + '; margin: 10px 0;">';
+                html += '<strong>' + r.name + '</strong>: ' + (r.passed ? '✓ 通过' : '✗ 失败');
+                html += '<br><small>' + r.details + '</small>';
+                html += '</li>';
+            });
+            html += '</ul>';
+            
+            var allPassed = results.every(function(r) { return r.passed; });
+            html += '<h2 style="color: ' + (allPassed ? 'green' : 'red') + '">';
+            html += allPassed ? '所有测试通过 ✓' : '存在失败的测试 ✗';
+            html += '</h2>';
+            
+            document.getElementById('results').innerHTML = html;
+        };
+    </script>
+</body>
+</html>
