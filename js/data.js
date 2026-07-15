@@ -1,5 +1,7 @@
 // 题库数据 - 从 index.html 分离
-var QUESTION_BANK = [
+var App = window.App || {};
+
+App.QUESTION_BANK = [
 // ===== 专辑 - 15题 =====
 {id:"001",category:"专辑",question:"林俊杰首张专辑《乐行者》发行于哪一天？",options:[{key:"A",text:"2003年4月1日"},{key:"B",text:"2003年4月10日"},{key:"C",text:"2003年5月1日"},{key:"D",text:"2003年5月10日"}],answer:"B",explanation:"《乐行者》于2003年4月10日正式发行，这也是林俊杰的出道专辑。"},
 {id:"005",category:"专辑",question:"《第二天堂》（俗称《江南》专辑）发行于哪一年？",options:[{key:"A",text:"2003年"},{key:"B",text:"2004年"},{key:"C",text:"2005年"},{key:"D",text:"2006年"}],answer:"B",explanation:"《第二天堂》于2004年6月4日发行，包含热门歌曲《江南》。"},
@@ -84,4 +86,4 @@ var QUESTION_BANK = [
 {id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"}
 ];
 
-var DEFAULT_QUESTION_BANK = QUESTION_BANK.slice();
+App.DEFAULT_QUESTION_BANK = App.QUESTION_BANK.slice();

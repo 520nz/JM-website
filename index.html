@@ -6,6 +6,7 @@
     <title>林俊杰粉丝答题</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+    <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
 </head>
 <body>
     <div class="container">
@@ -14,28 +15,28 @@
             <p style="color:var(--text2);font-size:14px;">为演唱会答题做准备</p>
         </header>
         <nav class="nav">
-            <button type="button" class="nav-item active" onclick="switchView('home')">首页</button>
-            <button type="button" class="nav-item" onclick="switchView('practice')">练习</button>
-            <button type="button" class="nav-item" onclick="switchView('wrongbook')">错题本</button>
-            <button type="button" class="nav-item" onclick="switchView('stats')">统计</button>
-            <button type="button" class="nav-item" onclick="switchView('admin')">管理</button>
+            <button type="button" class="nav-item active" data-view="home" onclick="App.switchView('home')">首页</button>
+            <button type="button" class="nav-item" data-view="practice" onclick="App.switchView('practice')">练习</button>
+            <button type="button" class="nav-item" data-view="wrongbook" onclick="App.switchView('wrongbook')">错题本</button>
+            <button type="button" class="nav-item" data-view="stats" onclick="App.switchView('stats')">统计</button>
+            <button type="button" class="nav-item" data-view="admin" onclick="App.switchView('admin')">管理</button>
         </nav>
         <div class="view active" id="view-home">
             <div class="card">
                 <h3 style="margin-bottom:12px;">开始练习</h3>
                 <div class="mode-selector">
-                    <div class="mode-btn active" data-mode="quick" onclick="selectMode('quick')">
+                    <div class="mode-btn active" data-mode="quick" onclick="App.selectMode('quick')">
                         <div class="label">快速</div><div class="desc">10题</div>
                     </div>
-                    <div class="mode-btn" data-mode="standard" onclick="selectMode('standard')">
+                    <div class="mode-btn" data-mode="standard" onclick="App.selectMode('standard')">
                         <div class="label">标准</div><div class="desc">20题</div>
                     </div>
-                    <div class="mode-btn" data-mode="intensive" onclick="selectMode('intensive')">
+                    <div class="mode-btn" data-mode="intensive" onclick="App.selectMode('intensive')">
                         <div class="label">强化</div><div class="desc">30题</div>
                     </div>
                 </div>
-                <button class="btn" style="margin-top:20px;" onclick="startRandomQuiz()">随机练习</button>
-                <button class="btn btn-outline" onclick="showCategoryView()">分类练习</button>
+                <button class="btn" style="margin-top:20px;" onclick="App.startRandomQuiz()">随机练习</button>
+                <button class="btn btn-outline" onclick="App.showCategoryView()">分类练习</button>
             </div>
             <div class="card">
                 <h3 style="margin-bottom:12px;">今日数据</h3>
@@ -51,13 +52,13 @@
                     <div style="font-size:48px;margin-bottom:16px;">📝</div>
                     <h3 style="margin-bottom:12px;">请先开始答题</h3>
                     <p style="color:var(--text2);margin-bottom:20px;">点击下方按钮开始练习</p>
-                    <button class="btn" style="max-width:200px;margin:0 auto;" onclick="switchView('home')">去首页开始</button>
+                    <button class="btn" style="max-width:200px;margin:0 auto;" onclick="App.switchView('home')">去首页开始</button>
                 </div>
             </div>
         </div>
         <div class="view" id="view-wrongbook">
             <div class="card"><h3 style="margin-bottom:12px;">错题本</h3><div id="wrongBookList"><div class="empty"><p>暂无错题记录</p></div></div></div>
-            <button class="btn" id="wrongBookBtn" onclick="startWrongBookQuiz()" style="display:none;">开始复习</button>
+            <button class="btn" id="wrongBookBtn" onclick="App.startWrongBookQuiz()" style="display:none;">开始复习</button>
         </div>
         <div class="view" id="view-stats">
             <div class="card">
@@ -70,13 +71,17 @@
                 </div>
             </div>
             <div class="card">
+                <h3 style="margin-bottom:12px;">答题趋势（近14天）</h3>
+                <canvas id="trendChart" style="width:100%;"></canvas>
+            </div>
+            <div class="card">
                 <h3 style="margin-bottom:12px;">分类正确率</h3>
                 <div id="catStats"><div class="empty"><p>暂无数据</p></div></div>
             </div>
         </div>
         <div class="view" id="view-category">
             <div class="card"><h3 style="margin-bottom:12px;">选择分类</h3><div class="category-list" id="categoryList"></div></div>
-            <button class="btn btn-outline" style="margin-top:12px;" onclick="switchView('home')">返回首页</button>
+            <button class="btn btn-outline" style="margin-top:12px;" onclick="App.switchView('home')">返回首页</button>
         </div>
         <!-- 管理视图 -->
         <div class="view" id="view-admin">
@@ -84,23 +89,23 @@
                 <h3 style="margin-bottom:12px;">数据管理</h3>
                 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button class="btn btn-outline btn-sm" onclick="exportData()">📤 导出数据</button>
+                        <button class="btn btn-outline btn-sm" onclick="App.exportData()">📤 导出数据</button>
                         <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">📥 导入数据</button>
-                        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+                        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="App.importData(event)">
                     </div>
-                    <button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="showResetConfirm()">🔄 重置</button>
+                    <button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="App.showResetConfirm()">🔄 重置</button>
                 </div>
             </div>
             <div class="card">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <h3>题库管理</h3>
-                    <button class="btn btn-sm" onclick="showAddForm()">+ 新增题目</button>
+                    <button class="btn btn-sm" onclick="App.showAddForm()">+ 新增题目</button>
                 </div>
                 <div style="margin-bottom:12px;display:flex;gap:10px;">
-                    <select id="categoryFilter" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);min-width:100px;" onchange="filterQuestions()">
+                    <select id="categoryFilter" style="padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--bg);color:var(--text);min-width:100px;" onchange="App.filterQuestions()">
                         <option value="">全部类别</option>
                     </select>
-                    <input type="text" id="searchInput" placeholder="搜索题目..." style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;" oninput="filterQuestions()">
+                    <input type="text" id="searchInput" placeholder="搜索题目..." style="flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;" oninput="App.filterQuestions()">
                 </div>
                 <div id="questionList" style="max-height:400px;overflow-y:auto;"></div>
             </div>
@@ -137,8 +142,8 @@
                     <textarea id="editExplanation" rows="2" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;resize:vertical;"></textarea>
                 </div>
                 <div style="display:flex;gap:10px;">
-                    <button class="btn" onclick="saveQuestion()">保存</button>
-                    <button class="btn btn-outline" onclick="closeModal()">取消</button>
+                    <button class="btn" onclick="App.saveQuestion()">保存</button>
+                    <button class="btn btn-outline" onclick="App.closeModal()">取消</button>
                 </div>
             </div>
         </div>
@@ -148,10 +153,10 @@
                 <h3 style="margin-bottom:16px;color:var(--error);">⚠️ 确认恢复默认题库</h3>
                 <p style="margin-bottom:16px;color:var(--text2);font-size:14px;">此操作将删除所有自定义题目，恢复为初始的78道默认题目。</p>
                 <p style="margin-bottom:16px;color:var(--text);font-size:14px;">请输入 <strong style="color:var(--primary);">恢复默认</strong> 以确认操作：</p>
-                <input type="text" id="resetConfirmInput" placeholder="请输入：恢复默认" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:16px;" oninput="checkResetInput()">
+                <input type="text" id="resetConfirmInput" placeholder="请输入：恢复默认" style="width:100%;padding:12px;border:2px solid var(--border);border-radius:8px;font-size:14px;margin-bottom:16px;" oninput="App.checkResetInput()">
                 <div style="display:flex;gap:10px;">
-                    <button class="btn" id="resetConfirmBtn" style="background:var(--error);opacity:0.5;pointer-events:none;" onclick="resetQuestionBank()">确认恢复</button>
-                    <button class="btn btn-outline" onclick="closeResetModal()">取消</button>
+                    <button class="btn" id="resetConfirmBtn" style="background:var(--error);opacity:0.5;pointer-events:none;" onclick="App.resetQuestionBank()">确认恢复</button>
+                    <button class="btn btn-outline" onclick="App.closeResetModal()">取消</button>
                 </div>
             </div>
         </div>
@@ -160,6 +165,7 @@
     <script src="js/data.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/quiz.js"></script>
+    <script src="js/chart.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
 </body>
