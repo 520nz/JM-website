@@ -130,12 +130,47 @@ function defaults() {
     };
 }
 
-// 从 IndexedDB 加载用户数据到内存缓存，返回 Promise
+function migrateFromLocalStorage() {
+    try {
+        var lsData = localStorage.getItem('jj_quiz_data');
+        if (!lsData) return null;
+        var parsed = JSON.parse(lsData);
+        if (parsed.history || parsed.wrong || parsed.stats) {
+            if (!parsed.stats) parsed.stats = { total: 0, correct: 0, cats: {} };
+            if (!parsed.history) parsed.history = [];
+            if (!parsed.wrong) parsed.wrong = [];
+            for (var i = 0; i < parsed.wrong.length; i++) {
+                var w = parsed.wrong[i];
+                if (w.level == null) w.level = 0;
+                if (!w.nextReview) w.nextReview = Date.now();
+                if (!w.lastReview) w.lastReview = 0;
+                if (!w.time) w.time = Date.now();
+            }
+            return parsed;
+        }
+    } catch (e) {}
+    return null;
+}
+
 function init() {
     return getDB().then(function() {
         return idbGet(STORE_USER, USER_DATA_ID);
     }).then(function(row) {
-        _cache = (row && row.data) ? row.data : defaults();
+        if (row && row.data) {
+            _cache = row.data;
+        } else {
+            var migrated = migrateFromLocalStorage();
+            if (migrated) {
+                _cache = migrated;
+                recalcStats();
+                idbPut(STORE_USER, { id: USER_DATA_ID, data: _cache }).catch(function(err) {
+                    console.error('[App.db] migration persist failed:', err);
+                });
+                try { localStorage.removeItem('jj_quiz_data'); } catch (e) {}
+            } else {
+                _cache = defaults();
+            }
+        }
         return _cache;
     });
 }
