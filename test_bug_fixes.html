@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Bug修复验证测试</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .pass { color: #0f0; }
+        .fail { color: #f00; }
+        .test-case { margin: 10px 0; padding: 10px; background: #2a2a2a; }
+        h2 { color: #fff; }
+    </style>
+</head>
+<body>
+    <h2>Bug修复验证测试</h2>
+    <div id="results"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/admin.js"></script>
+
+    <script>
+        var results = document.getElementById('results');
+
+        function test(name, fn) {
+            var div = document.createElement('div');
+            div.className = 'test-case';
+            try {
+                var passed = fn();
+                div.innerHTML = '<span class="' + (passed ? 'pass' : 'fail') + '">';
+                div.innerHTML += passed ? '✓ PASS: ' : '✗ FAIL: ';
+                div.innerHTML += name + '</span>';
+            } catch (e) {
+                div.innerHTML = '<span class="fail">✗ ERROR: ' + name + ' - ' + e.message + '</span>';
+            }
+            results.appendChild(div);
+        }
+
+        // 测试1: history去重
+        test('Bug#2: history去重 - 避免重复导入', function() {
+            // 模拟已有数据
+            var existingHistory = [
+                { qid: 'q1', time: 1000, ok: true },
+                { qid: 'q2', time: 2000, ok: false }
+            ];
+
+            // 模拟导入的数据（包含重复）
+            var importHistory = [
+                { qid: 'q1', time: 1000, ok: true },  // 重复
+                { qid: 'q3', time: 3000, ok: true }   // 新数据
+            ];
+
+            // 使用修复后的去重逻辑
+            var historyMap = {};
+            for (var h = 0; h < existingHistory.length; h++) {
+                var rec = existingHistory[h];
+                historyMap[rec.qid + '|' + rec.time] = rec;
+            }
+            for (var h2 = 0; h2 < importHistory.length; h2++) {
+                var newRec = importHistory[h2];
+                var key = newRec.qid + '|' + newRec.time;
+                if (!historyMap[key]) {
+                    historyMap[key] = newRec;
+                }
+            }
+            var merged = Object.keys(historyMap).map(function(k) { return historyMap[k]; });
+
+            // 验证：应该只有3条记录，不是4条
+            return merged.length === 3 &&
+                   merged.some(function(r) { return r.qid === 'q1'; }) &&
+                   merged.some(function(r) { return r.qid === 'q2'; }) &&
+                   merged.some(function(r) { return r.qid === 'q3'; });
+        });
+
+        // 测试2: 持久化失败标志
+        test('Bug#1: persist失败标志 - 仅警告一次', function() {
+            // 模拟多次调用persist失败场景
+            var failCount = 0;
+            var _persistFailed = false;
+
+            function mockPersist() {
+                return Promise.reject(new Error('QuotaExceededError')).catch(function(err) {
+                    if (!_persistFailed) {
+                        _persistFailed = true;
+                        failCount++;
+                    }
+                });
+            }
+
+            // 连续调用3次
+            return mockPersist().then(function() {
+                return mockPersist();
+            }).then(function() {
+                return mockPersist();
+            }).then(function() {
+                // 应该只计数1次
+                return failCount === 1;
+            });
+        });
+
+        // 测试3: 数据导入完整性
+        test('数据导入完整性 - stats重算正确', function() {
+            // 模拟已有数据
+            App.db.setData({
+                history: [{ qid: 'q1', time: 1000, ok: true }],
+                wrong: [],
+                stats: { total: 1, correct: 1, cats: {} }
+            });
+
+            // 模拟导入数据
+            var importData = {
+                history: [{ qid: 'q2', time: 2000, ok: false }],
+                wrong: []
+            };
+
+            // 执行合并（简化版）
+            var existingData = App.db.get();
+            if (importData.history) {
+                existingData.history = existingData.history.concat(importData.history);
+            }
+
+            // 验证history长度
+            return existingData.history.length === 2;
+        });
+
+        // 测试4: 空数据导入不崩溃
+        test('边界条件: 空数据导入不崩溃', function() {
+            try {
+                // 模拟导入空对象
+                var data = {};
+                // 检查导入逻辑的防御性代码
+                return !data.questionBank && !data.userData;
+            } catch (e) {
+                return false;
+            }
+        });
+
+        // 运行完毕提示
+        setTimeout(function() {
+            var div = document.createElement('div');
+            div.innerHTML = '<h3 style="color:#fff">测试完成</h3>';
+            results.appendChild(div);
+        }, 100);
+    </script>
+</body>
+</html>

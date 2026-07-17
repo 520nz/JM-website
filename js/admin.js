@@ -238,9 +238,23 @@ var App = window.App || {};
             if (data.userData) {
                 var existingData = A.db.get();
 
-                // 合并答题历史
+                // 合并答题历史（去重）
                 if (data.userData.history) {
-                    existingData.history = existingData.history.concat(data.userData.history);
+                    // 创建去重 map，key = qid + '|' + time
+                    var historyMap = {};
+                    for (var h = 0; h < existingData.history.length; h++) {
+                        var rec = existingData.history[h];
+                        historyMap[rec.qid + '|' + rec.time] = rec;
+                    }
+                    // 合并新数据，跳过重复记录
+                    for (var h2 = 0; h2 < data.userData.history.length; h2++) {
+                        var newRec = data.userData.history[h2];
+                        var key = newRec.qid + '|' + newRec.time;
+                        if (!historyMap[key]) {
+                            historyMap[key] = newRec;
+                        }
+                    }
+                    existingData.history = Object.keys(historyMap).map(function(k) { return historyMap[k]; });
                 }
 
                 // 合并错题本（含间隔重复数据）

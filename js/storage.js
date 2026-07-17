@@ -41,6 +41,7 @@ var USER_DATA_ID = 'main';
 
 var _db = null;     // IndexedDB 连接（复用）
 var _cache = null;  // 用户数据内存缓存
+var _persistFailed = false;  // 持久化失败标志
 
 // --- IndexedDB 操作封装 ---
 function openDB() {
@@ -151,6 +152,11 @@ function persist() {
     if (!_cache) return Promise.resolve();
     return idbPut(STORE_USER, { id: USER_DATA_ID, data: _cache }).catch(function(err) {
         console.error('[App.db] persist failed:', err);
+        // 用户友好的错误提示（仅首次失败时显示）
+        if (!_persistFailed) {
+            _persistFailed = true;
+            alert('⚠️ 数据保存失败！\n\n可能原因：\n- 浏览器隐私模式\n- 存储空间不足\n\n请立即导出数据备份，避免数据丢失。');
+        }
     });
 }
 
