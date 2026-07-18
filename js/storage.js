@@ -102,18 +102,37 @@ function idbGetAll(storeName) {
     });
 }
 
-// 清空并批量写入
 function idbClearAndPutAll(storeName, values) {
     return getDB().then(function(db) {
         return new Promise(function(resolve, reject) {
-            var tx = db.transaction(storeName, 'readwrite');
-            var store = tx.objectStore(storeName);
-            store.clear();
-            for (var i = 0; i < values.length; i++) {
-                store.put(values[i]);
-            }
-            tx.oncomplete = function() { resolve(); };
-            tx.onerror = function(e) { reject(e.target.error); };
+            var readTx = db.transaction(storeName, 'readonly');
+            var readReq = readTx.objectStore(storeName).getAll();
+            readReq.onsuccess = function() {
+                var existing = readReq.result || [];
+                var existingIds = {};
+                for (var i = 0; i < existing.length; i++) {
+                    existingIds[existing[i].id] = true;
+                }
+                var newIds = {};
+                for (var j = 0; j < values.length; j++) {
+                    newIds[values[j].id] = true;
+                }
+                var deleteIds = [];
+                for (var id in existingIds) {
+                    if (!newIds[id]) deleteIds.push(id);
+                }
+                var writeTx = db.transaction(storeName, 'readwrite');
+                var store = writeTx.objectStore(storeName);
+                for (var k = 0; k < deleteIds.length; k++) {
+                    store.delete(deleteIds[k]);
+                }
+                for (var l = 0; l < values.length; l++) {
+                    store.put(values[l]);
+                }
+                writeTx.oncomplete = function() { resolve(); };
+                writeTx.onerror = function(e) { reject(e.target.error); };
+            };
+            readTx.onerror = function(e) { reject(e.target.error); };
         });
     });
 }
@@ -354,7 +373,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz || false
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}
