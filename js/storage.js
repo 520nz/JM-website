@@ -313,13 +313,13 @@ App.db = {
 // ============================================================
 
 // 从 IndexedDB 加载题库到 App.QUESTION_BANK，返回 Promise
+// 注意：不覆盖 App.DEFAULT_QUESTION_BANK，确保 reset 功能能恢复真正的默认值
 function storeInit() {
     return getDB().then(function() {
         return idbGetAll(STORE_BANK);
     }).then(function(rows) {
         if (rows && rows.length > 0) {
             App.QUESTION_BANK = rows;
-            App.DEFAULT_QUESTION_BANK = App.QUESTION_BANK.slice();
         }
         // IndexedDB 中无题库时，保留 data.js 中的默认题库
     });
@@ -330,9 +330,9 @@ function storeSave() {
     return idbClearAndPutAll(STORE_BANK, App.QUESTION_BANK || []);
 }
 
-// 重置为默认题库
+// 重置为默认题库（使用深拷贝，防止修改当前题库时污染默认值）
 function storeReset() {
-    App.QUESTION_BANK = App.DEFAULT_QUESTION_BANK.slice();
+    App.QUESTION_BANK = JSON.parse(JSON.stringify(App.DEFAULT_QUESTION_BANK));
     return storeSave();
 }
 

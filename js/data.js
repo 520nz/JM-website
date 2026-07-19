@@ -86,4 +86,4 @@ App.QUESTION_BANK = [
 {id:"078",category:"获奖记录",question:"林俊杰曾受邀担任第26届台湾金曲奖的什么角色？",options:[{key:"A",text:"评审"},{key:"B",text:"主持人"},{key:"C",text:"官方宣传大使"},{key:"D",text:"开场表演嘉宾"}],answer:"C",explanation:"2015年5月，林俊杰受邀担任第26届台湾金曲奖颁奖典礼的官方宣传大使。"}
 ];
 
-App.DEFAULT_QUESTION_BANK = App.QUESTION_BANK.slice();
+App.DEFAULT_QUESTION_BANK = JSON.parse(JSON.stringify(App.QUESTION_BANK));

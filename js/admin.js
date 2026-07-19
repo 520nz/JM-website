@@ -252,11 +252,17 @@ var App = window.App || {};
                     for (var x = 0; x < data.userData.wrong.length; x++) {
                         var wrongItem = data.userData.wrong[x];
                         if (wrongMap[wrongItem.qid]) {
-                            // 合并：取较高的错误次数，保留间隔重复等级
-                            wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt || 1);
-                            // 如果导入的数据有间隔重复字段，保留较低等级（更保守）
+                            // 合并：取较高的错误次数，保留较低等级（更保守，需要更多复习）
+                            var target = wrongMap[wrongItem.qid];
+                            target.cnt = Math.max(target.cnt, wrongItem.cnt || 1);
                             if (wrongItem.level != null) {
-                                wrongMap[wrongItem.qid].level = Math.min(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
+                                var oldLevel = target.level || 0;
+                                target.level = Math.min(oldLevel, wrongItem.level);
+                                // 等级降低时同步更新复习时间（确保立即进入复习队列）
+                                if (target.level < oldLevel) {
+                                    target.lastReview = Date.now();
+                                    target.nextReview = Date.now();
+                                }
                             }
                         } else {
                             // 新错题，确保有间隔重复字段
@@ -312,11 +318,13 @@ var App = window.App || {};
     }
 
     function resetQuestionBank() {
-        A.store.reset();
-        closeResetModal();
-        alert('已恢复为默认题库，共 ' + A.QUESTION_BANK.length + ' 道题目');
-        try { renderQuestionList(); } catch (e) {}
-        try { updateCategoryFilter(); } catch (e) {}
+        A.store.reset().then(function() {
+            closeResetModal();
+            alert('已恢复为默认题库，共 ' + A.QUESTION_BANK.length + ' 道题目');
+            try { renderQuestionList(); } catch (e) {}
+            try { updateCategoryFilter(); } catch (e) {}
+            try { updateEditCategoryOptions(); } catch (e) {}
+        });
     }
 
     // --- 暴露到 App ---
