@@ -1,0 +1,14 @@
+{
+  "name": "jj-quiz-app",
+  "version": "1.0.0",
+  "description": "林俊杰知识问答应用",
+  "scripts": {
+    "test": "npx mocha test/test-node.js",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "mocha": "^10.2.0",
+    "chai": "^5.1.1",
+    "jsdom": "^24.1.0"
+  }
+}
