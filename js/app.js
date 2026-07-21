@@ -115,8 +115,39 @@ var App = window.App || {};
     }
 
     function removeWrong(qid) {
-        A.db.removeWrong(qid);
-        renderWrongBook();
+        // 斩题动效：先播放庆祝动画，再移除元素
+        var items = document.querySelectorAll('.error-item');
+        var targetEl = null;
+        for (var i = 0; i < items.length; i++) {
+            var btn = items[i].querySelector('button[onclick*="' + qid + '"]');
+            if (btn) { targetEl = items[i]; break; }
+        }
+
+        function doRemove() {
+            A.db.removeWrong(qid);
+            renderWrongBook();
+        }
+
+        if (targetEl) {
+            targetEl.classList.add('mastery-out');
+            // 生成粒子
+            for (var p = 0; p < 6; p++) {
+                var particle = document.createElement('span');
+                particle.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;background:var(--success);pointer-events:none;';
+                var angle = (Math.PI * 2 * p) / 6;
+                particle.style.setProperty('--px', Math.cos(angle) * 40 + 'px');
+                particle.style.setProperty('--py', Math.sin(angle) * 40 + 'px');
+                particle.style.animation = 'particle-fly 0.6s ease forwards';
+                targetEl.style.position = 'relative';
+                targetEl.appendChild(particle);
+            }
+            setTimeout(function() {
+                targetEl.classList.add('removing');
+                setTimeout(doRemove, 700);
+            }, 300);
+        } else {
+            doRemove();
+        }
     }
 
     // --- 统计页渲染（含趋势图） ---
