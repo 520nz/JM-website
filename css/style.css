@@ -185,6 +185,26 @@ body {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+@keyframes pulse-correct {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+@keyframes shake-wrong {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    50% { transform: translateX(4px); }
+    75% { transform: translateX(-2px); }
+}
+@keyframes particle-fly {
+    0% { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--px), var(--py)) scale(0.3); }
+}
+@keyframes mastery-celebrate {
+    0% { transform: scale(1); border-color: var(--success); }
+    50% { transform: scale(1.06); box-shadow: 0 0 30px rgba(16,185,129,0.4); }
+    100% { transform: scale(1); }
+}
 .feedback.correct { background: rgba(16, 185, 129, 0.12); border: 1px solid var(--success); box-shadow: 0 0 20px rgba(16,185,129,0.1); }
 .feedback.wrong { background: rgba(239, 68, 68, 0.12); border: 1px solid var(--error); box-shadow: 0 0 20px rgba(239,68,68,0.1); }
 .feedback-title { font-weight: 600; margin-bottom: 6px; }
@@ -224,6 +244,15 @@ body {
 .error-item .level-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary); margin-right: 8px; }
 .error-item .due-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(239,68,68,0.2); color: var(--error); }
 .error-item .due-badge.ready { background: rgba(16,185,129,0.2); color: var(--success); }
+.error-item.mastery-out {
+    animation: mastery-celebrate 0.5s ease forwards;
+    overflow: hidden;
+    transition: height 0.4s ease 0.3s, opacity 0.4s ease 0.3s, padding 0.4s ease 0.3s, margin 0.4s ease 0.3s;
+}
+.error-item.removing {
+    height: 0 !important; opacity: 0; padding-top: 0; padding-bottom: 0; margin-bottom: 0;
+    border-width: 0;
+}
 .finish-card { text-align: center; padding: 50px 20px; }
 .finish-icon { font-size: 56px; margin-bottom: 20px; animation: bounce 0.6s ease; }
 @keyframes bounce {
