@@ -18,6 +18,50 @@ var App = window.App || {};
 
     var VIEW_NAMES = { home: '首页', practice: '练习', wrongbook: '错题本', stats: '统计', admin: '管理' };
 
+    // --- Web Audio 音效 ---
+    var _audioCtx = null;
+    var _soundEnabled = true;
+
+    function getAudioCtx() {
+        if (!_audioCtx) {
+            try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { return null; }
+        }
+        return _audioCtx;
+    }
+
+    function playTone(freq, startTime, duration, type, volume) {
+        var ctx = getAudioCtx();
+        if (!ctx || !_soundEnabled) return;
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(volume || 0.15, ctx.currentTime + startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration);
+    }
+
+    function playCorrectSound() {
+        // C5 -> E5 -> G5 上行琶音，清脆悦耳
+        playTone(523.25, 0, 0.12, 'sine', 0.12);
+        playTone(659.25, 0.06, 0.12, 'sine', 0.12);
+        playTone(783.99, 0.12, 0.2, 'sine', 0.15);
+    }
+
+    function playWrongSound() {
+        // E4 -> C4 下行低音，温和提示
+        playTone(329.63, 0, 0.15, 'sine', 0.1);
+        playTone(261.63, 0.08, 0.25, 'sine', 0.12);
+    }
+
+    function toggleSound() {
+        _soundEnabled = !_soundEnabled;
+        return _soundEnabled;
+    }
+
     // --- 模式选择 ---
     function selectMode(m) {
         state.mode = m;
@@ -183,13 +227,17 @@ var App = window.App || {};
         var ok = (key === q.answer);
         if (ok) state.correctCount++;
 
+        // 播放音效
+        if (ok) { playCorrectSound(); } else { playWrongSound(); }
+
         // 记录答题
         A.db.addRecord({ qid: q.id, ans: key, ok: ok, time: Date.now() });
 
         // 间隔重复：错题本复习模式下更新复习状态
+        var reviewResult = null;
         if (state.isWrongBookQuiz) {
             if (ok) {
-                A.db.reviewCorrect(q.id);
+                reviewResult = A.db.reviewCorrect(q.id);
             } else {
                 A.db.reviewWrong(q.id);
             }
@@ -198,19 +246,38 @@ var App = window.App || {};
             if (!ok) A.db.addWrong(q.id);
         }
 
-        // 更新选项样式
+        // 更新选项样式 + 微动效
         for (var i = 0; i < q.options.length; i++) {
             var el = document.getElementById('opt-' + q.options[i].key);
             el.classList.add('disabled');
-            if (q.options[i].key === q.answer) el.classList.add('correct');
-            else if (q.options[i].key === key && !ok) el.classList.add('wrong');
+            if (q.options[i].key === q.answer) {
+                el.classList.add('correct');
+                // 答对脉冲动画
+                el.style.animation = 'pulse-correct 0.3s cubic-bezier(0.34,1.56,0.64,1)';
+                setTimeout(function(e) { e.style.animation = ''; }.bind(null, el), 350);
+            }
+            else if (q.options[i].key === key && !ok) {
+                el.classList.add('wrong');
+                // 答错抖动动画
+                el.style.animation = 'shake-wrong 0.25s ease';
+                setTimeout(function(e) { e.style.animation = ''; }.bind(null, el), 300);
+                // 移动端震动
+                if (navigator.vibrate) navigator.vibrate(80);
+            }
         }
 
         // 显示反馈
         var fb = document.getElementById('fb');
         fb.className = 'feedback show ' + (ok ? 'correct' : 'wrong');
         document.getElementById('fbTitle').textContent = ok ? '✓ 回答正确！' : '✗ 回答错误';
-        document.getElementById('fbDesc').textContent = q.explanation;
+        // 斩题提示：掌握时显示特殊信息
+        if (reviewResult && reviewResult.mastered) {
+            document.getElementById('fbDesc').textContent = q.explanation + ' 🎉 已掌握此题，从错题本移除！';
+        } else if (reviewResult && !reviewResult.mastered && state.isWrongBookQuiz) {
+            document.getElementById('fbDesc').textContent = q.explanation + ' （复习等级提升至 Lv.' + reviewResult.level + '）';
+        } else {
+            document.getElementById('fbDesc').textContent = q.explanation;
+        }
         document.getElementById('nextBtn').style.display = 'inline-block';
     }
 
@@ -357,4 +424,7 @@ var App = window.App || {};
     A.startTimer = startTimer;
     A.stopTimer = stopTimer;
     A.shuffle = shuffle;
+    A.playCorrectSound = playCorrectSound;
+    A.playWrongSound = playWrongSound;
+    A.toggleSound = toggleSound;
 })(App);
