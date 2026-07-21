@@ -205,7 +205,7 @@ function addWrong(qid) {
     persist();
 }
 
-// 答对错题时提升等级
+// 答对错题时提升等级，返回是否已掌握
 function reviewCorrect(qid) {
     var d = get();
     for (var i = 0; i < d.wrong.length; i++) {
@@ -216,13 +216,16 @@ function reviewCorrect(qid) {
             if (w.level >= 5) {
                 // 已掌握，从错题本移除
                 d.wrong.splice(i, 1);
+                persist();
+                return { mastered: true, qid: qid };
             } else {
                 w.nextReview = Date.now() + SR_INTERVALS[w.level];
+                persist();
+                return { mastered: false, level: w.level, qid: qid };
             }
-            persist();
-            return;
         }
     }
+    return { mastered: false, qid: qid };
 }
 
 // 答错错题时重置等级
