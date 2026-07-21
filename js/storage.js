@@ -126,7 +126,8 @@ function defaults() {
     return {
         history: [],
         wrong: [],
-        stats: { total: 0, correct: 0, cats: {} }
+        stats: { total: 0, correct: 0, cats: {} },
+        theme: 'dark'
     };
 }
 
