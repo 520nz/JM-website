@@ -11,7 +11,15 @@ var App = window.App || {};
         var views = document.querySelectorAll('.view');
         for (var i = 0; i < views.length; i++) views[i].classList.remove('active');
         var el = document.getElementById('view-' + v);
-        if (el) el.classList.add('active');
+        if (el) {
+            el.classList.add('active');
+            // 触发过渡动画：先渲染一帧 display:block + opacity:0，再设置目标状态
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(8px)';
+            void el.offsetHeight; // 强制 reflow
+            el.style.opacity = '';
+            el.style.transform = '';
+        }
 
         var navs = document.querySelectorAll('.nav-item');
         for (var j = 0; j < navs.length; j++) {
@@ -178,6 +186,9 @@ var App = window.App || {};
             var overlay = document.getElementById('loadingOverlay');
             if (overlay) overlay.remove();
 
+            // 应用主题
+            applyTheme();
+
             // 更新首页
             updateHome();
 
@@ -217,6 +228,29 @@ var App = window.App || {};
     A.removeWrong = removeWrong;
     A.renderStats = renderStats;
     A.init = init;
+
+    // --- 主题切换 ---
+    function switchTheme() {
+        var d = A.db.get();
+        var current = d.theme || 'dark';
+        var next = current === 'dark' ? 'light' : 'dark';
+        d.theme = next;
+        A.db.setData(d);
+        document.documentElement.setAttribute('data-theme', next);
+        var btn = document.querySelector('.theme-toggle');
+        if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
+    }
+
+    function applyTheme() {
+        var d = A.db.get();
+        var theme = d.theme || 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        var btn = document.querySelector('.theme-toggle');
+        if (btn) btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+    }
+
+    A.switchTheme = switchTheme;
+    A.applyTheme = applyTheme;
 
     // DOM 就绪后初始化
     window.addEventListener('DOMContentLoaded', init);
