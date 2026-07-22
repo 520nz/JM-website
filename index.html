@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>林俊杰粉丝答题</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#8B5CF6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="pwa-icon-192.png">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
     <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
 </head>
@@ -46,6 +51,20 @@
                     <div class="stat-card"><div class="stat-value" id="todayAcc">0%</div><div class="stat-label">正确率</div></div>
                 </div>
             </div>
+            <div class="card">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <h3>连续打卡</h3>
+                    <span id="streakBadge" class="streak-badge">🔥 0 天</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:13px;color:var(--text2);">每日目标</span>
+                    <span style="font-size:13px;color:var(--text2);">
+                        <span id="goalProgress">0</span> / <span id="goalTarget">20</span> 题
+                        <button class="btn btn-sm btn-outline" style="padding:2px 10px;font-size:12px;margin-left:8px;" onclick="App.editDailyGoal()">修改</button>
+                    </span>
+                </div>
+                <div class="progress-bar-bg"><div class="progress-bar" id="goalBar" style="width:0%"></div></div>
+            </div>
         </div>
         <div class="view" id="view-practice">
             <div id="quizArea" class="pb-safe">
@@ -78,6 +97,10 @@
             <div class="card">
                 <h3 style="margin-bottom:12px;">分类正确率</h3>
                 <div id="catStats"><div class="empty"><p>暂无数据</p></div></div>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom:12px;">成就徽章 <span id="achvCount" style="font-size:13px;color:var(--text2);font-weight:normal;"></span></h3>
+                <div class="achv-grid" id="achvGrid"></div>
             </div>
         </div>
         <div class="view" id="view-category">
@@ -169,5 +192,15 @@
     <script src="js/chart.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/app.js"></script>
+    <script>
+    // 注册 Service Worker（PWA 离线支持）
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js').catch(function(err) {
+                console.log('SW registration failed:', err);
+            });
+        });
+    }
+    </script>
 </body>
 </html>
