@@ -42,14 +42,28 @@ var App = window.App || {};
         sel.innerHTML = opts;
     }
 
+    var _adminPage = 1;
+    var _adminPageSize = 30;
+
     function renderQuestionList() {
         var search = document.getElementById('searchInput').value.toLowerCase();
         var catFilter = document.getElementById('categoryFilter').value;
-        var html = '';
+        // 先过滤
+        var filtered = [];
         for (var i = 0; i < A.QUESTION_BANK.length; i++) {
             var q = A.QUESTION_BANK[i];
             if (catFilter && q.category !== catFilter) continue;
             if (search && q.question.toLowerCase().indexOf(search) === -1) continue;
+            filtered.push(q);
+        }
+        // 分页
+        var totalPages = Math.max(1, Math.ceil(filtered.length / _adminPageSize));
+        if (_adminPage > totalPages) _adminPage = totalPages;
+        var start = (_adminPage - 1) * _adminPageSize;
+        var end = Math.min(start + _adminPageSize, filtered.length);
+        var html = '';
+        for (var j = start; j < end; j++) {
+            var q = filtered[j];
             html += '<div class="q-item">';
             html += '<div class="q-item-header">';
             html += '<span class="q-item-cat">' + A.esc(q.category) + '</span>';
@@ -61,10 +75,22 @@ var App = window.App || {};
             html += '<div class="q-item-answer">答案: ' + A.esc(q.answer) + '</div>';
             html += '</div>';
         }
+        // 分页控件
+        if (totalPages > 1) {
+            html += '<div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;">';
+            html += '<button class="btn btn-sm btn-outline" onclick="App.adminPrevPage()" ' + (_adminPage <= 1 ? 'disabled style="opacity:0.4;"' : '') + '>上一页</button>';
+            html += '<span style="font-size:13px;color:var(--text2);">' + _adminPage + ' / ' + totalPages + ' 页（共' + filtered.length + '题）</span>';
+            html += '<button class="btn btn-sm btn-outline" onclick="App.adminNextPage()" ' + (_adminPage >= totalPages ? 'disabled style="opacity:0.4;"' : '') + '>下一页</button>';
+            html += '</div>';
+        }
         document.getElementById('questionList').innerHTML = html || '<div class="empty"><p>暂无题目</p></div>';
     }
 
+    function adminPrevPage() { if (_adminPage > 1) { _adminPage--; renderQuestionList(); } }
+    function adminNextPage() { _adminPage++; renderQuestionList(); }
+
     function filterQuestions() {
+        _adminPage = 1;
         renderQuestionList();
     }
 
@@ -322,6 +348,8 @@ var App = window.App || {};
     // --- 暴露到 App ---
     A.renderAdmin = renderAdmin;
     A.filterQuestions = filterQuestions;
+    A.adminPrevPage = adminPrevPage;
+    A.adminNextPage = adminNextPage;
     A.showAddForm = showAddForm;
     A.showEditForm = showEditForm;
     A.closeModal = closeModal;
