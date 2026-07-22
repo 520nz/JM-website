@@ -1,5 +1,5 @@
 // sw.js - Service Worker（离线缓存，cache-first 策略）
-var CACHE_NAME = 'jj-quiz-v4';
+var CACHE_NAME = 'jj-quiz-v5';
 var ASSETS = [
   './',
   './index.html',
