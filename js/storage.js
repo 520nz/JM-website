@@ -129,7 +129,8 @@ function defaults() {
         stats: { total: 0, correct: 0, cats: {} },
         theme: 'dark',
         dailyGoal: 20,
-        achievements: []
+        achievements: [],
+        archive: []
     };
 }
 
@@ -177,6 +178,28 @@ function addRecord(rec) {
         if (!d.stats.cats[q.category]) d.stats.cats[q.category] = { t: 0, c: 0 };
         d.stats.cats[q.category].t++;
         if (rec.ok) d.stats.cats[q.category].c++;
+    }
+    // 历史数据归档：超过 1000 条时，把 90 天前的明细按天聚合
+    if (d.history.length > 1000) {
+        if (!d.archive) d.archive = [];
+        var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+        var oldRecs = [];
+        var newRecs = [];
+        for (var i = 0; i < d.history.length; i++) {
+            if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
+            else newRecs.push(d.history[i]);
+        }
+        // 按天聚合
+        var dayMap = {};
+        for (var j = 0; j < oldRecs.length; j++) {
+            var dt = new Date(oldRecs[j].time);
+            var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+            if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
+            dayMap[key].total++;
+            if (oldRecs[j].ok) dayMap[key].correct++;
+        }
+        for (var k in dayMap) d.archive.push(dayMap[k]);
+        d.history = newRecs;
     }
     persist();
 }
