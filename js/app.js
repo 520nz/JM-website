@@ -102,6 +102,9 @@ var App = window.App || {};
     }
 
     // --- 错题本渲染（含间隔重复信息） ---
+    // 错题本排序状态
+    var _wrongSort = 'recent';
+
     function renderWrongBook() {
         var wl = A.db.getWrong();
         var el = document.getElementById('wrongBookList');
@@ -113,20 +116,39 @@ var App = window.App || {};
             return;
         }
 
+        // 排序
+        var sorted = wl.slice();
+        if (_wrongSort === 'count') {
+            sorted.sort(function(a, b) { return b.cnt - a.cnt; });
+        } else if (_wrongSort === 'due') {
+            sorted.sort(function(a, b) { return (a.nextReview || 0) - (b.nextReview || 0); });
+        } else {
+            sorted.sort(function(a, b) { return (b.time || 0) - (a.time || 0); });
+        }
+
         var dueCount = A.db.getDueWrong().length;
         var now = Date.now();
 
-        var html = '<div class="error-list">';
-        for (var i = 0; i < wl.length; i++) {
-            var q = A.db.findQ(wl[i].qid);
+        // 排序选择器
+        var html = '<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">' +
+                   '<span style="font-size:13px;color:var(--text2);">排序：</span>' +
+                   '<select id="wrongSortSel" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--bg);color:var(--text);" onchange="App.setWrongSort(this.value)">' +
+                   '<option value="recent"' + (_wrongSort === 'recent' ? ' selected' : '') + '>最近添加</option>' +
+                   '<option value="count"' + (_wrongSort === 'count' ? ' selected' : '') + '>错误次数</option>' +
+                   '<option value="due"' + (_wrongSort === 'due' ? ' selected' : '') + '>到期时间</option>' +
+                   '</select></div>';
+
+        html += '<div class="error-list">';
+        for (var i = 0; i < sorted.length; i++) {
+            var q = A.db.findQ(sorted[i].qid);
             if (!q) continue;
-            var level = wl[i].level || 0;
-            var isDue = !wl[i].nextReview || wl[i].nextReview <= now;
+            var level = sorted[i].level || 0;
+            var isDue = !sorted[i].nextReview || sorted[i].nextReview <= now;
             var dueText = '';
             if (isDue) {
                 dueText = '<span class="due-badge ready">可复习</span>';
             } else {
-                var remain = wl[i].nextReview - now;
+                var remain = sorted[i].nextReview - now;
                 var remainText = '';
                 if (remain < 60 * 60 * 1000) {
                     remainText = Math.ceil(remain / (60 * 1000)) + '分钟后';
@@ -141,7 +163,7 @@ var App = window.App || {};
             html += '<div class="error-item">' +
                     '<div class="q">' + A.esc(q.question) + '</div>' +
                     '<div class="info">' +
-                        '<span><span class="level-badge">Lv.' + level + '</span>错误' + wl[i].cnt + '次 ' + dueText + '</span>' +
+                        '<span><span class="level-badge">Lv.' + level + '</span>错误' + sorted[i].cnt + '次 ' + dueText + '</span>' +
                         '<button class="btn btn-sm btn-error btn-outline" onclick="App.removeWrong(\'' + A.esc(q.id) + '\')">移除</button>' +
                     '</div></div>';
         }
@@ -150,6 +172,11 @@ var App = window.App || {};
         el.innerHTML = html;
         btn.style.display = 'block';
         btn.textContent = '开始复习 (' + wl.length + '题' + (dueCount > 0 ? '，' + dueCount + '题到期' : '') + ')';
+    }
+
+    function setWrongSort(s) {
+        _wrongSort = s;
+        renderWrongBook();
     }
 
     function removeWrong(qid) {
@@ -345,6 +372,7 @@ var App = window.App || {};
     A.renderAchievements = renderAchievements;
     A.showAchievementToast = showAchievementToast;
     A.editDailyGoal = editDailyGoal;
+    A.setWrongSort = setWrongSort;
     A.init = init;
 
     // --- 主题切换 ---
