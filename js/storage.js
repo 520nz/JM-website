@@ -127,7 +127,9 @@ function defaults() {
         history: [],
         wrong: [],
         stats: { total: 0, correct: 0, cats: {} },
-        theme: 'dark'
+        theme: 'dark',
+        dailyGoal: 20,
+        achievements: []
     };
 }
 
@@ -296,6 +298,123 @@ function setData(data) {
     persist();
 }
 
+// --- 每日目标 ---
+function getDailyGoal() {
+    return get().dailyGoal || 20;
+}
+
+function setDailyGoal(n) {
+    var d = get();
+    d.dailyGoal = Math.max(5, Math.min(100, n));
+    persist();
+}
+
+// --- 连续打卡天数计算 ---
+function getStreak() {
+    var d = get();
+    if (!d.history || d.history.length === 0) return 0;
+    var days = {};
+    for (var i = 0; i < d.history.length; i++) {
+        var dt = new Date(d.history[i].time);
+        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+    }
+    var streak = 0;
+    var check = new Date();
+    check.setHours(0, 0, 0, 0);
+    // 今天没答过就从昨天开始算（不断签）
+    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
+    while (true) {
+        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        if (days[key]) {
+            streak++;
+            check.setTime(check.getTime() - 86400000);
+        } else {
+            break;
+        }
+    }
+    return streak;
+}
+
+// --- 成就徽章检查 ---
+var ACHIEVEMENTS = [
+    { id: 'first_answer', name: '初出茅庐', icon: '🌱', desc: '完成第1次答题' },
+    { id: 'perfect_10', name: '十全十美', icon: '💯', desc: '单次10题全部答对' },
+    { id: 'daily_50', name: '勤奋粉丝', icon: '🔥', desc: '单日答题50题' },
+    { id: 'streak_3', name: '三日坚持', icon: '📅', desc: '连续答题3天' },
+    { id: 'streak_7', name: '七日之约', icon: '🗓️', desc: '连续答题7天' },
+    { id: 'total_100', name: '百题斩', icon: '⚔️', desc: '累计答题100题' },
+    { id: 'total_500', name: '五百题王', icon: '👑', desc: '累计答题500题' },
+    { id: 'acc_90', name: '资深JM', icon: '🎓', desc: '答满50题且正确率≥90%' },
+    { id: 'wrong_clear', name: '错题清零', icon: '✨', desc: '错题本全部掌握' },
+    { id: 'all_cats', name: '全能粉丝', icon: '🌈', desc: '所有分类都有答题记录' }
+];
+
+function getAchievements() {
+    return get().achievements || [];
+}
+
+function checkAchievements(context) {
+    var d = get();
+    if (!d.achievements) d.achievements = [];
+    var newUnlocks = [];
+
+    function has(id) { return d.achievements.indexOf(id) !== -1; }
+    function unlock(id) {
+        if (!has(id)) {
+            d.achievements.push(id);
+            var def = null;
+            for (var i = 0; i < ACHIEVEMENTS.length; i++) {
+                if (ACHIEVEMENTS[i].id === id) { def = ACHIEVEMENTS[i]; break; }
+            }
+            if (def) newUnlocks.push(def);
+        }
+    }
+
+    var total = d.stats.total;
+    var correct = d.stats.correct;
+
+    if (total >= 1) unlock('first_answer');
+    if (total >= 100) unlock('total_100');
+    if (total >= 500) unlock('total_500');
+    if (total >= 50 && correct / total >= 0.9) unlock('acc_90');
+
+    // 完美一轮（context 传入本次答题成绩）
+    if (context && context.quizTotal >= 10 && context.quizCorrect === context.quizTotal) unlock('perfect_10');
+
+    // 单日50题
+    var today = new Date().setHours(0, 0, 0, 0);
+    var todayCount = 0;
+    for (var i = 0; i < d.history.length; i++) {
+        if (d.history[i].time >= today) todayCount++;
+    }
+    if (todayCount >= 50) unlock('daily_50');
+
+    // 连续打卡
+    var streak = getStreak();
+    if (streak >= 3) unlock('streak_3');
+    if (streak >= 7) unlock('streak_7');
+
+    // 错题清零（有过错题记录且现在为空）
+    if (d.wrong.length === 0 && total > 0 && has('first_answer')) unlock('wrong_clear');
+
+    // 全分类
+    var cats = d.stats.cats || {};
+    var allCats = ['专辑', '歌曲', '个人信息', '获奖记录'];
+    var hasAll = true;
+    for (var c = 0; c < allCats.length; c++) {
+        if (!cats[allCats[c]] || !cats[allCats[c]].t) { hasAll = false; break; }
+    }
+    if (hasAll) unlock('all_cats');
+
+    if (newUnlocks.length > 0) persist();
+    return newUnlocks;
+}
+
+function getAchievementDefs() {
+    return ACHIEVEMENTS;
+}
+
 App.db = {
     init: init,
     get: get,
@@ -309,7 +428,13 @@ App.db = {
     findQ: findQ,
     recalcStats: recalcStats,
     setData: setData,
-    defaults: defaults
+    defaults: defaults,
+    getDailyGoal: getDailyGoal,
+    setDailyGoal: setDailyGoal,
+    getStreak: getStreak,
+    getAchievements: getAchievements,
+    checkAchievements: checkAchievements,
+    getAchievementDefs: getAchievementDefs
 };
 
 // ============================================================
