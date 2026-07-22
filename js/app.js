@@ -61,6 +61,44 @@ var App = window.App || {};
         document.getElementById('todayCount').textContent = th.length;
         var acc = th.length > 0 ? Math.round(th.filter(function(h) { return h.ok; }).length / th.length * 100) : 0;
         document.getElementById('todayAcc').textContent = acc + '%';
+
+        // 连续打卡
+        var streak = A.db.getStreak();
+        var badge = document.getElementById('streakBadge');
+        if (badge) {
+            badge.textContent = streak > 0 ? '🔥 ' + streak + ' 天' : '暂无连续记录';
+            badge.classList.toggle('active', streak > 0);
+        }
+
+        // 每日目标进度
+        var goal = A.db.getDailyGoal();
+        var todayDone = th.length;
+        var goalPct = Math.min(100, Math.round(todayDone / goal * 100));
+        var gp = document.getElementById('goalProgress');
+        var gt = document.getElementById('goalTarget');
+        var gb = document.getElementById('goalBar');
+        if (gp) gp.textContent = todayDone;
+        if (gt) gt.textContent = goal;
+        if (gb) {
+            gb.style.width = goalPct + '%';
+            if (goalPct >= 100) {
+                gb.style.background = 'linear-gradient(90deg, var(--success), #34d399)';
+            }
+        }
+    }
+
+    // --- 修改每日目标 ---
+    function editDailyGoal() {
+        var cur = A.db.getDailyGoal();
+        var input = prompt('设置每日答题目标（5-100题）：', cur);
+        if (input === null) return;
+        var n = parseInt(input, 10);
+        if (isNaN(n) || n < 5 || n > 100) {
+            alert('请输入 5-100 之间的数字');
+            return;
+        }
+        A.db.setDailyGoal(n);
+        updateHome();
     }
 
     // --- 错题本渲染（含间隔重复信息） ---
@@ -126,6 +164,13 @@ var App = window.App || {};
         function doRemove() {
             A.db.removeWrong(qid);
             renderWrongBook();
+            // 错题清零成就检查
+            var unlocks = A.db.checkAchievements();
+            if (unlocks && unlocks.length > 0) {
+                unlocks.forEach(function(a, i) {
+                    setTimeout(function() { showAchievementToast(a); }, 600 * (i + 1));
+                });
+            }
         }
 
         if (targetEl) {
@@ -182,6 +227,45 @@ var App = window.App || {};
 
         // 趋势图
         A.renderTrendChart('trendChart', d.history);
+
+        // 徽章墙
+        renderAchievements();
+    }
+
+    // --- 成就徽章墙渲染 ---
+    function renderAchievements() {
+        var grid = document.getElementById('achvGrid');
+        if (!grid) return;
+        var defs = A.db.getAchievementDefs();
+        var unlocked = A.db.getAchievements();
+        var cntEl = document.getElementById('achvCount');
+        if (cntEl) cntEl.textContent = unlocked.length + ' / ' + defs.length;
+
+        var html = '';
+        for (var i = 0; i < defs.length; i++) {
+            var a = defs[i];
+            var has = unlocked.indexOf(a.id) !== -1;
+            html += '<div class="achv-item' + (has ? ' unlocked' : '') + '" title="' + A.esc(a.desc) + '">' +
+                    '<div class="achv-icon">' + (has ? a.icon : '🔒') + '</div>' +
+                    '<div class="achv-name">' + A.esc(a.name) + '</div>' +
+                    '</div>';
+        }
+        grid.innerHTML = html;
+    }
+
+    // --- 成就解锁 Toast ---
+    function showAchievementToast(achv) {
+        var toast = document.createElement('div');
+        toast.className = 'achv-toast';
+        toast.innerHTML = '<span style="font-size:24px;">' + achv.icon + '</span>' +
+                          '<div><div style="font-weight:600;font-size:14px;">解锁成就</div>' +
+                          '<div style="font-size:13px;color:var(--text2);">' + A.esc(achv.name) + ' — ' + A.esc(achv.desc) + '</div></div>';
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.classList.add('show'); }, 10);
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() { toast.remove(); }, 400);
+        }, 3000);
     }
 
     // --- 异步初始化 ---
@@ -258,6 +342,9 @@ var App = window.App || {};
     A.renderWrongBook = renderWrongBook;
     A.removeWrong = removeWrong;
     A.renderStats = renderStats;
+    A.renderAchievements = renderAchievements;
+    A.showAchievementToast = showAchievementToast;
+    A.editDailyGoal = editDailyGoal;
     A.init = init;
 
     // --- 主题切换 ---
