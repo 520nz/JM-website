@@ -329,7 +329,7 @@ var App = window.App || {};
         state.idx = saved.idx || 0;
         state.correctCount = saved.correctCount || 0;
         state.mode = saved.mode || 'quick';
-        state.isWrongBookQuiz = false;
+        state.isWrongBookQuiz = saved.isWrongBookQuiz || false;
 
         // 如果已经答完，不恢复
         if (state.idx >= state.quiz.length) {

@@ -358,7 +358,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz || false
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}
