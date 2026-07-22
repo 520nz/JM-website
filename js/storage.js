@@ -198,7 +198,19 @@ function addRecord(rec) {
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
         }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
+        // 合并到 archive：按 date 去重累加，避免跨 cutoff 边界时重复堆积
+        var archiveMap = {};
+        for (var a = 0; a < d.archive.length; a++) {
+            archiveMap[d.archive[a].date] = d.archive[a];
+        }
+        for (var k in dayMap) {
+            if (archiveMap[k]) {
+                archiveMap[k].total += dayMap[k].total;
+                archiveMap[k].correct += dayMap[k].correct;
+            } else {
+                d.archive.push(dayMap[k]);
+            }
+        }
         d.history = newRecs;
     }
     persist();
@@ -309,6 +321,13 @@ function recalcStats() {
             if (!stats.cats[q.category]) stats.cats[q.category] = { t: 0, c: 0 };
             stats.cats[q.category].t++;
             if (rec.ok) stats.cats[q.category].c++;
+        }
+    }
+    // 累加归档数据（archive 按天聚合，无分类信息，仅恢复 total/correct，避免导入后累计统计被截断）
+    if (d.archive && d.archive.length) {
+        for (var j = 0; j < d.archive.length; j++) {
+            stats.total += d.archive[j].total || 0;
+            stats.correct += d.archive[j].correct || 0;
         }
     }
     d.stats = stats;
