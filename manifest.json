@@ -1,0 +1,32 @@
+{
+  "name": "林俊杰粉丝答题",
+  "short_name": "JJ答题",
+  "description": "林俊杰粉丝答题练习网站 - 为演唱会答题做准备",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0A1A",
+  "theme_color": "#8B5CF6",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
