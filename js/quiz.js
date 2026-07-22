@@ -302,14 +302,152 @@ var App = window.App || {};
         var wrong = total - correct;
         var pct = total > 0 ? Math.round(correct / total * 100) : 0;
 
+        // 保存成绩供分享使用
+        state.lastResult = {
+            total: total, correct: correct, wrong: wrong,
+            pct: pct, elapsed: elapsed,
+            mode: state.isWrongBookQuiz ? '错题复习' : ({quick:'快速',standard:'标准',intensive:'强化'})[state.mode] || '快速'
+        };
+
+        // 检查成就徽章
+        var newUnlocks = A.db.checkAchievements({ quizTotal: total, quizCorrect: correct });
+        if (newUnlocks && newUnlocks.length > 0) {
+            newUnlocks.forEach(function(a, i) {
+                setTimeout(function() { A.showAchievementToast(a); }, 600 * (i + 1));
+            });
+        }
+
         var html = '<div class="card finish-card"><div class="finish-icon">🎉</div><h2>答题完成！</h2>' +
                    '<div class="finish-stats">' +
                    '<div class="finish-stat"><div class="val green">' + correct + '</div><div class="lbl">正确</div></div>' +
                    '<div class="finish-stat"><div class="val red">' + wrong + '</div><div class="lbl">错误</div></div>' +
                    '<div class="finish-stat"><div class="val">' + pct + '%</div><div class="lbl">正确率</div></div>' +
                    '<div class="finish-stat"><div class="val">' + fmtTime(elapsed) + '</div><div class="lbl">用时</div></div>' +
-                   '</div><button class="btn" onclick="App.switchView(\'home\')">返回首页</button></div>';
+                   '</div>' +
+                   '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">' +
+                   '<button class="btn btn-sm" onclick="App.shareResultCard()">📸 分享成绩卡片</button>' +
+                   '<button class="btn btn-sm btn-outline" onclick="App.copyResultText()">📋 复制成绩文案</button>' +
+                   '</div>' +
+                   '<button class="btn" onclick="App.switchView(\'home\')">返回首页</button></div>';
         document.getElementById('quizArea').innerHTML = html;
+    }
+
+    // --- 成绩分享卡片（Canvas 绘制 + PNG 下载） ---
+    function shareResultCard() {
+        var r = state.lastResult;
+        if (!r) return;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 340;
+        var ctx = canvas.getContext('2d');
+
+        // 背景渐变
+        var grad = ctx.createLinearGradient(0, 0, 600, 340);
+        grad.addColorStop(0, '#0F0A1A');
+        grad.addColorStop(0.5, '#150D22');
+        grad.addColorStop(1, '#1A0F2E');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 600, 340);
+
+        // 顶部紫色装饰条
+        var barGrad = ctx.createLinearGradient(0, 0, 600, 0);
+        barGrad.addColorStop(0, '#8B5CF6');
+        barGrad.addColorStop(1, '#F472B6');
+        ctx.fillStyle = barGrad;
+        ctx.fillRect(0, 0, 600, 6);
+
+        // 标题
+        ctx.fillStyle = '#F5F5F5';
+        ctx.font = 'bold 26px -apple-system, "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎵 林俊杰粉丝答题', 300, 52);
+
+        // 模式 + 日期
+        ctx.fillStyle = '#B8B8C8';
+        ctx.font = '15px -apple-system, "Segoe UI", sans-serif';
+        var now = new Date();
+        var dateStr = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+        ctx.fillText(r.mode + '模式 · ' + dateStr, 300, 82);
+
+        // 大正确率数字
+        var pctColor = r.pct >= 80 ? '#10B981' : (r.pct >= 60 ? '#F472B6' : '#EF4444');
+        ctx.fillStyle = pctColor;
+        ctx.font = 'bold 72px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText(r.pct + '%', 300, 170);
+
+        ctx.fillStyle = '#B8B8C8';
+        ctx.font = '14px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText('正确率', 300, 196);
+
+        // 三项数据
+        ctx.font = 'bold 22px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = '#10B981';
+        ctx.fillText(String(r.correct), 170, 250);
+        ctx.fillStyle = '#EF4444';
+        ctx.fillText(String(r.wrong), 300, 250);
+        ctx.fillStyle = '#F5F5F5';
+        ctx.fillText(fmtTime(r.elapsed), 430, 250);
+
+        ctx.font = '12px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = '#B8B8C8';
+        ctx.fillText('正确', 170, 272);
+        ctx.fillText('错误', 300, 272);
+        ctx.fillText('用时', 430, 272);
+
+        // 底部话题标签
+        ctx.fillStyle = '#8B5CF6';
+        ctx.font = '13px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillText('#林俊杰答题挑战#', 300, 315);
+
+        // 下载 PNG
+        canvas.toBlob(function(blob) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'JJ答题成绩_' + dateStr + '.png';
+            a.click();
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+    }
+
+    // --- 复制成绩文案 ---
+    function copyResultText() {
+        var r = state.lastResult;
+        if (!r) return;
+        var text = '【林俊杰粉丝答题】' + r.mode + '模式 ' + r.total + '题，正确率 ' + r.pct + '%（对' + r.correct + '错' + r.wrong + '），用时 ' + fmtTime(r.elapsed) + ' #林俊杰答题挑战#';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showCopyToast();
+            }).catch(function() {
+                fallbackCopy(text);
+            });
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); showCopyToast(); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+
+    function showCopyToast() {
+        var toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.textContent = '✓ 已复制到剪贴板';
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.classList.add('show'); }, 10);
+        setTimeout(function() {
+            toast.classList.remove('show');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 2000);
     }
 
     // --- 答题中断恢复 ---
@@ -427,4 +565,6 @@ var App = window.App || {};
     A.playCorrectSound = playCorrectSound;
     A.playWrongSound = playWrongSound;
     A.toggleSound = toggleSound;
+    A.shareResultCard = shareResultCard;
+    A.copyResultText = copyResultText;
 })(App);
