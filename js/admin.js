@@ -269,6 +269,24 @@ var App = window.App || {};
                     existingData.history = existingData.history.concat(data.userData.history);
                 }
 
+                // 合并归档数据（避免日期重复）
+                if (data.userData.archive) {
+                    if (!existingData.archive) existingData.archive = [];
+                    var archiveMap = {};
+                    for (var a = 0; a < existingData.archive.length; a++) {
+                        archiveMap[existingData.archive[a].date] = existingData.archive[a];
+                    }
+                    for (var b = 0; b < data.userData.archive.length; b++) {
+                        var arc = data.userData.archive[b];
+                        if (archiveMap[arc.date]) {
+                            archiveMap[arc.date].total += arc.total || 0;
+                            archiveMap[arc.date].correct += arc.correct || 0;
+                        } else {
+                            existingData.archive.push(arc);
+                        }
+                    }
+                }
+
                 // 合并错题本（含间隔重复数据）
                 if (data.userData.wrong) {
                     var wrongMap = {};

@@ -198,7 +198,21 @@ function addRecord(rec) {
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
         }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
+        // 合并到已有的 archive（避免重复）
+        for (var k in dayMap) {
+            var found = false;
+            for (var m = 0; m < d.archive.length; m++) {
+                if (d.archive[m].date === k) {
+                    d.archive[m].total += dayMap[k].total;
+                    d.archive[m].correct += dayMap[k].correct;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                d.archive.push(dayMap[k]);
+            }
+        }
         d.history = newRecs;
     }
     persist();

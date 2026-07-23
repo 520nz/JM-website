@@ -381,7 +381,7 @@ var App = window.App || {};
         var current = d.theme || 'dark';
         var next = current === 'dark' ? 'light' : 'dark';
         d.theme = next;
-        A.db.setData(d);
+        A.db.persist();
         document.documentElement.setAttribute('data-theme', next);
         var btn = document.querySelector('.theme-toggle');
         if (btn) btn.textContent = next === 'dark' ? '🌙' : '☀️';
