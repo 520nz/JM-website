@@ -198,7 +198,21 @@ function addRecord(rec) {
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
         }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
+        // 检查并合并已存在的归档数据，避免重复
+        for (var k in dayMap) {
+            var exists = false;
+            for (var m = 0; m < d.archive.length; m++) {
+                if (d.archive[m].date === k) {
+                    d.archive[m].total += dayMap[k].total;
+                    d.archive[m].correct += dayMap[k].correct;
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                d.archive.push(dayMap[k]);
+            }
+        }
         d.history = newRecs;
     }
     persist();
@@ -300,6 +314,7 @@ function getDueWrong() {
 function recalcStats() {
     var d = get();
     var stats = { total: 0, correct: 0, cats: {} };
+    // 从 history 计算
     for (var i = 0; i < d.history.length; i++) {
         var rec = d.history[i];
         stats.total++;
@@ -309,6 +324,14 @@ function recalcStats() {
             if (!stats.cats[q.category]) stats.cats[q.category] = { t: 0, c: 0 };
             stats.cats[q.category].t++;
             if (rec.ok) stats.cats[q.category].c++;
+        }
+    }
+    // 从 archive 计算（归档数据不含题目ID，只能统计总数）
+    if (d.archive) {
+        for (var j = 0; j < d.archive.length; j++) {
+            var arc = d.archive[j];
+            stats.total += arc.total || 0;
+            stats.correct += arc.correct || 0;
         }
     }
     d.stats = stats;

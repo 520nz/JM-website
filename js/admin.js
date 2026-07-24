@@ -297,6 +297,42 @@ var App = window.App || {};
 
                 // 关键修复：不直接累加 stats，而是从 history 重新计算
                 A.db.recalcStats();
+
+                // 导入后触发归档检查（如果 history 超过 1000 条）
+                var currentData = A.db.get();
+                while (currentData.history.length > 1000) {
+                    var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+                    var oldRecs = [];
+                    var newRecs = [];
+                    for (var ar = 0; ar < currentData.history.length; ar++) {
+                        if (currentData.history[ar].time < cutoff) oldRecs.push(currentData.history[ar]);
+                        else newRecs.push(currentData.history[ar]);
+                    }
+                    if (oldRecs.length === 0) break;
+                    var dayMap = {};
+                    for (var am = 0; am < oldRecs.length; am++) {
+                        var dt = new Date(oldRecs[am].time);
+                        var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+                        if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
+                        dayMap[key].total++;
+                        if (oldRecs[am].ok) dayMap[key].correct++;
+                    }
+                    if (!currentData.archive) currentData.archive = [];
+                    for (var ak in dayMap) {
+                        var exists = false;
+                        for (var al = 0; al < currentData.archive.length; al++) {
+                            if (currentData.archive[al].date === ak) {
+                                currentData.archive[al].total += dayMap[ak].total;
+                                currentData.archive[al].correct += dayMap[ak].correct;
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (!exists) currentData.archive.push(dayMap[ak]);
+                    }
+                    currentData.history = newRecs;
+                }
+                A.db.setData(currentData);
             }
 
             var msg = '数据导入成功！';
