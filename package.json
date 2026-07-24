@@ -1,0 +1,20 @@
+{
+  "name": "jj-quiz-tests",
+  "version": "1.0.0",
+  "description": "Test suite for JJ Quiz",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "roots": ["<rootDir>/js"],
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "moduleFileExtensions": ["js"],
+    "setupFilesAfterEnv": ["<rootDir>/js/__tests__/setup.js"]
+  }
+}
