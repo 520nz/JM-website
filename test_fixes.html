@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>缺陷修复验证测试</title>
+</head>
+<body>
+<h1>缺陷修复验证</h1>
+<pre id="log"></pre>
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script>
+(function() {
+    var logEl = document.getElementById('log');
+    var passCount = 0;
+    var failCount = 0;
+
+    function log(msg) { logEl.textContent += msg + '\n'; }
+    function assert(condition, desc) {
+        if (condition) { passCount++; log('  PASS: ' + desc); }
+        else { failCount++; log('  FAIL: ' + desc); }
+    }
+
+    // 模拟 IndexedDB 不可用时的内存后端
+    // 用 App.db 的内存缓存特性来测试（_cache 是内部变量，通过 setData/get 操作）
+    // 先用 init 加载默认数据
+    App.db.init().then(function() {
+
+        log('=== 缺陷1: recalcStats 归档数据统计丢失 ===');
+
+        // 构造场景：history 有 5 条，archive 有 2 天的聚合数据
+        var d = App.db.get();
+        d.history = [];
+        d.archive = [
+            { date: '2026-5-1', total: 30, correct: 20, cats: { '专辑': { t: 10, c: 8 }, '歌曲': { t: 20, c: 12 } } },
+            { date: '2026-5-2', total: 15, correct: 10, cats: { '专辑': { t: 5, c: 3 } } }
+        ];
+        // 添加 5 条 history
+        var bank = App.QUESTION_BANK;
+        for (var i = 0; i < 5 && i < bank.length; i++) {
+            d.history.push({ qid: bank[i].id, ans: 'A', ok: i < 3, time: Date.now() });
+        }
+
+        App.db.setData(d);
+        App.db.recalcStats();
+
+        d = App.db.get();
+        // history 5 条 + archive 45 条 = 总共 50
+        assert(d.stats.total === 50, 'total 应为 50（history 5 + archive 45），实际: ' + d.stats.total);
+        // history 正确 3 + archive 正确 30 = 33
+        assert(d.stats.correct === 33, 'correct 应为 33（history 3 + archive 30），实际: ' + d.stats.correct);
+        // 专辑: history 中的 + archive 专辑 15
+        var albumT = d.stats.cats['专辑'] ? d.stats.cats['专辑'].t : 0;
+        log('  专辑 total: ' + albumT + ' (来自 history + archive)');
+        assert(d.stats.cats['专辑'] && d.stats.cats['专辑'].t >= 15, '专辑分类统计应 >= 15（archive 中有 15），实际: ' + albumT);
+
+        log('');
+        log('=== 缺陷2: 会话恢复丢失错题本模式 ===');
+
+        // 构造模拟的会话状态
+        var mockState = {
+            quiz: [bank[0]],
+            idx: 0,
+            correctCount: 0,
+            startTime: Date.now(),
+            mode: 'quick',
+            isWrongBookQuiz: true
+        };
+
+        // 保存会话
+        App.session.save(mockState);
+
+        // 加载会话
+        var loaded = App.session.load();
+        assert(loaded.isWrongBookQuiz === true, '恢复后 isWrongBookQuiz 应为 true，实际: ' + loaded.isWrongBookQuiz);
+
+        // 再测试非错题本模式
+        mockState.isWrongBookQuiz = false;
+        App.session.save(mockState);
+        loaded = App.session.load();
+        assert(loaded.isWrongBookQuiz === false, '非错题本模式恢复后 isWrongBookQuiz 应为 false，实际: ' + loaded.isWrongBookQuiz);
+
+        log('');
+        log('========================================');
+        log('测试结果: ' + passCount + ' 通过, ' + failCount + ' 失败');
+        if (failCount === 0) log('所有修复验证通过！');
+        else log('存在失败的测试，请检查！');
+
+    }).catch(function(err) {
+        log('初始化失败: ' + err);
+    });
+})();
+</script>
+</body>
+</html>

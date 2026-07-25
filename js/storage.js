@@ -189,14 +189,20 @@ function addRecord(rec) {
             if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
             else newRecs.push(d.history[i]);
         }
-        // 按天聚合
+        // 按天聚合（含分类统计）
         var dayMap = {};
         for (var j = 0; j < oldRecs.length; j++) {
             var dt = new Date(oldRecs[j].time);
             var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
-            if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
+            if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0, cats: {} };
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
+            var q = findQ(oldRecs[j].qid);
+            if (q) {
+                if (!dayMap[key].cats[q.category]) dayMap[key].cats[q.category] = { t: 0, c: 0 };
+                dayMap[key].cats[q.category].t++;
+                if (oldRecs[j].ok) dayMap[key].cats[q.category].c++;
+            }
         }
         for (var k in dayMap) d.archive.push(dayMap[k]);
         d.history = newRecs;
@@ -300,19 +306,39 @@ function getDueWrong() {
 function recalcStats() {
     var d = get();
     var stats = { total: 0, correct: 0, cats: {} };
+    // 遍历历史记录
     for (var i = 0; i < d.history.length; i++) {
-        var rec = d.history[i];
-        stats.total++;
-        if (rec.ok) stats.correct++;
-        var q = findQ(rec.qid);
-        if (q) {
-            if (!stats.cats[q.category]) stats.cats[q.category] = { t: 0, c: 0 };
-            stats.cats[q.category].t++;
-            if (rec.ok) stats.cats[q.category].c++;
+        _addRecToStats(stats, d.history[i]);
+    }
+    // 遍历归档记录（按天聚合的数据也计入统计）
+    if (d.archive && d.archive.length > 0) {
+        for (var j = 0; j < d.archive.length; j++) {
+            var a = d.archive[j];
+            stats.total += a.total || 0;
+            stats.correct += a.correct || 0;
+            // 恢复分类统计
+            if (a.cats) {
+                for (var cat in a.cats) {
+                    if (!stats.cats[cat]) stats.cats[cat] = { t: 0, c: 0 };
+                    stats.cats[cat].t += a.cats[cat].t || 0;
+                    stats.cats[cat].c += a.cats[cat].c || 0;
+                }
+            }
         }
     }
     d.stats = stats;
     persist();
+}
+
+function _addRecToStats(stats, rec) {
+    stats.total++;
+    if (rec.ok) stats.correct++;
+    var q = findQ(rec.qid);
+    if (q) {
+        if (!stats.cats[q.category]) stats.cats[q.category] = { t: 0, c: 0 };
+        stats.cats[q.category].t++;
+        if (rec.ok) stats.cats[q.category].c++;
+    }
 }
 
 // 直接设置数据（导入用）
@@ -506,7 +532,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}
