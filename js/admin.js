@@ -297,6 +297,8 @@ var App = window.App || {};
 
                 // 关键修复：不直接累加 stats，而是从 history 重新计算
                 A.db.recalcStats();
+                // 导入后检查并触发归档（防止大量历史数据导致性能问题）
+                A.db.archiveHistory();
             }
 
             var msg = '数据导入成功！';

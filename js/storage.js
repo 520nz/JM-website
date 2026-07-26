@@ -167,7 +167,30 @@ function findQ(qid) {
     return null;
 }
 
-// 添加答题记录
+function archiveHistory() {
+    var d = get();
+    if (!d.history || d.history.length <= 1000) return;
+    if (!d.archive) d.archive = [];
+    var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+    var oldRecs = [];
+    var newRecs = [];
+    for (var i = 0; i < d.history.length; i++) {
+        if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
+        else newRecs.push(d.history[i]);
+    }
+    var dayMap = {};
+    for (var j = 0; j < oldRecs.length; j++) {
+        var dt = new Date(oldRecs[j].time);
+        var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+        if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
+        dayMap[key].total++;
+        if (oldRecs[j].ok) dayMap[key].correct++;
+    }
+    for (var k in dayMap) d.archive.push(dayMap[k]);
+    d.history = newRecs;
+    persist();
+}
+
 function addRecord(rec) {
     var d = get();
     d.history.push(rec);
@@ -179,27 +202,8 @@ function addRecord(rec) {
         d.stats.cats[q.category].t++;
         if (rec.ok) d.stats.cats[q.category].c++;
     }
-    // 历史数据归档：超过 1000 条时，把 90 天前的明细按天聚合
     if (d.history.length > 1000) {
-        if (!d.archive) d.archive = [];
-        var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
-        var oldRecs = [];
-        var newRecs = [];
-        for (var i = 0; i < d.history.length; i++) {
-            if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
-            else newRecs.push(d.history[i]);
-        }
-        // 按天聚合
-        var dayMap = {};
-        for (var j = 0; j < oldRecs.length; j++) {
-            var dt = new Date(oldRecs[j].time);
-            var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
-            if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
-            dayMap[key].total++;
-            if (oldRecs[j].ok) dayMap[key].correct++;
-        }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
-        d.history = newRecs;
+        archiveHistory();
     }
     persist();
 }
@@ -332,6 +336,12 @@ function setDailyGoal(n) {
     persist();
 }
 
+function setTheme(t) {
+    var d = get();
+    d.theme = t;
+    persist();
+}
+
 // --- 连续打卡天数计算 ---
 function getStreak() {
     var d = get();
@@ -450,10 +460,12 @@ App.db = {
     getDueWrong: getDueWrong,
     findQ: findQ,
     recalcStats: recalcStats,
+    archiveHistory: archiveHistory,
     setData: setData,
     defaults: defaults,
     getDailyGoal: getDailyGoal,
     setDailyGoal: setDailyGoal,
+    setTheme: setTheme,
     getStreak: getStreak,
     getAchievements: getAchievements,
     checkAchievements: checkAchievements,
@@ -506,7 +518,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}
