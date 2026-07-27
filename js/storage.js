@@ -180,27 +180,34 @@ function addRecord(rec) {
         if (rec.ok) d.stats.cats[q.category].c++;
     }
     // 历史数据归档：超过 1000 条时，把 90 天前的明细按天聚合
-    if (d.history.length > 1000) {
-        if (!d.archive) d.archive = [];
-        var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
-        var oldRecs = [];
-        var newRecs = [];
-        for (var i = 0; i < d.history.length; i++) {
-            if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
-            else newRecs.push(d.history[i]);
+        if (d.history.length > 1000) {
+            if (!d.archive) d.archive = [];
+            var cutoff = Date.now() - 90 * 24 * 60 * 60 * 1000;
+            var oldRecs = [];
+            var newRecs = [];
+            for (var i = 0; i < d.history.length; i++) {
+                if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
+                else newRecs.push(d.history[i]);
+            }
+            // 检查哪些日期已经归档过（避免重复归档）
+            var archivedDates = {};
+            for (var a = 0; a < d.archive.length; a++) {
+                archivedDates[d.archive[a].date] = true;
+            }
+            // 按天聚合未归档的日期
+            var dayMap = {};
+            for (var j = 0; j < oldRecs.length; j++) {
+                var dt = new Date(oldRecs[j].time);
+                var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+                if (archivedDates[key]) continue;
+                if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
+                dayMap[key].total++;
+                if (oldRecs[j].ok) dayMap[key].correct++;
+            }
+            for (var k in dayMap) d.archive.push(dayMap[k]);
+            d.history = newRecs;
+            recalcStats();
         }
-        // 按天聚合
-        var dayMap = {};
-        for (var j = 0; j < oldRecs.length; j++) {
-            var dt = new Date(oldRecs[j].time);
-            var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
-            if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
-            dayMap[key].total++;
-            if (oldRecs[j].ok) dayMap[key].correct++;
-        }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
-        d.history = newRecs;
-    }
     persist();
 }
 
@@ -506,7 +513,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}

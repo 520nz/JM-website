@@ -280,9 +280,9 @@ var App = window.App || {};
                         if (wrongMap[wrongItem.qid]) {
                             // 合并：取较高的错误次数，保留间隔重复等级
                             wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt || 1);
-                            // 如果导入的数据有间隔重复字段，保留较低等级（更保守）
+                            // 如果导入的数据有间隔重复字段，保留较高等级（已有复习进度）
                             if (wrongItem.level != null) {
-                                wrongMap[wrongItem.qid].level = Math.min(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
+                                wrongMap[wrongItem.qid].level = Math.max(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
                             }
                         } else {
                             // 新错题，确保有间隔重复字段
