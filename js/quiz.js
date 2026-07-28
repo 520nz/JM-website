@@ -415,7 +415,7 @@ var App = window.App || {};
     function copyResultText() {
         var r = state.lastResult;
         if (!r) return;
-        var text = '【林俊杰粉丝答题】' + r.mode + '模式 ' + r.total + '题，正确率 ' + r.pct + '%（对' + r.correct + '错' + r.wrong + '），用时 ' + fmtTime(r.elapsed) + ' #林俊杰答题挑战#';
+        var text = '【林俊杰粉丝答题】' + r.mode + '模式 ' + r.total + '题，正确率 ' + r.pct + '%（对' + r.correct + '错' + r.wrong + '），用时 ' + fmtTime(r.elapsed) + ' 来挑战 👉 https://cdn.jsdelivr.net/gh/520nz/JM-website@main/index.html #林俊杰答题挑战#';
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text).then(function() {
                 showCopyToast();
@@ -467,7 +467,7 @@ var App = window.App || {};
         state.idx = saved.idx || 0;
         state.correctCount = saved.correctCount || 0;
         state.mode = saved.mode || 'quick';
-        state.isWrongBookQuiz = saved.isWrongBookQuiz || false;
+        state.isWrongBookQuiz = false;
 
         // 如果已经答完，不恢复
         if (state.idx >= state.quiz.length) {
