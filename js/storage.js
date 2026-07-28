@@ -198,7 +198,16 @@ function addRecord(rec) {
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
         }
-        for (var k in dayMap) d.archive.push(dayMap[k]);
+        // 检查归档中是否已存在相同日期，避免重复归档
+        var existingArchiveKeys = {};
+        for (var a = 0; a < d.archive.length; a++) {
+            existingArchiveKeys[d.archive[a].date] = true;
+        }
+        for (var k in dayMap) {
+            if (!existingArchiveKeys[k]) {
+                d.archive.push(dayMap[k]);
+            }
+        }
         d.history = newRecs;
     }
     persist();
@@ -335,16 +344,19 @@ function setDailyGoal(n) {
 // --- 连续打卡天数计算 ---
 function getStreak() {
     var d = get();
-    if (!d.history || d.history.length === 0) return 0;
     var days = {};
-    for (var i = 0; i < d.history.length; i++) {
+    for (var i = 0; i < (d.history || []).length; i++) {
         var dt = new Date(d.history[i].time);
         days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
     }
+    // 合并归档数据中的日期
+    for (var j = 0; j < (d.archive || []).length; j++) {
+        days[d.archive[j].date] = true;
+    }
+    if (Object.keys(days).length === 0) return 0;
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    // 今天没答过就从昨天开始算（不断签）
     var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
@@ -506,7 +518,8 @@ function sessionSave(state) {
             idx: state.idx,
             correctCount: state.correctCount,
             startTime: state.startTime,
-            mode: state.mode
+            mode: state.mode,
+            isWrongBookQuiz: state.isWrongBookQuiz || false
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
     } catch (e) {}
