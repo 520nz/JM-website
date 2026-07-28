@@ -252,8 +252,8 @@ var App = window.App || {};
             catEl.innerHTML = html;
         }
 
-        // 趋势图
-        A.renderTrendChart('trendChart', d.history);
+        // 趋势图（含归档数据）
+        A.renderTrendChart('trendChart', d.history, d.archive);
 
         // 徽章墙
         renderAchievements();

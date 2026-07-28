@@ -5,43 +5,53 @@
 var App = window.App || {};
 (function(A) {
     // 绘制趋势图
-    function renderTrendChart(canvasId, history) {
-        var canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-        var ctx = canvas.getContext('2d');
-        var dpr = window.devicePixelRatio || 1;
-        var w = canvas.parentElement.clientWidth - 4;
-        var h = 180;
-        canvas.width = w * dpr;
-        canvas.height = h * dpr;
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        ctx.scale(dpr, dpr);
-        ctx.clearRect(0, 0, w, h);
+function renderTrendChart(canvasId, history, archive) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.parentElement.clientWidth - 4;
+    var h = 180;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
 
-        // 按天聚合最近 14 天数据
-        var days = 14;
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
-        var dayData = [];
-        for (var i = days - 1; i >= 0; i--) {
-            var dayStart = today.getTime() - i * 86400000;
-            var dayEnd = dayStart + 86400000;
-            var dayCount = 0;
-            var dayCorrect = 0;
-            for (var j = 0; j < history.length; j++) {
-                if (history[j].time >= dayStart && history[j].time < dayEnd) {
-                    dayCount++;
-                    if (history[j].ok) dayCorrect++;
-                }
+    // 按天聚合最近 14 天数据
+    var days = 14;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var dayData = [];
+    for (var i = days - 1; i >= 0; i--) {
+        var dayStart = today.getTime() - i * 86400000;
+        var dayEnd = dayStart + 86400000;
+        var dayCount = 0;
+        var dayCorrect = 0;
+        for (var j = 0; j < (history || []).length; j++) {
+            if (history[j].time >= dayStart && history[j].time < dayEnd) {
+                dayCount++;
+                if (history[j].ok) dayCorrect++;
             }
-            dayData.push({
-                date: new Date(dayStart),
-                count: dayCount,
-                correct: dayCorrect,
-                acc: dayCount > 0 ? Math.round(dayCorrect / dayCount * 100) : 0
-            });
         }
+        // 从归档数据中补充
+        var dt = new Date(dayStart);
+        var dateKey = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+        for (var k = 0; k < (archive || []).length; k++) {
+            if (archive[k].date === dateKey) {
+                dayCount += archive[k].total;
+                dayCorrect += archive[k].correct;
+                break;
+            }
+        }
+        dayData.push({
+            date: new Date(dayStart),
+            count: dayCount,
+            correct: dayCorrect,
+            acc: dayCount > 0 ? Math.round(dayCorrect / dayCount * 100) : 0
+        });
+    }
 
         // 找最大值
         var maxCount = 0;
