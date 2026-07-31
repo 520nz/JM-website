@@ -1,0 +1,13 @@
+{
+  "name": "jj-quiz-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "回归测试 - 答题/存储/管理核心逻辑",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node --test test/"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}
