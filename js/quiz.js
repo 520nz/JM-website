@@ -545,6 +545,8 @@ var App = window.App || {};
     // --- 暴露到 App ---
     A.state = state;
     A.selectMode = selectMode;
+    A.getCount = getCount;
+    A.fmtTime = fmtTime;
     A.startRandomQuiz = startRandomQuiz;
     A.showCategoryView = showCategoryView;
     A.startCatQuiz = startCatQuiz;
