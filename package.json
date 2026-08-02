@@ -1,0 +1,14 @@
+{
+  "name": "jj-quiz-app",
+  "version": "1.0.0",
+  "description": "林俊杰粉丝答题网站",
+  "private": true,
+  "scripts": {
+    "test": "jest --no-cache",
+    "test:coverage": "jest --coverage --no-cache"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}
