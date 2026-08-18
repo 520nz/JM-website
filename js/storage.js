@@ -347,7 +347,8 @@ function getStreak() {
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
         var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        // 月份统一 +1，与归档聚合的日期 key 保持一致（addRecord 归档时用 getMonth+1）
+        days[dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate()] = true;
     }
     // 合并归档数据中的日期
     for (var j = 0; j < (d.archive || []).length; j++) {
@@ -357,10 +358,11 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    // 注意：key 月份使用 1-based（与上面 days 存入逻辑 / addRecord 归档逻辑保持一致）
+    var todayKey = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);

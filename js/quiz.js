@@ -562,6 +562,7 @@ var App = window.App || {};
     A.startTimer = startTimer;
     A.stopTimer = stopTimer;
     A.shuffle = shuffle;
+    A.fmtTime = fmtTime;
     A.playCorrectSound = playCorrectSound;
     A.playWrongSound = playWrongSound;
     A.toggleSound = toggleSound;
