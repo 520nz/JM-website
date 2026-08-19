@@ -164,7 +164,7 @@ var App = window.App || {};
                     '<div class="q">' + A.esc(q.question) + '</div>' +
                     '<div class="info">' +
                         '<span><span class="level-badge">Lv.' + level + '</span>错误' + sorted[i].cnt + '次 ' + dueText + '</span>' +
-                        '<button class="btn btn-sm btn-error btn-outline" onclick="App.removeWrong(\'' + A.esc(q.id) + '\')">移除</button>' +
+                        '<button class="btn btn-sm btn-error btn-outline" data-qid="' + A.esc(q.id) + '" onclick="App.removeWrong(this.getAttribute(\'data-qid\'))">移除</button>' +
                     '</div></div>';
         }
         html += '</div>';
@@ -184,8 +184,8 @@ var App = window.App || {};
         var items = document.querySelectorAll('.error-item');
         var targetEl = null;
         for (var i = 0; i < items.length; i++) {
-            var btn = items[i].querySelector('button[onclick*="' + qid + '"]');
-            if (btn) { targetEl = items[i]; break; }
+            var btn = items[i].querySelector('button[data-qid]');
+            if (btn && btn.getAttribute('data-qid') === qid) { targetEl = items[i]; break; }
         }
 
         function doRemove() {

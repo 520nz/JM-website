@@ -17,6 +17,14 @@ function esc(s) {
 }
 App.esc = esc;
 
+// --- JS 字符串字面量转义（用于 onclick="foo('...')" 中的参数） ---
+// 先转义反斜杠和单引号，再经 HTML 转义后可安全嵌入单引号包裹的 JS 字符串
+function escJsStr(s) {
+    if (s == null) return '';
+    return esc(String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+}
+App.escJsStr = escJsStr;
+
 // --- 间隔重复：间隔时间表（毫秒） ---
 // level 0: 立即可复习
 // level 1: 1小时后
@@ -341,15 +349,20 @@ function setDailyGoal(n) {
     persist();
 }
 
+// 生成统一格式的日期 key（月份 1-12，与归档 addRecord 中的格式保持一致）
+function _dayKey(d) {
+    return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate();
+}
+
 // --- 连续打卡天数计算 ---
 function getStreak() {
     var d = get();
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
         var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        days[_dayKey(dt)] = true;
     }
-    // 合并归档数据中的日期
+    // 合并归档数据中的日期（归档已使用相同的 key 格式）
     for (var j = 0; j < (d.archive || []).length; j++) {
         days[d.archive[j].date] = true;
     }
@@ -357,10 +370,10 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    var todayKey = _dayKey(check);
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = _dayKey(check);
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);

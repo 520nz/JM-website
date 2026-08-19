@@ -68,8 +68,8 @@ var App = window.App || {};
             html += '<div class="q-item-header">';
             html += '<span class="q-item-cat">' + A.esc(q.category) + '</span>';
             html += '<div class="q-item-actions">';
-            html += '<button class="btn btn-outline btn-sm" onclick="App.showEditForm(\'' + A.esc(q.id) + '\')">编辑</button>';
-            html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" onclick="App.deleteQuestion(\'' + A.esc(q.id) + '\')">删除</button>';
+            html += '<button class="btn btn-outline btn-sm" data-qid="' + A.esc(q.id) + '" onclick="App.showEditForm(this.getAttribute(\'data-qid\'))">编辑</button>';
+            html += '<button class="btn btn-outline btn-sm" style="border-color:var(--error);color:var(--error);" data-qid="' + A.esc(q.id) + '" onclick="App.deleteQuestion(this.getAttribute(\'data-qid\'))">删除</button>';
             html += '</div></div>';
             html += '<div class="q-item-text">' + A.esc(q.question) + '</div>';
             html += '<div class="q-item-answer">答案: ' + A.esc(q.answer) + '</div>';
@@ -264,9 +264,21 @@ var App = window.App || {};
             if (data.userData) {
                 var existingData = A.db.get();
 
-                // 合并答题历史
+                // 合并答题历史（按 qid+time 去重，避免重复导入同一备份导致统计膨胀）
                 if (data.userData.history) {
-                    existingData.history = existingData.history.concat(data.userData.history);
+                    var seenHist = {};
+                    var mergedHist = [];
+                    var allHist = existingData.history.concat(data.userData.history);
+                    for (var h = 0; h < allHist.length; h++) {
+                        var r = allHist[h];
+                        // 以 qid + time 作为唯一键；若 time 缺失则退化到索引级拼接
+                        var hkey = (r.qid || '') + '|' + (r.time || ('__idx_' + h));
+                        if (!seenHist[hkey]) {
+                            seenHist[hkey] = true;
+                            mergedHist.push(r);
+                        }
+                    }
+                    existingData.history = mergedHist;
                 }
 
                 // 合并错题本（含间隔重复数据）

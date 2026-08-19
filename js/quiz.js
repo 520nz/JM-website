@@ -137,7 +137,7 @@ var App = window.App || {};
         }
         var html = '';
         for (var name in cats) {
-            html += '<div class="category-item" onclick="App.startCatQuiz(\'' + A.esc(name) + '\')">' +
+            html += '<div class="category-item" onclick="App.startCatQuiz(\'' + A.escJsStr(name) + '\')">' +
                     '<span class="category-name">' + A.esc(name) + '</span>' +
                     '<span class="category-count">' + cats[name] + '题</span></div>';
         }
@@ -210,7 +210,7 @@ var App = window.App || {};
         html += '<div class="question-card"><div class="question-text">' + A.esc(q.question) + '</div>';
         for (var i = 0; i < q.options.length; i++) {
             var o = q.options[i];
-            html += '<div class="option-item" onclick="App.pickOption(\'' + A.esc(o.key) + '\')" id="opt-' + A.esc(o.key) + '">' +
+            html += '<div class="option-item" onclick="App.pickOption(\'' + A.escJsStr(o.key) + '\')" id="opt-' + A.esc(o.key) + '">' +
                     '<span class="option-key">' + A.esc(o.key) + '</span><span>' + A.esc(o.text) + '</span></div>';
         }
         html += '<div class="feedback" id="fb"><div class="feedback-title" id="fbTitle"></div><div class="feedback-desc" id="fbDesc"></div></div></div>';
