@@ -176,7 +176,12 @@ var App = window.App || {};
             var q = A.db.findQ(wrongList[i].qid);
             if (q) qs.push(q);
         }
-        if (qs.length === 0) return;
+        if (qs.length === 0) {
+            state.quiz = [];
+            state.idx = 0;
+            state.correctCount = 0;
+            return;
+        }
         state.quiz = shuffle(qs);
         state.idx = 0;
         state.correctCount = 0;
@@ -290,6 +295,9 @@ var App = window.App || {};
     function quitQuiz() {
         stopTimer();
         A.session.clear();
+        state.quiz = [];
+        state.idx = 0;
+        state.correctCount = 0;
         A.switchView('home');
     }
 

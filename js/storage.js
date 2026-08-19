@@ -513,12 +513,20 @@ var SKEY = 'jj_quiz_session';
 
 function sessionSave(state) {
     try {
+        var quizIds;
+        if (state.quiz && Array.isArray(state.quiz)) {
+            quizIds = state.quiz.map(function(q) { return q.id; });
+        } else if (state.quizIds && Array.isArray(state.quizIds)) {
+            quizIds = state.quizIds;
+        } else {
+            quizIds = [];
+        }
         var data = {
-            quizIds: state.quiz.map(function(q) { return q.id; }),
-            idx: state.idx,
-            correctCount: state.correctCount,
-            startTime: state.startTime,
-            mode: state.mode,
+            quizIds: quizIds,
+            idx: state.idx || 0,
+            correctCount: state.correctCount || 0,
+            startTime: state.startTime || Date.now(),
+            mode: state.mode || 'quick',
             isWrongBookQuiz: state.isWrongBookQuiz || false
         };
         sessionStorage.setItem(SKEY, JSON.stringify(data));
