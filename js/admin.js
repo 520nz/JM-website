@@ -130,6 +130,21 @@ var App = window.App || {};
         document.getElementById('editModal').style.display = 'none';
     }
 
+    // --- 选项文本解析（便于测试与复用） ---
+    function parseOptions(optsText) {
+        var lines = optsText.split('\n');
+        var options = [];
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var match = line.match(/^([A-Z])[.、．]\s*(.+)$/);
+            if (match) {
+                options.push({ key: match[1], text: match[2] });
+            }
+        }
+        return options;
+    }
+
     function saveQuestion() {
         var id = document.getElementById('editId').value;
         var category = document.getElementById('editCategory').value;
@@ -143,17 +158,7 @@ var App = window.App || {};
             return;
         }
 
-        // 解析选项
-        var lines = optsText.split('\n');
-        var options = [];
-        for (var i = 0; i < lines.length; i++) {
-            var line = lines[i].trim();
-            if (!line) continue;
-            var match = line.match(/^([A-Z])[.、．]\s*(.+)$/);
-            if (match) {
-                options.push({ key: match[1], text: match[2] });
-            }
-        }
+        var options = parseOptions(optsText);
 
         if (options.length < 2) {
             alert('请至少输入两个选项，格式：A.选项内容');
@@ -215,6 +220,77 @@ var App = window.App || {};
         alert('数据已导出！');
     }
 
+    // --- 数据合并逻辑（便于测试与复用） ---
+    function mergeImportedData(data) {
+        var addedCount = 0;
+        var updatedCount = 0;
+
+        // 导入题库
+        if (data.questionBank) {
+            var existingIds = {};
+            for (var i = 0; i < A.QUESTION_BANK.length; i++) {
+                existingIds[A.QUESTION_BANK[i].id] = true;
+            }
+            for (var j = 0; j < data.questionBank.length; j++) {
+                var q = data.questionBank[j];
+                if (existingIds[q.id]) {
+                    for (var k = 0; k < A.QUESTION_BANK.length; k++) {
+                        if (A.QUESTION_BANK[k].id === q.id) {
+                            A.QUESTION_BANK[k] = q;
+                            updatedCount++;
+                            break;
+                        }
+                    }
+                } else {
+                    A.QUESTION_BANK.push(q);
+                    addedCount++;
+                }
+            }
+            A.store.save();
+        }
+
+        // 导入用户数据（修复：合并 history 后重算 stats）
+        if (data.userData) {
+            var existingData = A.db.get();
+
+            // 合并答题历史
+            if (data.userData.history) {
+                existingData.history = existingData.history.concat(data.userData.history);
+            }
+
+            // 合并错题本（含间隔重复数据）
+            if (data.userData.wrong) {
+                var wrongMap = {};
+                for (var w = 0; w < existingData.wrong.length; w++) {
+                    wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
+                }
+                for (var x = 0; x < data.userData.wrong.length; x++) {
+                    var wrongItem = data.userData.wrong[x];
+                    if (wrongMap[wrongItem.qid]) {
+                        // 合并：取较高的错误次数，保留间隔重复等级
+                        wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt || 1);
+                        // 如果导入的数据有间隔重复字段，保留较低等级（更保守）
+                        if (wrongItem.level != null) {
+                            wrongMap[wrongItem.qid].level = Math.min(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
+                        }
+                    } else {
+                        // 新错题，确保有间隔重复字段
+                        if (!wrongItem.level) wrongItem.level = 0;
+                        if (!wrongItem.nextReview) wrongItem.nextReview = Date.now();
+                        if (!wrongItem.lastReview) wrongItem.lastReview = 0;
+                        if (!wrongItem.time) wrongItem.time = Date.now();
+                        existingData.wrong.push(wrongItem);
+                    }
+                }
+            }
+
+            // 关键修复：不直接累加 stats，而是从 history 重新计算
+            A.db.recalcStats();
+        }
+
+        return { addedCount: addedCount, updatedCount: updatedCount };
+    }
+
     // --- 数据导入（修复 stats 累加问题） ---
     function importData(event) {
         var file = event.target.files[0];
@@ -233,75 +309,11 @@ var App = window.App || {};
                 return;
             }
 
-            var addedCount = 0;
-            var updatedCount = 0;
-
-            // 导入题库
-            if (data.questionBank) {
-                var existingIds = {};
-                for (var i = 0; i < A.QUESTION_BANK.length; i++) {
-                    existingIds[A.QUESTION_BANK[i].id] = true;
-                }
-                for (var j = 0; j < data.questionBank.length; j++) {
-                    var q = data.questionBank[j];
-                    if (existingIds[q.id]) {
-                        for (var k = 0; k < A.QUESTION_BANK.length; k++) {
-                            if (A.QUESTION_BANK[k].id === q.id) {
-                                A.QUESTION_BANK[k] = q;
-                                updatedCount++;
-                                break;
-                            }
-                        }
-                    } else {
-                        A.QUESTION_BANK.push(q);
-                        addedCount++;
-                    }
-                }
-                A.store.save();
-            }
-
-            // 导入用户数据（修复：合并 history 后重算 stats）
-            if (data.userData) {
-                var existingData = A.db.get();
-
-                // 合并答题历史
-                if (data.userData.history) {
-                    existingData.history = existingData.history.concat(data.userData.history);
-                }
-
-                // 合并错题本（含间隔重复数据）
-                if (data.userData.wrong) {
-                    var wrongMap = {};
-                    for (var w = 0; w < existingData.wrong.length; w++) {
-                        wrongMap[existingData.wrong[w].qid] = existingData.wrong[w];
-                    }
-                    for (var x = 0; x < data.userData.wrong.length; x++) {
-                        var wrongItem = data.userData.wrong[x];
-                        if (wrongMap[wrongItem.qid]) {
-                            // 合并：取较高的错误次数，保留间隔重复等级
-                            wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt || 1);
-                            // 如果导入的数据有间隔重复字段，保留较低等级（更保守）
-                            if (wrongItem.level != null) {
-                                wrongMap[wrongItem.qid].level = Math.min(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
-                            }
-                        } else {
-                            // 新错题，确保有间隔重复字段
-                            if (!wrongItem.level) wrongItem.level = 0;
-                            if (!wrongItem.nextReview) wrongItem.nextReview = Date.now();
-                            if (!wrongItem.lastReview) wrongItem.lastReview = 0;
-                            if (!wrongItem.time) wrongItem.time = Date.now();
-                            existingData.wrong.push(wrongItem);
-                        }
-                    }
-                }
-
-                // 关键修复：不直接累加 stats，而是从 history 重新计算
-                A.db.recalcStats();
-            }
+            var result = mergeImportedData(data);
 
             var msg = '数据导入成功！';
-            if (addedCount > 0 || updatedCount > 0) {
-                msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+            if (result.addedCount > 0 || result.updatedCount > 0) {
+                msg += '\n题目：新增 ' + result.addedCount + ' 道，更新 ' + result.updatedCount + ' 道';
             }
             alert(msg);
             try { A.updateHome(); } catch (e) {}
@@ -347,6 +359,7 @@ var App = window.App || {};
 
     // --- 暴露到 App ---
     A.renderAdmin = renderAdmin;
+    A.parseOptions = parseOptions;
     A.filterQuestions = filterQuestions;
     A.adminPrevPage = adminPrevPage;
     A.adminNextPage = adminNextPage;
@@ -357,6 +370,7 @@ var App = window.App || {};
     A.deleteQuestion = deleteQuestion;
     A.exportData = exportData;
     A.importData = importData;
+    A.mergeImportedData = mergeImportedData;
     A.showResetConfirm = showResetConfirm;
     A.closeResetModal = closeResetModal;
     A.checkResetInput = checkResetInput;
