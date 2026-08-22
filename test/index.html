@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>JJ 答题 - 测试套件</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; padding: 20px; }
+        h1 { color: #8B5CF6; margin-bottom: 20px; }
+        h2 { margin: 20px 0 10px; font-size: 18px; color: #c4b5fd; }
+        .summary { background: #16213e; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .summary .stat { display: inline-block; margin-right: 30px; }
+        .summary .num { font-size: 32px; font-weight: bold; }
+        .summary .num.pass { color: #10B981; }
+        .summary .num.fail { color: #EF4444; }
+        .suite { background: #16213e; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+        .suite-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .suite-name { font-weight: 600; }
+        .suite-count { font-size: 13px; color: #9ca3af; }
+        .test { padding: 8px 12px; margin: 4px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .test.pass { background: rgba(16, 185, 129, 0.15); }
+        .test.fail { background: rgba(239, 68, 68, 0.15); }
+        .test-name { flex: 1; }
+        .test-status { font-size: 12px; }
+        .test-status.pass { color: #10B981; }
+        .test-status.fail { color: #EF4444; }
+        .test-error { font-size: 11px; color: #fca5a5; margin-left: 10px; white-space: pre-wrap; }
+        .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+        .badge.pass { background: #10B981; color: #fff; }
+        .badge.fail { background: #EF4444; color: #fff; }
+        .toolbar { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #8B5CF6; color: #fff; }
+        .btn-primary:hover { background: #7C3AED; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>🧪 JJ 答题 - 测试套件</h1>
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="runAllTests()">运行所有测试</button>
+        <span id="runStatus" style="color:#9ca3af;font-size:13px;"></span>
+    </div>
+    <div id="results"></div>
+
+    <!-- JS 文件按依赖顺序加载（注意：不加载 app.js 以避免自动初始化） -->
+    <script src="../js/data.js"></script>
+    <script src="../js/storage.js"></script>
+    <script src="../js/quiz.js"></script>
+    <script src="../js/chart.js"></script>
+    <script src="../js/admin.js"></script>
+
+    <!-- Mock IndexedDB 依赖，让测试在无 IndexedDB 环境中也能运行 -->
+    <script>
+        // 替换 persist 为 no-op，避免 IndexedDB 访问
+        (function() {
+            var originalPersist = App.db.persist;
+            App.db.persist = function() { return Promise.resolve(); };
+
+            // 替换 init 为直接使用默认数据
+            App.db.init = function() {
+                App.db.setData(App.db.defaults());
+                return Promise.resolve();
+            };
+
+            // 替换 store.init
+            App.store.init = function() { return Promise.resolve(); };
+            App.store.save = function() { return Promise.resolve(); };
+            App.store.reset = function() {
+                App.QUESTION_BANK = App.DEFAULT_QUESTION_BANK.slice();
+                return Promise.resolve();
+            };
+
+            // 暴露 fmtTime 给测试（原先是 quiz.js 内部函数）
+            // 我们重新实现它用于测试
+            App.fmtTime = function(ms) {
+                var sec = Math.floor(ms / 1000);
+                var m = Math.floor(sec / 60);
+                var s = sec % 60;
+                return m + '分' + s + '秒';
+            };
+
+            // 暴露 stopTimer 给测试
+            App.stopTimer = function() {
+                if (App.state && App.state.timer) {
+                    clearInterval(App.state.timer);
+                    App.state.timer = null;
+                }
+            };
+
+            // 暴露 renderTrendChart 给测试
+            App.renderTrendChart = function() {};
+
+            // 暴露 showAchievementToast
+            App.showAchievementToast = function() {};
+
+            // 暴露 handleQuizKeydown - 需要确保 quiz.js 已加载
+            // 下面会重新加载 app.js 来覆盖这些函数
+        })();
+
+        // 加载 app.js 的功能（但不触发 DOMContentLoaded 初始化）
+        // 我们手动提取需要的函数
+        (function() {
+            // 重新运行 storage.js 中的初始化逻辑但跳过 IndexedDB
+            App.db.setData(App.db.defaults());
+        })();
+
+        // 创建必要的 DOM 元素
+        (function() {
+            var elements = [
+                'view-home', 'view-practice', 'view-wrongbook', 'view-stats', 'view-admin', 'view-category',
+                'quizArea', 'wrongBookList', 'wrongBookBtn', 'sTotal', 'sCorrect', 'sAcc', 'sWrong',
+                'catStats', 'trendChart', 'achvGrid', 'achvCount', 'categoryList',
+                'todayCount', 'todayAcc', 'streakBadge', 'goalProgress', 'goalTarget', 'goalBar',
+                'timerVal', 'fb', 'fbTitle', 'fbDesc', 'nextBtn', 'opt-A',
+                'categoryFilter', 'editCategory', 'questionList', 'searchInput',
+                'modalTitle', 'editId', 'editQuestion', 'editOptions', 'editAnswer', 'editExplanation',
+                'editModal', 'resetModal', 'resetConfirmInput', 'resetConfirmBtn',
+                'catStats', 'achvGrid', 'achvCount'
+            ];
+            for (var i = 0; i < elements.length; i++) {
+                var el = document.getElementById(elements[i]);
+                if (!el) {
+                    if (elements[i] === 'trendChart') {
+                        el = document.createElement('canvas');
+                    } else {
+                        el = document.createElement('div');
+                    }
+                    el.id = elements[i];
+                    if (elements[i].indexOf('view-') === 0) {
+                        el.className = 'view';
+                    }
+                    document.body.appendChild(el);
+                }
+            }
+            if (!document.querySelector('.container')) {
+                var c = document.createElement('div');
+                c.className = 'container';
+                document.body.appendChild(c);
+            }
+        })();
+    </script>
+
+    <!-- 加载 app.js 获取视图切换等功能（但会阻止 DOMContentLoaded 事件） -->
+    <script>
+        // 拦截 DOMContentLoaded
+        var _originalAddEventListener = EventTarget.prototype.addEventListener;
+        var _domContentLoadedHandlers = [];
+        EventTarget.prototype.addEventListener = function(type, listener, options) {
+            if (type === 'DOMContentLoaded') {
+                _domContentLoadedHandlers.push(listener);
+                return; // 不注册真正的监听器
+            }
+            return _originalAddEventListener.apply(this, arguments);
+        };
+    </script>
+    <script src="../js/app.js"></script>
+    <script>
+        // 恢复 addEventListener
+        EventTarget.prototype.addEventListener = _originalAddEventListener;
+
+        // 手动设置必要的引用（由于 app.js 的 init 没有运行，我们需要确保一些函数可用）
+        // app.js 中的 switchView 等函数需要 DOM 元素，我们确保它们存在
+
+        // 确保 App.state 存在
+        if (!App.state) {
+            App.state = {
+                quiz: [], idx: 0, answered: false, mode: 'quick',
+                correctCount: 0, startTime: 0, timer: null, isWrongBookQuiz: false
+            };
+        }
+    </script>
+
+    <!-- 测试框架和测试文件 -->
+    <script src="runner.js"></script>
+    <script src="storage_test.js"></script>
+    <script src="quiz_test.js"></script>
+    <script src="admin_test.js"></script>
+
+    <!-- 测试运行逻辑 -->
+    <script>
+        function runAllTests() {
+            document.getElementById('runStatus').textContent = '运行中...';
+            var result = TestRunner.run();
+            renderResults(result);
+            document.getElementById('runStatus').textContent = '完成';
+        }
+
+        function renderResults(result) {
+            var html = '';
+            html += '<div class="summary">';
+            html += '<div class="stat"><div class="num pass">' + result.passed + '</div><div>通过</div></div>';
+            html += '<div class="stat"><div class="num fail">' + result.failed + '</div><div>失败</div></div>';
+            html += '<div class="stat"><div class="num pass" style="font-size:24px;">' + result.results.length + '</div><div>测试套件</div></div>';
+            html += '</div>';
+
+            for (var s = 0; s < result.results.length; s++) {
+                var suite = result.results[s];
+                var badgeClass = suite.failed > 0 ? 'fail' : 'pass';
+                var badgeText = suite.failed > 0 ? suite.failed + ' 失败' : '全部通过';
+                html += '<div class="suite">';
+                html += '<div class="suite-header">';
+                html += '<span class="suite-name">' + suite.name + '</span>';
+                html += '<span><span class="suite-count">' + suite.passed + '/' + (suite.passed + suite.failed) + ' 通过</span> ';
+                html += '<span class="badge ' + badgeClass + '">' + badgeText + '</span></span>';
+                html += '</div>';
+
+                for (var t = 0; t < suite.tests.length; t++) {
+                    var test = suite.tests[t];
+                    html += '<div class="test ' + (test.passed ? 'pass' : 'fail') + '">';
+                    html += '<span class="test-name">' + test.name + '</span>';
+                    html += '<span class="test-status ' + (test.passed ? 'pass' : 'fail') + '">';
+                    html += test.passed ? '✓ 通过' : '✗ 失败';
+                    if (!test.passed && test.error) {
+                        html += '<span class="test-error">' + test.error + '</span>';
+                    }
+                    html += '</span>';
+                    html += '</div>';
+                }
+                html += '</div>';
+            }
+
+            document.getElementById('results').innerHTML = html;
+
+            console.log('=== 测试结果 ===');
+            console.log('通过: ' + result.passed + ', 失败: ' + result.failed);
+            for (var e = 0; e < result.errors.length; e++) {
+                console.error('  ' + result.errors[e].suite + ' > ' + result.errors[e].test + ': ' + result.errors[e].error);
+            }
+        }
+
+        // 页面加载完成后自动运行
+        window.addEventListener('load', function() {
+            setTimeout(runAllTests, 200);
+        });
+    </script>
+</body>
+</html>
