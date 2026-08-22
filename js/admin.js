@@ -260,16 +260,28 @@ var App = window.App || {};
                 A.store.save();
             }
 
-            // 导入用户数据（修复：合并 history 后重算 stats）
+            // 导入用户数据（合并 history/wrong/achievements/archive/设置）
             if (data.userData) {
                 var existingData = A.db.get();
 
-                // 合并答题历史
-                if (data.userData.history) {
-                    existingData.history = existingData.history.concat(data.userData.history);
+                // 1. 合并答题历史（按 qid+time 去重，避免多次导入产生重复）
+                if (data.userData.history && data.userData.history.length > 0) {
+                    var histKeySet = {};
+                    for (var h = 0; h < existingData.history.length; h++) {
+                        var r = existingData.history[h];
+                        histKeySet[r.qid + '_' + r.time] = true;
+                    }
+                    for (var nh = 0; nh < data.userData.history.length; nh++) {
+                        var nr = data.userData.history[nh];
+                        var nkey = nr.qid + '_' + nr.time;
+                        if (!histKeySet[nkey]) {
+                            existingData.history.push(nr);
+                            histKeySet[nkey] = true;
+                        }
+                    }
                 }
 
-                // 合并错题本（含间隔重复数据）
+                // 2. 合并错题本（含间隔重复数据）
                 if (data.userData.wrong) {
                     var wrongMap = {};
                     for (var w = 0; w < existingData.wrong.length; w++) {
@@ -278,11 +290,20 @@ var App = window.App || {};
                     for (var x = 0; x < data.userData.wrong.length; x++) {
                         var wrongItem = data.userData.wrong[x];
                         if (wrongMap[wrongItem.qid]) {
-                            // 合并：取较高的错误次数，保留间隔重复等级
+                            // 合并：取较高的错误次数，保留较低复习等级（更保守）
                             wrongMap[wrongItem.qid].cnt = Math.max(wrongMap[wrongItem.qid].cnt, wrongItem.cnt || 1);
-                            // 如果导入的数据有间隔重复字段，保留较低等级（更保守）
                             if (wrongItem.level != null) {
                                 wrongMap[wrongItem.qid].level = Math.min(wrongMap[wrongItem.qid].level || 0, wrongItem.level);
+                            }
+                            // 取更早的添加时间、更晚的复习时间
+                            if (wrongItem.time && wrongItem.time < (wrongMap[wrongItem.qid].time || Infinity)) {
+                                wrongMap[wrongItem.qid].time = wrongItem.time;
+                            }
+                            if (wrongItem.lastReview && wrongItem.lastReview > (wrongMap[wrongItem.qid].lastReview || 0)) {
+                                wrongMap[wrongItem.qid].lastReview = wrongItem.lastReview;
+                            }
+                            if (wrongItem.nextReview && wrongItem.nextReview < (wrongMap[wrongItem.qid].nextReview || Infinity)) {
+                                wrongMap[wrongItem.qid].nextReview = wrongItem.nextReview;
                             }
                         } else {
                             // 新错题，确保有间隔重复字段
@@ -295,7 +316,50 @@ var App = window.App || {};
                     }
                 }
 
-                // 关键修复：不直接累加 stats，而是从 history 重新计算
+                // 3. 合并归档数据（按日期累加）
+                if (data.userData.archive && data.userData.archive.length > 0) {
+                    if (!existingData.archive) existingData.archive = [];
+                    var archMap = {};
+                    for (var ae = 0; ae < existingData.archive.length; ae++) {
+                        archMap[existingData.archive[ae].date] = existingData.archive[ae];
+                    }
+                    for (var ai = 0; ai < data.userData.archive.length; ai++) {
+                        var ia = data.userData.archive[ai];
+                        if (archMap[ia.date]) {
+                            archMap[ia.date].total += ia.total || 0;
+                            archMap[ia.date].correct += ia.correct || 0;
+                        } else {
+                            var newArch = { date: ia.date, total: ia.total || 0, correct: ia.correct || 0 };
+                            existingData.archive.push(newArch);
+                            archMap[ia.date] = newArch;
+                        }
+                    }
+                }
+
+                // 4. 合并成就徽章（取并集，保留已解锁的）
+                if (data.userData.achievements && data.userData.achievements.length > 0) {
+                    if (!existingData.achievements) existingData.achievements = [];
+                    var achSet = {};
+                    for (var aae = 0; aae < existingData.achievements.length; aae++) {
+                        achSet[existingData.achievements[aae]] = true;
+                    }
+                    for (var aai = 0; aai < data.userData.achievements.length; aai++) {
+                        if (!achSet[data.userData.achievements[aai]]) {
+                            existingData.achievements.push(data.userData.achievements[aai]);
+                            achSet[data.userData.achievements[aai]] = true;
+                        }
+                    }
+                }
+
+                // 5. 合并偏好设置（仅当导入值更完善时覆盖）
+                if (data.userData.theme && !existingData.theme) {
+                    existingData.theme = data.userData.theme;
+                }
+                if (data.userData.dailyGoal && (!existingData.dailyGoal || existingData.dailyGoal === 20)) {
+                    existingData.dailyGoal = data.userData.dailyGoal;
+                }
+
+                // 从合并后的 history 重新计算 stats（不再累加）
                 A.db.recalcStats();
             }
 

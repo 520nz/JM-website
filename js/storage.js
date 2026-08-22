@@ -17,6 +17,12 @@ function esc(s) {
 }
 App.esc = esc;
 
+// --- 统一日期 key 工具（1-based 月份，与归档格式一致） ---
+function dateKey(ts) {
+    var dt = (ts instanceof Date) ? ts : new Date(ts);
+    return dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+}
+
 // --- 间隔重复：间隔时间表（毫秒） ---
 // level 0: 立即可复习
 // level 1: 1小时后
@@ -41,6 +47,43 @@ var USER_DATA_ID = 'main';
 
 var _db = null;     // IndexedDB 连接（复用）
 var _cache = null;  // 用户数据内存缓存
+
+// --- persist 串行化：避免并发写入竞态 ---
+var _persistInProgress = false;
+var _persistQueued = false;
+
+function _doPersist() {
+    if (!_cache) {
+        _persistInProgress = false;
+        _checkPersistQueue();
+        return Promise.resolve();
+    }
+    _persistInProgress = true;
+    return idbPut(STORE_USER, { id: USER_DATA_ID, data: _cache }).then(function() {
+        _persistInProgress = false;
+        _checkPersistQueue();
+    }).catch(function(err) {
+        console.error('[App.db] persist failed:', err);
+        _persistInProgress = false;
+        _checkPersistQueue();
+    });
+}
+
+function _checkPersistQueue() {
+    if (_persistQueued && !_persistInProgress) {
+        _persistQueued = false;
+        _doPersist();
+    }
+}
+
+// 异步写入 IndexedDB（串行化执行，避免并发覆盖）
+function persist() {
+    if (_persistInProgress) {
+        _persistQueued = true;
+        return Promise.resolve();
+    }
+    return _doPersist();
+}
 
 // --- IndexedDB 操作封装 ---
 function openDB() {
@@ -150,14 +193,6 @@ function get() {
     return _cache;
 }
 
-// 异步写入 IndexedDB（fire-and-forget，错误仅记录）
-function persist() {
-    if (!_cache) return Promise.resolve();
-    return idbPut(STORE_USER, { id: USER_DATA_ID, data: _cache }).catch(function(err) {
-        console.error('[App.db] persist failed:', err);
-    });
-}
-
 // 查找题目（在 App.QUESTION_BANK 中）
 function findQ(qid) {
     var bank = App.QUESTION_BANK || [];
@@ -192,8 +227,7 @@ function addRecord(rec) {
         // 按天聚合
         var dayMap = {};
         for (var j = 0; j < oldRecs.length; j++) {
-            var dt = new Date(oldRecs[j].time);
-            var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+            var key = dateKey(oldRecs[j].time);
             if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
@@ -346,8 +380,7 @@ function getStreak() {
     var d = get();
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
-        var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        days[dateKey(d.history[i].time)] = true;
     }
     // 合并归档数据中的日期
     for (var j = 0; j < (d.archive || []).length; j++) {
@@ -357,10 +390,10 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    var todayKey = dateKey(check);
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = dateKey(check);
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);
