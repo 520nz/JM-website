@@ -122,6 +122,27 @@ function idbClearAndPutAll(storeName, values) {
 // App.db 模块（替换原 DB，内存缓存 + 异步写入）
 // ============================================================
 
+// 归一化用户数据：用 defaults 补全缺失字段，防止数据损坏导致崩溃
+function normalizeData(data) {
+    var d = defaults();
+    if (!data || typeof data !== 'object') return d;
+    // 顶层字段补全
+    for (var k in d) {
+        if (data[k] == null) data[k] = d[k];
+    }
+    // stats 内部字段补全
+    if (!data.stats || typeof data.stats !== 'object') data.stats = d.stats;
+    if (typeof data.stats.total !== 'number') data.stats.total = 0;
+    if (typeof data.stats.correct !== 'number') data.stats.correct = 0;
+    if (!data.stats.cats || typeof data.stats.cats !== 'object') data.stats.cats = {};
+    // history/wrong/archive 必须是数组
+    if (!Array.isArray(data.history)) data.history = [];
+    if (!Array.isArray(data.wrong)) data.wrong = [];
+    if (!Array.isArray(data.archive)) data.archive = [];
+    if (!Array.isArray(data.achievements)) data.achievements = [];
+    return data;
+}
+
 function defaults() {
     return {
         history: [],
@@ -139,14 +160,14 @@ function init() {
     return getDB().then(function() {
         return idbGet(STORE_USER, USER_DATA_ID);
     }).then(function(row) {
-        _cache = (row && row.data) ? row.data : defaults();
+        _cache = normalizeData((row && row.data) ? row.data : null);
         return _cache;
     });
 }
 
 // 同步返回内存缓存（API 与原 DB.get() 保持一致）
 function get() {
-    if (!_cache) _cache = defaults();
+    if (!_cache) _cache = normalizeData(null);
     return _cache;
 }
 
@@ -326,7 +347,7 @@ function recalcStats() {
 
 // 直接设置数据（导入用）
 function setData(data) {
-    _cache = data;
+    _cache = normalizeData(data);
     persist();
 }
 
@@ -347,7 +368,7 @@ function getStreak() {
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
         var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        days[dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate()] = true;
     }
     // 合并归档数据中的日期
     for (var j = 0; j < (d.archive || []).length; j++) {
@@ -357,10 +378,10 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    var todayKey = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);
