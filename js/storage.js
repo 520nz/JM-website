@@ -216,6 +216,7 @@ function addRecord(rec) {
 // 添加错题（含间隔重复逻辑）
 function addWrong(qid) {
     var d = get();
+    d._everHadWrong = true; // 标记：曾有过错题（用于 wrong_clear 成就判断）
     var found = null;
     for (var i = 0; i < d.wrong.length; i++) {
         if (d.wrong[i].qid === qid) { found = d.wrong[i]; break; }
@@ -347,7 +348,8 @@ function getStreak() {
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
         var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        // 与归档 date 格式统一：月份从 1 开始（addRecord 归档中使用 Month+1）
+        days[dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate()] = true;
     }
     // 合并归档数据中的日期
     for (var j = 0; j < (d.archive || []).length; j++) {
@@ -357,10 +359,10 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    var todayKey = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = check.getFullYear() + '-' + (check.getMonth() + 1) + '-' + check.getDate();
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);
@@ -430,8 +432,8 @@ function checkAchievements(context) {
     if (streak >= 3) unlock('streak_3');
     if (streak >= 7) unlock('streak_7');
 
-    // 错题清零（有过错题记录且现在为空）
-    if (d.wrong.length === 0 && total > 0 && has('first_answer')) unlock('wrong_clear');
+    // 错题清零（曾有过错题且现在为空，且已答过至少 1 题）
+    if (d.wrong.length === 0 && d._everHadWrong && total > 0 && has('first_answer')) unlock('wrong_clear');
 
     // 全分类
     var cats = d.stats.cats || {};
