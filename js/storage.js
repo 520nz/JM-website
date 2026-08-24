@@ -17,6 +17,14 @@ function esc(s) {
 }
 App.esc = esc;
 
+// --- 统一日期 key 生成（归档/打卡通用，避免月份不一致） ---
+function dateKey(ts) {
+    var dt = new Date(ts);
+    var m = dt.getMonth() + 1;   // 1-12
+    var d = dt.getDate();
+    return dt.getFullYear() + '-' + m + '-' + d;
+}
+
 // --- 间隔重复：间隔时间表（毫秒） ---
 // level 0: 立即可复习
 // level 1: 1小时后
@@ -189,11 +197,10 @@ function addRecord(rec) {
             if (d.history[i].time < cutoff) oldRecs.push(d.history[i]);
             else newRecs.push(d.history[i]);
         }
-        // 按天聚合
+        // 按天聚合（使用统一 dateKey，与 getStreak 保持一致）
         var dayMap = {};
         for (var j = 0; j < oldRecs.length; j++) {
-            var dt = new Date(oldRecs[j].time);
-            var key = dt.getFullYear() + '-' + (dt.getMonth() + 1) + '-' + dt.getDate();
+            var key = dateKey(oldRecs[j].time);
             if (!dayMap[key]) dayMap[key] = { date: key, total: 0, correct: 0 };
             dayMap[key].total++;
             if (oldRecs[j].ok) dayMap[key].correct++;
@@ -309,7 +316,8 @@ function getDueWrong() {
 function recalcStats() {
     var d = get();
     var stats = { total: 0, correct: 0, cats: {} };
-    for (var i = 0; i < d.history.length; i++) {
+    // 1) 从逐条历史计算（含分类明细）
+    for (var i = 0; i < (d.history || []).length; i++) {
         var rec = d.history[i];
         stats.total++;
         if (rec.ok) stats.correct++;
@@ -319,6 +327,12 @@ function recalcStats() {
             stats.cats[q.category].t++;
             if (rec.ok) stats.cats[q.category].c++;
         }
+    }
+    // 2) 合并归档聚合数据（归档已丢失 qid，无法恢复分类，仅累加 total/correct）
+    for (var j = 0; j < (d.archive || []).length; j++) {
+        var a = d.archive[j];
+        stats.total += (a.total || 0);
+        stats.correct += (a.correct || 0);
     }
     d.stats = stats;
     persist();
@@ -346,10 +360,9 @@ function getStreak() {
     var d = get();
     var days = {};
     for (var i = 0; i < (d.history || []).length; i++) {
-        var dt = new Date(d.history[i].time);
-        days[dt.getFullYear() + '-' + dt.getMonth() + '-' + dt.getDate()] = true;
+        days[dateKey(d.history[i].time)] = true;
     }
-    // 合并归档数据中的日期
+    // 合并归档数据中的日期（归档已使用统一 dateKey）
     for (var j = 0; j < (d.archive || []).length; j++) {
         days[d.archive[j].date] = true;
     }
@@ -357,10 +370,10 @@ function getStreak() {
     var streak = 0;
     var check = new Date();
     check.setHours(0, 0, 0, 0);
-    var todayKey = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+    var todayKey = dateKey(check.getTime());
     if (!days[todayKey]) check.setTime(check.getTime() - 86400000);
     while (true) {
-        var key = check.getFullYear() + '-' + check.getMonth() + '-' + check.getDate();
+        var key = dateKey(check.getTime());
         if (days[key]) {
             streak++;
             check.setTime(check.getTime() - 86400000);

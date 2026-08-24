@@ -235,6 +235,23 @@ var App = window.App || {};
 
             var addedCount = 0;
             var updatedCount = 0;
+            var invalidCount = 0;
+
+            // 题目结构校验：避免畸形数据在后续答题时导致崩溃
+            function isValidQuestion(q) {
+                if (!q || typeof q !== 'object') return false;
+                if (!q.id || !q.question || !q.category || !q.answer) return false;
+                if (!Array.isArray(q.options) || q.options.length < 2) return false;
+                var validKeys = {};
+                for (var oi = 0; oi < q.options.length; oi++) {
+                    var o = q.options[oi];
+                    if (!o || typeof o.key !== 'string' || typeof o.text !== 'string') return false;
+                    validKeys[o.key] = true;
+                }
+                // 答案必须是选项之一
+                if (!validKeys[q.answer]) return false;
+                return true;
+            }
 
             // 导入题库
             if (data.questionBank) {
@@ -244,6 +261,7 @@ var App = window.App || {};
                 }
                 for (var j = 0; j < data.questionBank.length; j++) {
                     var q = data.questionBank[j];
+                    if (!isValidQuestion(q)) { invalidCount++; continue; }
                     if (existingIds[q.id]) {
                         for (var k = 0; k < A.QUESTION_BANK.length; k++) {
                             if (A.QUESTION_BANK[k].id === q.id) {
@@ -300,8 +318,9 @@ var App = window.App || {};
             }
 
             var msg = '数据导入成功！';
-            if (addedCount > 0 || updatedCount > 0) {
+            if (addedCount > 0 || updatedCount > 0 || invalidCount > 0) {
                 msg += '\n题目：新增 ' + addedCount + ' 道，更新 ' + updatedCount + ' 道';
+                if (invalidCount > 0) msg += '，跳过无效 ' + invalidCount + ' 道';
             }
             alert(msg);
             try { A.updateHome(); } catch (e) {}
